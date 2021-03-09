@@ -38,7 +38,12 @@ describe("Deep gems NFT functionality", function () {
     const psi = (await PSIContract.deploy(gems.address)) as PSI;
     await gems.initialize(psi.address);
 
-    await psi.mint(pe(`10`), { value: pe(`10`), gasPrice: 0 });
+    await psi.mint(pe(`10`), { value: pe(`100`), gasPrice: 0 });
+
+    await network.provider.request({
+      method: "evm_mine",
+      params: [],
+    });
 
     // forge one gem
     await gems.forge(pe("1"));
@@ -59,37 +64,98 @@ describe("Deep gems NFT functionality", function () {
     await gems.reforge(tokenId);
   });
 
-  // it("See if gems keep the same index", async function () {
-  //   const signers = await ethers.getSigners();
-  //   const DeepGemsContract = await ethers.getContractFactory("DeepGems");
-  //   const gems = (await DeepGemsContract.deploy()) as DeepGems;
-  //   const PSIContract = await ethers.getContractFactory("PSI");
-  //   const psi = (await PSIContract.deploy(gems.address)) as PSI;
-  //   await gems.initialize(psi.address);
+  it("forges a gem", async function () {
+    const signers = await ethers.getSigners();
+    const DeepGemsContract = await ethers.getContractFactory("DeepGems");
+    const gems = (await DeepGemsContract.deploy()) as DeepGems;
+    const PSIContract = await ethers.getContractFactory("PSI");
+    const psi = (await PSIContract.deploy(gems.address)) as PSI;
+    await gems.initialize(psi.address);
 
-  //   // Mint psi for both signer 0 and 1
-  //   await psi.mint(pe(`10`), { value: pe(`10`), gasPrice: 0 });
-  //   await psi
-  //     .connect(signers[1])
-  //     .mint(pe(`10`), { value: pe(`10`), gasPrice: 0 });
+    await psi.mint(pe(`100`), { value: pe(`10`), gasPrice: 0 });
 
-  //   // Mine one gem
-  //   await gems.mineGem(pe("1"));
+    // FORGE
+    await gems.forge(pe("103"));
 
-  //   // Mine another (with a different account since only one gem can be mined per block per account)
-  //   await gems.connect(signers[1]).mineGem(pe("1"));
+    let events = await gems.queryFilter({
+      address: gems.address,
+      topics: [
+        "0x7ad4b12ff4ce0fdd55b19da97f85fc9a091971912adda4a8bba51626c4cd5469",
+      ],
+    });
 
-  //   // Look up gem at index
-  //   const gemId1 = await gems.tokenByIndex(0);
-  //   console.log("gemid 1", gemId1);
+    console.log(events);
 
-  //   // Burn gem
-  //   await gems.burnGem(gemId1);
+    const forgedTokenId = events[0].args.tokenId;
+    const forgedOwner = events[0].args.owner;
 
-  //   // Look up gem at index 0 again
-  //   const gemId2 = await gems.tokenByIndex(0);
+    console.log(forgedTokenId, forgedOwner);
 
-  //   // Is different gem.
-  //   console.log("gemid 2", gemId2);
-  // });
+    console.log("METADATA", await gems.getGemMetadata(forgedTokenId));
+  });
+
+  it("emits the right events", async function () {
+    const signers = await ethers.getSigners();
+    const DeepGemsContract = await ethers.getContractFactory("DeepGems");
+    const gems = (await DeepGemsContract.deploy()) as DeepGems;
+    const PSIContract = await ethers.getContractFactory("PSI");
+    const psi = (await PSIContract.deploy(gems.address)) as PSI;
+    await gems.initialize(psi.address);
+
+    await psi.mint(pe(`10`), { value: pe(`10`), gasPrice: 0 });
+
+    // FORGE
+    await gems.forge(pe("1"));
+
+    let events = await gems.queryFilter({
+      address: gems.address,
+      topics: [
+        "0x7ad4b12ff4ce0fdd55b19da97f85fc9a091971912adda4a8bba51626c4cd5469",
+      ],
+    });
+
+    const forgedTokenId = events[0].args.tokenId;
+    const forgedOwner = events[0].args.owner;
+
+    console.log(forgedTokenId, forgedOwner);
+
+    // REFORGE
+    await gems.reforge(forgedTokenId);
+
+    events = await gems.queryFilter({
+      address: gems.address,
+      topics: [
+        "0x178d4bb17ec1a0b60cda63c27afeafa706c4f4fe9f1f9f3aba895836fd4b94c1",
+      ],
+    });
+
+    const reforgedTokenId = events[0].args.tokenId;
+    const reforgedOwner = events[0].args.owner;
+
+    console.log("REFORGE", events);
+
+    // ACTIVATE
+    await gems.activate(forgedTokenId);
+
+    events = await gems.queryFilter({
+      address: gems.address,
+      topics: [
+        "0xcffdf6de62e8d9ae544ba4c36565fe4bcef3c1a96f174abbe6c56e25e2b220ed",
+      ],
+    });
+
+    console.log("ACTIVATE", events);
+
+    // BURN
+    await gems.burn(forgedTokenId);
+
+    events = await gems.queryFilter({
+      address: gems.address,
+      topics: [
+        "0x696de425f79f4a40bc6d2122ca50507f0efbeabbff86a84871b7196ab8ea8df7",
+      ],
+    });
+
+    console.log("BURN", events);
+  });
 });

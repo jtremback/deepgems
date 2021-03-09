@@ -6,15 +6,15 @@ import "./QuadraticBondingCurve.sol";
 contract PSI is QuadraticBondingCurve {
     address state_deepGemsContract;
 
-    constructor(address _deepGemsAddress) ERC20("PSI", "PSI") {
-        state_deepGemsContract = _deepGemsAddress;
+    constructor(address deepGemsAddress) ERC20("PSI", "PSI") {
+        state_deepGemsContract = deepGemsAddress;
     }
 
     // This calls the internal transfer function, bypassing the allowance
     // check when transferring psi to the deep gems contract.
     // It can only be called by the deep gems contract..
-    function transferToDeepGems(address _sender, uint256 _amount) public {
+    function transferToDeepGems(address sender, uint256 amount) public {
         require(msg.sender == state_deepGemsContract);
-        _transfer(_sender, state_deepGemsContract, _amount);
+        _transfer(sender, state_deepGemsContract, amount);
     }
 }

@@ -37,12 +37,12 @@ contract DeepGems is ERC721 {
         return (uint128(a >> 128), uint128(a));
     }
 
-    function packLatent(address addr, bytes32 blockh)
+    function packLatent(address addr, bytes32 blckhash)
         public
         pure
         returns (uint128)
     {
-        return (uint128(addr) << 64) | uint64(uint256(blockh));
+        return (uint128(addr) << 64) | uint64(uint256(blckhash));
     }
 
     function initialize(address psiContract) public {
@@ -55,7 +55,10 @@ contract DeepGems is ERC721 {
 
         uint256 id =
             uint128sToUint256(
-                packLatent(msg.sender, blockhash(block.number)),
+                // Someone could set up a site where people can view the gem
+                // they could forge in an upcoming block, and what it looks like at
+                // different psi levels.
+                packLatent(msg.sender, blockhash(block.number - 2)),
                 uint128(amountPsi)
             );
 
@@ -95,7 +98,7 @@ contract DeepGems is ERC721 {
         emit Reforged(msg.sender, oldId, newId);
     }
 
-    function burnGem(uint256 gemId) public {
+    function burn(uint256 gemId) public {
         if (state_unactivatedGems[gemId] == msg.sender) {
             // We are burning an unactivated gem
             delete state_unactivatedGems[gemId];
@@ -103,7 +106,7 @@ contract DeepGems is ERC721 {
             // We are burning an activated gem
             _burn(gemId);
         } else {
-            revert("gem does not exist or you don't own it");
+            revert("this gem does not exist or you don't own it");
         }
 
         // Casting gemId to uint128 chops off the first 16 bytes,

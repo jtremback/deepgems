@@ -21,16 +21,14 @@ const RENDERER_URL = "";
 const TEMP_IMG_FILE = "";
 const S3_DATA_BUCKET = "";
 const S3_IMAGE_BUCKET = "";
+const TIMEOUT = 10000;
 
 function loop() {
   run();
   setTimeout(() => {
     loop();
-  }, 1000);
+  }, TIMEOUT);
 }
-
-let lastBlockRetrieved = 11994864;
-let blocksPerFetch = 10;
 
 const provider = ethers.getDefaultProvider("homestead", {
   infura: "28b587d8cdde4eea926069342c002e01",
