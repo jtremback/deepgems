@@ -1,0 +1,55 @@
+@namespace svg "http://www.w3.org/2000/svg";
+:not(svg|*) {
+  all: unset;
+  display: revert;
+  box-sizing: border-box;
+}
+[default-styles] {
+  all: revert;
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@200&display=swap");
+
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
+
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital@1&display=swap");
+
+@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
+
+@import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@300&display=swap");
+
+@keyframes hue-rotate {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+.hue-rotate {
+  animation-name: hue-rotate;
+  animation-duration: 4s;
+  animation-iteration-count: infinite;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: "Bebas Neue";
+}
+
+body {
+  margin: 0;
+  font-family: "Oswald", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: black;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
