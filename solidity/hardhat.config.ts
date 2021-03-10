@@ -3,6 +3,10 @@ import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-gas-reporter";
 import "hardhat-typechain";
+import { use } from "chai";
+import { solidity } from "ethereum-waffle";
+
+use(solidity);
 
 /**
  * @type import('hardhat/config').HardhatUserConfig

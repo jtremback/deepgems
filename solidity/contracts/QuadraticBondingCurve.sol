@@ -10,7 +10,7 @@ import "hardhat/console.sol";
 abstract contract QuadraticBondingCurve is ERC20 {
     using SafeMath for uint256;
 
-    uint256 private SCALING = 10000;
+    uint256 private SCALING = 2000000000000;
 
     function pow3(uint256 base) internal pure returns (uint256) {
         return base.mul(base).mul(base);
@@ -39,13 +39,14 @@ abstract contract QuadraticBondingCurve is ERC20 {
 
     function quoteMint(uint256 tokensToMint) public view returns (uint256) {
         // Scales the number by a constant to get to the level we want
-        return quoteMintRaw(tokensToMint).div(SCALING);
+        // We add one wei to absorb rounding error
+        return quoteMintRaw(tokensToMint).div(SCALING).add(1);
     }
 
     function mint(uint256 tokensToMint) public payable {
         // CHECKS
 
-        uint256 numEther = quoteMint(tokensToMint) + 1; // Plus one for good luck
+        uint256 numEther = quoteMint(tokensToMint);
 
         require(numEther <= msg.value, "Did not send enough Ether");
 

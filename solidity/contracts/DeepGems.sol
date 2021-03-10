@@ -15,8 +15,8 @@ contract DeepGems is ERC721 {
     event Forged(address indexed owner, uint256 indexed tokenId);
     event Reforged(
         address indexed owner,
-        uint256 indexed oldId,
-        uint256 indexed newId
+        uint256 indexed oldTokenId,
+        uint256 indexed newTokenId
     );
     event Activated(address indexed owner, uint256 indexed tokenId);
     event Burned(address indexed owner, uint256 indexed tokenId);
@@ -58,7 +58,8 @@ contract DeepGems is ERC721 {
                 // Someone could set up a site where people can view the gem
                 // they could forge in an upcoming block, and what it looks like at
                 // different psi levels.
-                packLatent(msg.sender, blockhash(block.number - 2)),
+                // 5 blocks gives you about a minute to get your tx in.
+                packLatent(msg.sender, blockhash(block.number - 5)),
                 uint128(amountPsi)
             );
 
@@ -67,56 +68,59 @@ contract DeepGems is ERC721 {
         emit Forged(msg.sender, id);
     }
 
-    function activate(uint256 gemId) public {
+    function activate(uint256 tokenId) public {
         require(
-            state_unactivatedGems[gemId] == msg.sender,
+            state_unactivatedGems[tokenId] == msg.sender,
             "either this gem is already activated, you don't own it, or it does not exist"
         );
 
-        delete state_unactivatedGems[gemId];
+        delete state_unactivatedGems[tokenId];
 
-        _mint(msg.sender, gemId);
-        emit Activated(msg.sender, gemId);
+        _mint(msg.sender, tokenId);
+        emit Activated(msg.sender, tokenId);
     }
 
-    function reforge(uint256 oldId) public {
+    function reforge(uint256 oldTokenId) public {
         require(
-            state_unactivatedGems[oldId] == msg.sender,
+            state_unactivatedGems[oldTokenId] == msg.sender,
             "either this gem is already activated, you don't own it, or it does not exist"
         );
 
-        delete state_unactivatedGems[oldId];
+        delete state_unactivatedGems[oldTokenId];
 
-        uint256 newId =
+        uint256 newTokenId =
             uint128sToUint256(
                 packLatent(msg.sender, blockhash(block.number)),
-                uint128(oldId)
+                uint128(oldTokenId)
             );
 
-        state_unactivatedGems[newId] = msg.sender;
+        state_unactivatedGems[newTokenId] = msg.sender;
 
-        emit Reforged(msg.sender, oldId, newId);
+        emit Reforged(msg.sender, oldTokenId, newTokenId);
     }
 
-    function burn(uint256 gemId) public {
-        if (state_unactivatedGems[gemId] == msg.sender) {
+    function burn(uint256 tokenId) public {
+        if (state_unactivatedGems[tokenId] == msg.sender) {
             // We are burning an unactivated gem
-            delete state_unactivatedGems[gemId];
-        } else if (_exists(gemId) && ownerOf(gemId) == msg.sender) {
+            delete state_unactivatedGems[tokenId];
+        } else if (_exists(tokenId) && ownerOf(tokenId) == msg.sender) {
             // We are burning an activated gem
-            _burn(gemId);
+            _burn(tokenId);
         } else {
             revert("this gem does not exist or you don't own it");
         }
 
-        // Casting gemId to uint128 chops off the first 16 bytes,
+        // Casting tokenId to uint128 chops off the first 16 bytes,
         // leaving only the amount of psi the gem has.
-        IERC20(state_psiContract).transfer(msg.sender, uint256(uint128(gemId)));
+        IERC20(state_psiContract).transfer(
+            msg.sender,
+            uint256(uint128(tokenId))
+        );
 
-        emit Burned(msg.sender, gemId);
+        emit Burned(msg.sender, tokenId);
     }
 
-    function getGemMetadata(uint256 gemId)
+    function getGemMetadata(uint256 tokenId)
         public
         pure
         returns (
@@ -127,7 +131,7 @@ contract DeepGems is ERC721 {
             uint32
         )
     {
-        (uint128 latent, uint128 psi) = uint256ToUint128s(gemId);
+        (uint128 latent, uint128 psi) = uint256ToUint128s(tokenId);
         // We want 100 psi to correspond to an input of 1 into truncation_psi in the neural net,
         // and 103 psi to correspond to 1.03 truncation_psi, etc.
         // So we scale by 1e18, which results in e.g. 103 PSI = 103 (losing 18 decimal places).

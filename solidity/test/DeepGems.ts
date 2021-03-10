@@ -64,7 +64,7 @@ describe("Deep gems NFT functionality", function () {
     await gems.reforge(tokenId);
   });
 
-  it("forges a gem", async function () {
+  it.only("happy path", async function () {
     const signers = await ethers.getSigners();
     const DeepGemsContract = await ethers.getContractFactory("DeepGems");
     const gems = (await DeepGemsContract.deploy()) as DeepGems;
@@ -72,10 +72,19 @@ describe("Deep gems NFT functionality", function () {
     const psi = (await PSIContract.deploy(gems.address)) as PSI;
     await gems.initialize(psi.address);
 
-    await psi.mint(pe(`100`), { value: pe(`10`), gasPrice: 0 });
+    await psi.mint(pe(`200`), { value: pe(`10`), gasPrice: 0 });
 
     // FORGE
+
     await gems.forge(pe("103"));
+
+    // Takes money
+    expect(fe(await psi.balanceOf(signers[0].address))).to.equal("97.0");
+
+    // Not enough tokens
+    expect(gems.forge(pe("100000"))).to.be.reverted;
+
+    await gems.forge(pe("97.0"));
 
     let events = await gems.queryFilter({
       address: gems.address,
@@ -84,14 +93,76 @@ describe("Deep gems NFT functionality", function () {
       ],
     });
 
-    console.log(events);
-
-    const forgedTokenId = events[0].args.tokenId;
     const forgedOwner = events[0].args.owner;
+    const forgedTokenId = events[0].args.tokenId;
+    const forgedTokenId2 = events[1].args.tokenId;
 
-    console.log(forgedTokenId, forgedOwner);
+    expect(forgedOwner).to.equal(signers[0].address);
 
-    console.log("METADATA", await gems.getGemMetadata(forgedTokenId));
+    const metadata = await gems.getGemMetadata(forgedTokenId);
+
+    expect(metadata[4]).to.equal(103);
+
+    console.log("METADATA", metadata);
+
+    // REFORGE
+
+    await gems.reforge(forgedTokenId);
+
+    events = await gems.queryFilter({
+      address: gems.address,
+      topics: [
+        "0x178d4bb17ec1a0b60cda63c27afeafa706c4f4fe9f1f9f3aba895836fd4b94c1",
+      ],
+    });
+
+    const reforgedTokenId = events[0].args.newTokenId;
+
+    // ACTIVATE
+
+    await gems.activate(reforgedTokenId);
+
+    // Doesn't exist
+    expect(gems.activate(forgedTokenId)).to.be.reverted;
+
+    // Already activated
+    expect(gems.activate(reforgedTokenId)).to.be.reverted;
+
+    // TRANSFER
+
+    await gems.transferFrom(
+      signers[0].address,
+      signers[1].address,
+      reforgedTokenId
+    );
+
+    events = await gems.queryFilter({
+      address: gems.address,
+      topics: [
+        "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+      ],
+    });
+
+    expect(events[0].args.tokenId).to.equal(reforgedTokenId);
+
+    // BURN
+
+    // Can't burn a gem you don't own
+    expect(gems.burn(reforgedTokenId)).to.be.reverted;
+
+    await gems.connect(signers[1]).burn(reforgedTokenId);
+
+    // Already been burned
+    expect(gems.connect(signers[1]).burn(reforgedTokenId)).to.be.reverted;
+
+    // Should have gotten the money
+    expect(fe(await psi.balanceOf(signers[1].address))).to.equal("103.0");
+
+    // Burn unactivated gem
+
+    await gems.burn(forgedTokenId2);
+
+    expect(fe(await psi.balanceOf(signers[0].address))).to.equal("97.0");
   });
 
   it("emits the right events", async function () {
