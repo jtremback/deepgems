@@ -8,7 +8,7 @@ import "./PSI.sol";
 contract DeepGems is ERC721 {
     constructor() ERC721("Deep Gems", "DEEP") {}
 
-    address state_psiContract;
+    address public state_psiContract;
 
     mapping(uint256 => address) public state_unactivatedGems;
 
