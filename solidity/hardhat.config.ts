@@ -5,6 +5,7 @@ import "hardhat-gas-reporter";
 import "hardhat-typechain";
 import { use } from "chai";
 import { solidity } from "ethereum-waffle";
+import "@nomiclabs/hardhat-etherscan";
 
 use(solidity);
 
@@ -15,7 +16,19 @@ const config: HardhatUserConfig = {
   solidity: "0.7.6",
   gasReporter: {
     currency: "USD",
-    coinmarketcap: "a3870d7b-a01f-4ad3-8810-1baefaa7ba4d",
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+  },
+  networks: {
+    hardhat: {},
+    rinkeby: {
+      url: "https://rinkeby.infura.io/v3/" + process.env.INFURA_PROJECT_ID,
+      accounts: [process.env.DEPLOY_ADDRESS_PRIVKEY],
+    },
+  },
+  etherscan: {
+    // Your API key for Etherscan
+    // Obtain one at https://etherscan.io/
+    apiKey: process.env.ETHERSCAN_API_KEY,
   },
 };
 

@@ -1,48 +1,61 @@
-// Every tick, poll for newly mined gems
-// // Get their ids and render gems for them,
-// // Upload rendered gems to cache s3
-// // Store metadata such as time, id, etc
-
-// Polling
-// Every tick, request all erc721 mint events since last one
-
-// Rebuilding image cache
-// Iterate over all gems on erc20, check if any are missing
-
 import fetch from "node-fetch";
 import ethers from "ethers";
 import fs from "fs";
 import AWS from "aws-sdk";
+import { DeepGems } from "../../solidity/typechain/DeepGems";
 const gemAbi = require("../solidity/artifacts/contracts/DeepGems.sol/DeepGems.json");
 
-const S3_JSON_CONTEXT_URL = "";
-const BLOCKS_PER_FETCH = 10;
-const RENDERER_URL = "";
-const TEMP_IMG_FILE = "";
-const S3_DATA_BUCKET = "";
-const S3_IMAGE_BUCKET = "";
-const TIMEOUT = 10000;
+// All of this stuff needs to get put into process.env somehow
+const {
+  S3_JSON_CONTEXT_URL,
+  BLOCKS_PER_FETCH,
+  RENDERER_URL,
+  S3_DATA_BUCKET,
+  S3_IMAGE_BUCKET,
+  LOOP_TIME,
+  FORGED_EVENT_TOPIC,
+  REFORGED_EVENT_TOPIC,
+  BURNED_EVENT_TOPIC,
+  ACTIVATED_EVENT_TOPIC,
+  TRANSFERED_EVENT_TOPIC,
+  AWS_ACCESS_KEY_ID,
+  AWS_SECRET_ACCESS_KEY,
+  INFURA_KEY,
+  GEMS_CONTRACT,
+}: {
+  S3_JSON_CONTEXT_URL: string;
+  BLOCKS_PER_FETCH: string;
+  RENDERER_URL: string;
+  S3_DATA_BUCKET: string;
+  S3_IMAGE_BUCKET: string;
+  LOOP_TIME: string;
+  FORGED_EVENT_TOPIC: string;
+  REFORGED_EVENT_TOPIC: string;
+  BURNED_EVENT_TOPIC: string;
+  ACTIVATED_EVENT_TOPIC: string;
+  TRANSFERED_EVENT_TOPIC: string;
+  AWS_ACCESS_KEY_ID: string;
+  AWS_SECRET_ACCESS_KEY: string;
+  INFURA_KEY: string;
+  GEMS_CONTRACT: string;
+} = process.env as any;
 
 function loop() {
   run();
-  setTimeout(() => {
+  setLOOP_Time(() => {
     loop();
-  }, TIMEOUT);
+  }, parseInt(LOOP_TIME, 10));
 }
 
 const provider = ethers.getDefaultProvider("homestead", {
-  infura: "28b587d8cdde4eea926069342c002e01",
+  infura: INFURA_KEY,
 });
 
-const gems = new ethers.Contract(
-  "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-  gemAbi,
-  provider
-);
+const gems = new ethers.Contract(GEMS_CONTRACT, gemAbi, provider) as DeepGems;
 
 const s3 = new AWS.S3({
-  accessKeyId: "",
-  secretAccessKey: "",
+  accessKeyId: AWS_ACCESS_KEY_ID,
+  secretAccessKey: AWS_SECRET_ACCESS_KEY,
 });
 
 interface UserAccount {
@@ -72,9 +85,11 @@ async function run() {
     {
       address: gems.address,
       topics: [
-        "0x7ad4b12ff4ce0fdd55b19da97f85fc9a091971912adda4a8bba51626c4cd5469",
-        "0x7ad4b12ff4ce0fdd55b19da97f85fc9a091971912adda4a8bba51626c4cd5469",
-        "0x7ad4b12ff4ce0fdd55b19da97f85fc9a091971912adda4a8bba51626c4cd5469",
+        FORGED_EVENT_TOPIC,
+        REFORGED_EVENT_TOPIC,
+        BURNED_EVENT_TOPIC,
+        ACTIVATED_EVENT_TOPIC,
+        TRANSFERED_EVENT_TOPIC,
       ],
     },
     context.lastBlockRetrieved,
@@ -95,7 +110,8 @@ async function run() {
   }
 
   // Upload context
-  context.lastBlockRetrieved = context.lastBlockRetrieved + BLOCKS_PER_FETCH;
+  context.lastBlockRetrieved =
+    context.lastBlockRetrieved + parseInt(BLOCKS_PER_FETCH, 10);
   context.userIndex = Object.keys(userMapping);
 
   uploadToS3(
@@ -122,6 +138,10 @@ async function indexEvents(
 
       case "Activated":
         await indexActivatedEvent(context, userMapping, event);
+        break;
+
+      case "Burned":
+        await indexBurnedEvent(context, userMapping, event);
         break;
 
       case "Transfer":
@@ -151,6 +171,7 @@ async function indexForgedEvent(
     // Update user entry
     userMapping[owner] = { gems: {} };
   }
+
   userMapping[owner].gems[tokenId] = { activated: false };
   await renderGem(tokenId);
 }
@@ -183,9 +204,11 @@ async function indexReforgedEvent(
 }
 
 async function renderGem(tokenId: string) {
+  // Get metadata
+  const metdata = await gems.getGemMetadata(tokenId);
   // Upload image to s3
   const img = await (
-    await fetch(`${RENDERER_URL}/${JSON.stringify([])}`)
+    await fetch(`${RENDERER_URL}/${JSON.stringify(metdata)}`)
   ).buffer();
 
   uploadToS3(img, S3_IMAGE_BUCKET, `${tokenId}.jpg`);
@@ -237,7 +260,7 @@ async function indexTransferEvent(
   delete userMapping[from].gems[tokenId];
 }
 
-async function indexBurnEvent(
+async function indexBurnedEvent(
   context: Context,
   userMapping: UserMapping,
   event: ethers.ethers.Event

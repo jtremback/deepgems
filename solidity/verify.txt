@@ -1,0 +1,5 @@
+To verify, run 
+
+Deepgems.sol:
+
+eval $(cat .env) npx hardhat verify --network rinkeby 0x8Aed54A628ff1Cac3beEba58cfE3D8eA5e7fc0d0
