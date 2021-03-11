@@ -1,0 +1,10 @@
+[Unit]
+Description=Keeps the Deep Gems indexer up
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=npm run start
+Restart=always
+User=ubuntu
+WorkingDirectory=/home/ubuntu/deepgems/indexer/
