@@ -1,9 +1,9 @@
 import fetch from "node-fetch";
-import ethers from "ethers";
+import { ethers } from "ethers";
 import fs from "fs";
 import AWS from "aws-sdk";
 import { DeepGems } from "../../solidity/typechain/DeepGems";
-const gemAbi = require("../solidity/artifacts/contracts/DeepGems.sol/DeepGems.json");
+const gemArtifact = require("../../solidity/artifacts/contracts/DeepGems.sol/DeepGems.json");
 
 const {
   S3_JSON_CONTEXT_URL,
@@ -40,8 +40,12 @@ const {
 } = process.env as any;
 
 function loop() {
-  run();
-  setLOOP_Time(() => {
+  try {
+    run();
+  } catch (e) {
+    console.error(e);
+  }
+  setTimeout(() => {
     loop();
   }, parseInt(LOOP_TIME, 10));
 }
@@ -50,7 +54,11 @@ const provider = ethers.getDefaultProvider("homestead", {
   infura: INFURA_KEY,
 });
 
-const gems = new ethers.Contract(GEMS_CONTRACT, gemAbi, provider) as DeepGems;
+const gems = new ethers.Contract(
+  GEMS_CONTRACT,
+  gemArtifact.abi,
+  provider
+) as DeepGems;
 
 const s3 = new AWS.S3({
   accessKeyId: AWS_ACCESS_KEY_ID,
@@ -71,7 +79,11 @@ interface Context {
 }
 
 async function run() {
-  const context: Context = await (await fetch(S3_JSON_CONTEXT_URL)).json();
+  const rawContext = await (await fetch(S3_JSON_CONTEXT_URL)).json();
+  const context: Context = {
+    lastBlockRetrieved: parseInt(rawContext.lastBlockRetrieved, 10),
+    userIndex: rawContext.userIndex,
+  };
 
   // Populate users mapping
   const userMapping: UserMapping = {};
@@ -92,7 +104,7 @@ async function run() {
       ],
     },
     context.lastBlockRetrieved,
-    context.lastBlockRetrieved + BLOCKS_PER_FETCH
+    context.lastBlockRetrieved + parseInt(BLOCKS_PER_FETCH, 10)
   );
 
   // Index events
@@ -123,7 +135,7 @@ async function run() {
 async function indexEvents(
   context: Context,
   userMapping: UserMapping,
-  events: ethers.ethers.Event[]
+  events: ethers.Event[]
 ) {
   for (const event of events) {
     switch (event.event) {
@@ -156,7 +168,7 @@ async function indexEvents(
 async function indexForgedEvent(
   context: Context,
   userMapping: UserMapping,
-  event: ethers.ethers.Event
+  event: ethers.Event
 ) {
   const tokenId = event.args!._id;
   const owner = event.args!._owner;
@@ -178,7 +190,7 @@ async function indexForgedEvent(
 async function indexReforgedEvent(
   context: Context,
   userMapping: UserMapping,
-  event: ethers.ethers.Event
+  event: ethers.Event
 ) {
   const owner = event.args!.owner;
   const oldTokenId = event.args!.oldTokenId;
@@ -216,7 +228,7 @@ async function renderGem(tokenId: string) {
 async function indexActivatedEvent(
   context: Context,
   userMapping: UserMapping,
-  event: ethers.ethers.Event
+  event: ethers.Event
 ) {
   const tokenId = event.args!._id;
   const owner = event.args!._owner;
@@ -238,7 +250,7 @@ async function indexActivatedEvent(
 async function indexTransferEvent(
   context: Context,
   userMapping: UserMapping,
-  event: ethers.ethers.Event
+  event: ethers.Event
 ) {
   const from = event.args!.from;
   const to = event.args!.to;
@@ -262,7 +274,7 @@ async function indexTransferEvent(
 async function indexBurnedEvent(
   context: Context,
   userMapping: UserMapping,
-  event: ethers.ethers.Event
+  event: ethers.Event
 ) {
   const owner = event.args!.owner;
   const tokenId = event.args!.tokenId;
