@@ -5,7 +5,6 @@ import AWS from "aws-sdk";
 import { DeepGems } from "../../solidity/typechain/DeepGems";
 const gemAbi = require("../solidity/artifacts/contracts/DeepGems.sol/DeepGems.json");
 
-// All of this stuff needs to get put into process.env somehow
 const {
   S3_JSON_CONTEXT_URL,
   BLOCKS_PER_FETCH,

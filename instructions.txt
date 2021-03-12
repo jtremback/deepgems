@@ -1,0 +1,40 @@
+Clone the deepgems_site and the stylegan2-ada repos into the home folder.
+
+Make a file called .env with the following vars:
+
+TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN
+ADMIN_PHONE
+MSG_SERVICE_SID
+
+Due to some python bullshit, we can't script starting the renderer. So what you need to do is, from the ~ folder:
+
+- start a new tmux session: `tmux new -s renderer`
+- in the tmux session: `source activate tensorflow_p37; cd ./stylegan2-ada/; python dg_server.py --network=./network-snapshot-000008.pkl; eval $(cat .env) ./deploy/notifier.sh "renderer has crashed"`
+- detach from the session: Ctrl-b d
+
+Might as well run the indexer manually too:
+
+First create an .env file in ./deepgems/indexer/ with these vars:
+
+S3_JSON_CONTEXT_URL
+BLOCKS_PER_FETCH
+RENDERER_URL
+S3_DATA_BUCKET
+S3_IMAGE_BUCKET
+LOOP_TIME
+FORGED_EVENT_TOPIC
+REFORGED_EVENT_TOPIC
+BURNED_EVENT_TOPIC
+ACTIVATED_EVENT_TOPIC
+TRANSFERED_EVENT_TOPIC
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+INFURA_KEY
+GEMS_CONTRACT
+
+- start a new tmux session: `tmux new -s indexer`
+- in the tmux session: `cd ./deepgems_site/indexer; npm run start; eval $(cat .env) ./deploy/notifier.sh "indexer has crashed"`
+- detach from the session: Ctrl-b d
+
+now you can exit from the server and the server will run
