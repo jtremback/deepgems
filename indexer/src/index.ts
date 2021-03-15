@@ -50,15 +50,15 @@ function loop() {
   }, parseInt(LOOP_TIME, 10));
 }
 
-const provider = ethers.getDefaultProvider("homestead", {
-  infura: INFURA_KEY,
-});
+const provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_KEY);
 
 const gems = new ethers.Contract(
   GEMS_CONTRACT,
   gemArtifact.abi,
   provider
 ) as DeepGems;
+
+console.log("Foo", provider);
 
 const s3 = new AWS.S3({
   accessKeyId: AWS_ACCESS_KEY_ID,
@@ -91,6 +91,21 @@ async function run() {
     userMapping[userAddr] = await getUserGems(userAddr);
   }
 
+  console.log(
+    `Getting events from ${context.lastBlockRetrieved} to ${
+      context.lastBlockRetrieved + parseInt(BLOCKS_PER_FETCH, 10)
+    }`
+  );
+
+  console.log("gems.address", gems.address);
+
+  const currentBlock = 42069;
+
+  const highestBlockToGet = Math.max(
+    currentBlock,
+    context.lastBlockRetrieved + parseInt(BLOCKS_PER_FETCH, 10)
+  );
+
   // Get events
   const events = await gems.queryFilter(
     {
@@ -100,15 +115,18 @@ async function run() {
         REFORGED_EVENT_TOPIC,
         BURNED_EVENT_TOPIC,
         ACTIVATED_EVENT_TOPIC,
-        TRANSFERED_EVENT_TOPIC,
+        // TRANSFERED_EVENT_TOPIC,
       ],
     },
     context.lastBlockRetrieved,
-    context.lastBlockRetrieved + parseInt(BLOCKS_PER_FETCH, 10)
+    highestBlockToGet
   );
 
+  console.log(`Got ${events.length} events`);
+  console.log(`Events: ${JSON.stringify(events)}`);
+
   // Index events
-  indexEvents(context, userMapping, events);
+  const highestBlockInEvents = await indexEvents(context, userMapping, events);
 
   // Save state
   // Upload each user
@@ -121,8 +139,7 @@ async function run() {
   }
 
   // Upload context
-  context.lastBlockRetrieved =
-    context.lastBlockRetrieved + parseInt(BLOCKS_PER_FETCH, 10);
+  context.lastBlockRetrieved = highestBlock;
   context.userIndex = Object.keys(userMapping);
 
   uploadToS3(
@@ -137,7 +154,12 @@ async function indexEvents(
   userMapping: UserMapping,
   events: ethers.Event[]
 ) {
+  let highestBlock = 0;
   for (const event of events) {
+    if (event.blockNumber > highestBlock) {
+      highestBlock = event.blockNumber;
+    }
+
     switch (event.event) {
       case "Forged":
         await indexForgedEvent(context, userMapping, event);
@@ -163,6 +185,7 @@ async function indexEvents(
         throw new Error("Unknown event");
     }
   }
+  return highestBlock;
 }
 
 async function indexForgedEvent(

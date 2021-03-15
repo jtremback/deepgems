@@ -30,7 +30,7 @@ describe("Deep gems NFT functionality", function () {
     console.log(a.toString(), b.toString());
   });
 
-  it("gas test", async function () {
+  it.only("gas test", async function () {
     const signers = await ethers.getSigners();
     const DeepGemsContract = await ethers.getContractFactory("DeepGems");
     const gems = (await DeepGemsContract.deploy()) as DeepGems;
@@ -38,33 +38,30 @@ describe("Deep gems NFT functionality", function () {
     const psi = (await PSIContract.deploy(gems.address)) as PSI;
     await gems.initialize(psi.address);
 
-    await psi.mint(pe(`10`), { value: pe(`100`), gasPrice: 0 });
+    await psi.mint(pe(`100`), { value: pe(`100`), gasPrice: 0 });
 
-    await network.provider.request({
-      method: "evm_mine",
-      params: [],
-    });
+    await psi.approve(gems.address, pe(`100`));
 
     // forge one gem
-    await gems.forge(pe("1"));
+    await gems.forge(pe("100"));
 
-    const events = await gems.queryFilter({
-      address: gems.address,
-      topics: [
-        "0x7ad4b12ff4ce0fdd55b19da97f85fc9a091971912adda4a8bba51626c4cd5469",
-      ],
-    });
+    // const events = await gems.queryFilter({
+    //   address: gems.address,
+    //   topics: [
+    //     "0x7ad4b12ff4ce0fdd55b19da97f85fc9a091971912adda4a8bba51626c4cd5469",
+    //   ],
+    // });
 
-    const tokenId = events[0].args._id;
+    // const tokenId = events[0].args._id;
 
-    console.log(events);
+    // console.log(events);
 
-    console.log("RETRIEVED", await gems.state_unactivatedGems(tokenId));
+    // console.log("RETRIEVED", await gems.state_unactivatedGems(tokenId));
 
-    await gems.reforge(tokenId);
+    // await gems.reforge(tokenId);
   });
 
-  it.only("happy path", async function () {
+  it("happy path", async function () {
     const signers = await ethers.getSigners();
     const DeepGemsContract = await ethers.getContractFactory("DeepGems");
     const gems = (await DeepGemsContract.deploy()) as DeepGems;
