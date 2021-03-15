@@ -9,10 +9,9 @@ contract DeepGems is ERC721 {
     constructor() ERC721("Deep Gems", "DEEP") {}
 
     address public state_psiContract;
-
     mapping(uint256 => address) public state_unactivatedGems;
 
-    event Forged(address indexed owner, uint256 indexed tokenId);
+    event Forged(address indexed owner, uint256 indexed tokenId, uint128 psi);
     event Reforged(
         address indexed owner,
         uint256 indexed oldTokenId,
@@ -49,11 +48,9 @@ contract DeepGems is ERC721 {
         state_psiContract = psiContract;
     }
 
-    function forge(uint256 amountPsi) public {
-        // Transfer Psi to pay for gem
-        PSI(state_psiContract).transferToDeepGems(msg.sender, amountPsi);
-
-        uint256 id =
+    function _forge(uint256 amountPsi) private returns (uint256) {
+        // Generate id
+        uint256 tokenId =
             uint128sToUint256(
                 // Someone could set up a site where people can view the gem
                 // they could forge in an upcoming block, and what it looks like at
@@ -63,9 +60,39 @@ contract DeepGems is ERC721 {
                 uint128(amountPsi)
             );
 
-        state_unactivatedGems[id] = msg.sender;
+        // This could be triggered if someone tries to mint twice in a block
+        // with the same address, or if someone has the same first 8 bytes in
+        // their address as someone else
+        require(state_unactivatedGems[tokenId] == address(0), "gem exists");
+        require(!_exists(tokenId), "gem exists");
 
-        emit Forged(msg.sender, id);
+        // Transfer Psi to pay for gem
+        PSI(state_psiContract).transferToDeepGems(msg.sender, amountPsi);
+
+        state_unactivatedGems[tokenId] = msg.sender;
+
+        return tokenId;
+    }
+
+    function forge(uint256 amountPsi) public returns (uint256) {
+        uint256 tokenId = _forge(amountPsi);
+        emit Forged(msg.sender, tokenId, uint128(amountPsi));
+
+        return tokenId;
+    }
+
+    function reforge(uint256 oldTokenId) public {
+        require(
+            state_unactivatedGems[oldTokenId] == msg.sender,
+            "either this gem is already activated, you don't own it, or it does not exist"
+        );
+
+        delete state_unactivatedGems[oldTokenId];
+
+        // pull the psi off the old token id by casting to uint128
+        uint256 newTokenId = _forge(uint128(oldTokenId));
+
+        emit Reforged(msg.sender, oldTokenId, newTokenId);
     }
 
     function activate(uint256 tokenId) public {
@@ -78,25 +105,6 @@ contract DeepGems is ERC721 {
 
         _mint(msg.sender, tokenId);
         emit Activated(msg.sender, tokenId);
-    }
-
-    function reforge(uint256 oldTokenId) public {
-        require(
-            state_unactivatedGems[oldTokenId] == msg.sender,
-            "either this gem is already activated, you don't own it, or it does not exist"
-        );
-
-        delete state_unactivatedGems[oldTokenId];
-
-        uint256 newTokenId =
-            uint128sToUint256(
-                packLatent(msg.sender, blockhash(block.number)),
-                uint128(oldTokenId)
-            );
-
-        state_unactivatedGems[newTokenId] = msg.sender;
-
-        emit Reforged(msg.sender, oldTokenId, newTokenId);
     }
 
     function burn(uint256 tokenId) public {
