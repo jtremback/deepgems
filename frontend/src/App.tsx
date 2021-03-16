@@ -1,11 +1,61 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState } from "react";
 import background from "./background.jpg";
 import "./App.css";
 import psi0example from "./images/0psi.jpg";
 import psi100example from "./images/100psi.jpg";
 import psi300example from "./images/300psi.jpg";
+import useAPIPolling, { APIPollingOptions } from "use-api-polling";
+
+const GRAPHQL_URL = "http://localhost:8000/subgraphs/name/jtremback/deepgems";
+const IMAGES_CDN = "https://deepgemscache.s3.us-west-2.amazonaws.com/";
+
+const recentGemsQuery = `{
+  gems(orderBy: forgeTime, orderDirection: desc, first: 7){
+    id
+    psi
+    owner
+    forgeTime
+    forgeBlock
+  }
+}`;
+
+async function getRecentGems() {
+  return (
+    await (
+      await fetch(GRAPHQL_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ query: recentGemsQuery }),
+      })
+    ).json()
+  ).data.gems;
+}
+
+type GemDataResponse = GemData[];
+
+type GemData = {
+  id: string;
+};
 
 function App() {
+  const [recentGems, setRecentGems] = useState();
+
+  const fetchFunc = async () => {
+    return await getRecentGems();
+  };
+
+  const options: APIPollingOptions<GemDataResponse> = {
+    fetchFunc,
+    initialState: [],
+    delay: 5000,
+  };
+
+  const data = useAPIPolling(options);
+
+  console.log(data);
   return (
     <div
       style={{
@@ -21,50 +71,9 @@ function App() {
         alignItems: "center",
       }}
     >
-      <div style={{ height: 1700, display: "flex", flexDirection: "column" }}>
-        <div style={{ height: "80vh" }}></div>
-        <div
-          style={{
-            background: "rgba(0,0,0,0.5)",
-            padding: 20,
-            paddingLeft: 30,
-            paddingRight: 30,
-          }}
-        >
-          <h1 style={{ color: "rgb(217,213,207)", margin: 0 }}>Dig deeper ↓</h1>
-        </div>
-      </div>
-      <div style={{ maxWidth: "1202px" }}>
-        <h1
-          className="display-3"
-          style={{
-            color: "rgb(217,213,207)",
-            fontSize: 150,
-            textAlign: "center",
-            opacity: 0.8,
-          }}
-        >
-          Deep Gems
-        </h1>
-      </div>
-
-      <div style={{ overflow: "hidden", width: "100%", whiteSpace: "nowrap" }}>
-        {[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map(() => {
-          return (
-            <div
-              style={{
-                width: 300,
-                height: 300,
-                background: "white",
-                borderRadius: 10000,
-                marginRight: 40,
-                marginBottom: 40,
-                display: "inline-block",
-              }}
-            ></div>
-          );
-        })}
-      </div>
+      <DigDeeper />
+      <PageTitle />
+      <RecentGems gemData={data} />
       <div
         style={{
           maxWidth: "1024px",
@@ -85,11 +94,83 @@ function App() {
           }}
         >
           <BuyPSIBox />
-          <MineAGemBox />
+          <ForgeAGemBox />
         </div>
         <YourGems />
       </div>
     </div>
+  );
+}
+
+function DigDeeper() {
+  return (
+    <div style={{ height: 1700, display: "flex", flexDirection: "column" }}>
+      <div style={{ height: "80vh" }}></div>
+      <div
+        style={{
+          background: "rgba(0,0,0,0.5)",
+          padding: 20,
+          paddingLeft: 30,
+          paddingRight: 30,
+        }}
+      >
+        <h1 style={{ color: "rgb(217,213,207)", margin: 0 }}>Dig deeper ↓</h1>
+      </div>
+    </div>
+  );
+}
+
+function PageTitle() {
+  return (
+    <div style={{ maxWidth: "1202px" }}>
+      <h1
+        className="display-3"
+        style={{
+          color: "rgb(217,213,207)",
+          fontSize: 150,
+          textAlign: "center",
+          opacity: 0.8,
+        }}
+      >
+        Deep Gems
+      </h1>
+    </div>
+  );
+}
+
+function RecentGems({ gemData }: { gemData: GemDataResponse }) {
+  return (
+    <div style={{ overflow: "hidden", width: "100%", whiteSpace: "nowrap" }}>
+      {gemData.map((gem) => (
+        <RecentGem gem={gem} />
+      ))}
+    </div>
+  );
+}
+
+function RecentGem({
+  style,
+  gem,
+}: {
+  style?: React.CSSProperties;
+  gem: GemData;
+}) {
+  return (
+    <div
+      style={{
+        width: 300,
+        height: 300,
+        backgroundImage: `url(${IMAGES_CDN}${gem.id}.jpg)`,
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+        backgroundColor: "black",
+        borderRadius: 10000,
+        marginRight: 40,
+        marginBottom: 40,
+        display: "inline-block",
+        ...style,
+      }}
+    ></div>
   );
 }
 
@@ -136,34 +217,60 @@ function ExplainerText() {
 }
 
 function BuyPSIBox() {
+  const [mode, setMode] = useState("buy");
   return (
     <div style={{ background: "rgb(27,23,20)", padding: 40 }}>
-      <h2>Buy PSI</h2>
-      <form>
-        <p>Amount of PSI to buy:</p>
-        <p>
-          <TextInput />
-        </p>
-        <p>Estimated ETH required:</p>
-        <p style={{ fontFamily: "Inconsolata" }}>0.003 ETH</p>
-        <Button>Buy</Button>
-      </form>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <h2
+          onClick={() => setMode("buy")}
+          style={mode == "buy" ? {} : { color: "grey", cursor: "pointer" }}
+        >
+          Buy PSI
+        </h2>
+        <h2
+          onClick={() => setMode("sell")}
+          style={mode == "sell" ? {} : { color: "grey", cursor: "pointer" }}
+        >
+          Sell PSI
+        </h2>
+      </div>
+      {mode == "buy" ? (
+        <form>
+          <p>Amount of PSI to buy:</p>
+          <p>
+            <TextInput />
+          </p>
+          <p>Estimated ETH required:</p>
+          <p style={{ fontFamily: "Inconsolata" }}>0.003 ETH</p>
+          <Button>Buy</Button>
+        </form>
+      ) : (
+        <form>
+          <p>Amount of PSI to sell:</p>
+          <p>
+            <TextInput />
+          </p>
+          <p>Estimated ETH earned:</p>
+          <p style={{ fontFamily: "Inconsolata" }}>0.003 ETH</p>
+          <Button>Sell</Button>
+        </form>
+      )}
     </div>
   );
 }
 
-function MineAGemBox() {
+function ForgeAGemBox() {
   return (
     <div style={{ background: "rgb(27,23,20)", padding: 40 }}>
-      <h2>Mine a Gem</h2>
+      <h2>Forge a Gem</h2>
       <form>
-        <p>Amount of PSI to put in the gem:</p>
+        <p>Amount of PSI to forge the gem with:</p>
         <p>
           <TextInput />
         </p>
         <p>Your PSI balance:</p>
         <p style={{ fontFamily: "Inconsolata" }}>104.32930302 PSI</p>
-        <Button>Mine</Button>
+        <Button>Forge</Button>
       </form>
     </div>
   );
