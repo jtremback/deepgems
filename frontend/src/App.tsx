@@ -5,9 +5,27 @@ import psi0example from "./images/0psi.jpg";
 import psi100example from "./images/100psi.jpg";
 import psi300example from "./images/300psi.jpg";
 import useAPIPolling, { APIPollingOptions } from "use-api-polling";
+import WalletConnectProvider from "@walletconnect/web3-provider";
+import { ethers } from "ethers";
+import Web3Modal from "web3modal";
 
 const GRAPHQL_URL = "http://localhost:8000/subgraphs/name/jtremback/deepgems";
 const IMAGES_CDN = "https://deepgemscache.s3.us-west-2.amazonaws.com/";
+
+const providerOptions = {
+  walletconnect: {
+    package: WalletConnectProvider, // required
+    options: {
+      infuraId: "INFURA_ID", // required
+    },
+  },
+};
+
+const web3Modal = new Web3Modal({
+  network: "mainnet", // optional
+  cacheProvider: true, // optional
+  providerOptions, // required
+});
 
 const recentGemsQuery = `{
   gems(orderBy: forgeTime, orderDirection: desc, first: 7){
@@ -41,7 +59,7 @@ type GemData = {
 };
 
 function App() {
-  const [recentGems, setRecentGems] = useState();
+  const [provider, setProvider] = useState<ethers.providers.BaseProvider>();
 
   const fetchFunc = async () => {
     return await getRecentGems();
@@ -55,7 +73,7 @@ function App() {
 
   const data = useAPIPolling(options);
 
-  console.log(data);
+  console.log(provider);
   return (
     <div
       style={{
@@ -85,18 +103,7 @@ function App() {
         }}
       >
         <ExplainerText />
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-around",
-            paddingTop: 40,
-            paddingBottom: 40,
-          }}
-        >
-          <BuyPSIBox />
-          <ForgeAGemBox />
-        </div>
-        <YourGems />
+        <BlockchainInteraction provider={provider} setProvider={setProvider} />
       </div>
     </div>
   );
@@ -213,6 +220,59 @@ function ExplainerText() {
       PSI back out. But be careful! When you burn a gem you only get 99% of its
       PSI out. 1% is lost forever.
     </>
+  );
+}
+
+function BlockchainInteraction({
+  setProvider,
+  provider,
+}: {
+  setProvider: (provider?: ethers.providers.BaseProvider) => void;
+  provider?: ethers.providers.BaseProvider;
+}) {
+  return (
+    <div style={{ position: "relative" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-around",
+          paddingTop: 40,
+          paddingBottom: 40,
+        }}
+      >
+        <>
+          <BuyPSIBox />
+          <ForgeAGemBox />
+        </>
+      </div>
+      {provider && <YourGems />}
+      {!provider && (
+        <div
+          style={{
+            position: "absolute",
+            background: "rgba(0,0,0,0.8)",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Button
+            onClick={async () =>
+              //  Enable session (triggers QR Code modal)
+              setProvider(
+                new ethers.providers.Web3Provider(await web3Modal.connect())
+              )
+            }
+          >
+            Connect Wallet
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -345,9 +405,16 @@ function TextInput({ style }: { style?: React.CSSProperties }) {
   );
 }
 
-function Button({ children }: { children: ReactNode }) {
+function Button({
+  children,
+  onClick,
+}: {
+  children: ReactNode;
+  onClick?: React.MouseEventHandler;
+}) {
   return (
     <button
+      onClick={onClick}
       style={{
         fontFamily: "Bebas Neue",
         background: "blue",
