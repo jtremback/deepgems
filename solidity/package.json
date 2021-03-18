@@ -6,7 +6,8 @@
   "scripts": {
     "evm": "eval $(cat .env) npx hardhat node",
     "test": "eval $(cat .env) npx hardhat --network localhost test",
-    "deploy": "eval $(cat .env) npx hardhat run --network rinkeby scripts/deploy.ts"
+    "deploy": "eval $(cat .env) npx hardhat run --network rinkeby scripts/deploy.ts",
+    "deploy-local": "eval $(cat .env) npx hardhat run --network localhost scripts/deployAndPopulate.ts"
   },
   "keywords": [],
   "author": "Jehan Tremback, Slava Balasanov",

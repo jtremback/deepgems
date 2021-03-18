@@ -64,8 +64,6 @@ const gems = new ethers.Contract(
   provider
 ) as DeepGems;
 
-console.log("Foo", provider);
-
 const s3 = new AWS.S3({
   accessKeyId: AWS_ACCESS_KEY_ID,
   secretAccessKey: AWS_SECRET_ACCESS_KEY,

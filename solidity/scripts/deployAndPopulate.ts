@@ -6,16 +6,19 @@ const fe = ethers.utils.formatEther;
 const pe = ethers.utils.parseEther;
 
 async function main() {
+  const signers = await ethers.getSigners();
   const DeepGemsContract = await ethers.getContractFactory("DeepGems");
   const gems = (await DeepGemsContract.deploy()) as DeepGems;
   const PSIContract = await ethers.getContractFactory("PSI");
   const psi = (await PSIContract.deploy(gems.address)) as PSI;
   await gems.initialize(psi.address);
 
+  console.log("Signers", signers);
+
   console.log("DeepGems address:", gems.address);
   console.log("Psi address:", psi.address);
 
-  await psi.mint(pe("1000"), { value: pe(`100`) });
+  await psi.mint(pe("1000"), { value: pe(`90`) });
 
   await gems.forge(pe("100"));
   await gems.forge(pe("200"));

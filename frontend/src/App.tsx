@@ -8,9 +8,18 @@ import useAPIPolling, { APIPollingOptions } from "use-api-polling";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { ethers } from "ethers";
 import Web3Modal from "web3modal";
+import { DeepGems } from "../../solidity/typechain/DeepGems";
+import { PSI } from "../../solidity/typechain/PSI";
+const gemArtifact = require("./DeepGems.json");
+const psiArtifact = require("./PSI.json");
 
 const GRAPHQL_URL = "http://localhost:8000/subgraphs/name/jtremback/deepgems";
 const IMAGES_CDN = "https://deepgemscache.s3.us-west-2.amazonaws.com/";
+const GEMS_CONTRACT = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const PSI_CONTRACT = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+
+const fe = ethers.utils.formatEther;
+const pe = ethers.utils.parseEther;
 
 const providerOptions = {
   walletconnect: {
@@ -58,8 +67,14 @@ type GemData = {
   id: string;
 };
 
+type Blockchain = {
+  provider: ethers.providers.BaseProvider;
+  gems: DeepGems;
+  psi: PSI;
+};
+
 function App() {
-  const [provider, setProvider] = useState<ethers.providers.BaseProvider>();
+  const [blockchain, setBlockchain] = useState<Blockchain>();
 
   const fetchFunc = async () => {
     return await getRecentGems();
@@ -73,7 +88,43 @@ function App() {
 
   const data = useAPIPolling(options);
 
-  console.log(provider);
+  async function connectProvider() {
+    //  Enable session (triggers QR Code modal)
+    const provider = new ethers.providers.Web3Provider(
+      await web3Modal.connect()
+    );
+    const gems = (new ethers.Contract(
+      GEMS_CONTRACT,
+      gemArtifact.abi,
+      provider
+    ) as any) as DeepGems;
+
+    const psi = (new ethers.Contract(
+      PSI_CONTRACT,
+      psiArtifact.abi,
+      provider
+    ) as any) as PSI;
+
+    setBlockchain({ provider, gems, psi });
+  }
+
+  async function quoteBuyPsi(amountPsi: number) {
+    return blockchain!.psi.quoteMint(amountPsi);
+  }
+
+  async function quoteSellPsi(amountPsi: number) {
+    return blockchain!.psi.quoteBurn(amountPsi);
+  }
+
+  async function buyPSI(amountPsi: number, amountEth: number) {
+    blockchain!.psi.mint(amountPsi, { value: amountEth });
+  }
+
+  async function sellPSI(amountPsi: number, minEth: number) {
+    blockchain!.psi.burn(amountPsi, minEth);
+  }
+
+  console.log(blockchain);
   return (
     <div
       style={{
@@ -103,7 +154,10 @@ function App() {
         }}
       >
         <ExplainerText />
-        <BlockchainInteraction provider={provider} setProvider={setProvider} />
+        <BlockchainInteraction
+          blockchain={blockchain}
+          connectProvider={connectProvider}
+        />
       </div>
     </div>
   );
@@ -224,11 +278,11 @@ function ExplainerText() {
 }
 
 function BlockchainInteraction({
-  setProvider,
-  provider,
+  connectProvider,
+  blockchain,
 }: {
-  setProvider: (provider?: ethers.providers.BaseProvider) => void;
-  provider?: ethers.providers.BaseProvider;
+  connectProvider: () => void;
+  blockchain?: Blockchain;
 }) {
   return (
     <div style={{ position: "relative" }}>
@@ -241,12 +295,12 @@ function BlockchainInteraction({
         }}
       >
         <>
-          <BuyPSIBox />
+          <BuyPSIBox blockchain={blockchain} />
           <ForgeAGemBox />
         </>
       </div>
-      {provider && <YourGems />}
-      {!provider && (
+      {blockchain && <YourGems />}
+      {!blockchain && (
         <div
           style={{
             position: "absolute",
@@ -260,58 +314,140 @@ function BlockchainInteraction({
             alignItems: "center",
           }}
         >
-          <Button
-            onClick={async () =>
-              //  Enable session (triggers QR Code modal)
-              setProvider(
-                new ethers.providers.Web3Provider(await web3Modal.connect())
-              )
-            }
-          >
-            Connect Wallet
-          </Button>
+          <Button onClick={connectProvider}>Connect Wallet</Button>
         </div>
       )}
     </div>
   );
 }
 
-function BuyPSIBox() {
-  const [mode, setMode] = useState("buy");
+function BuyPSIBox({ blockchain }: { blockchain?: Blockchain }) {
+  const [state, setState] = useState<{
+    mode: "buy" | "sell";
+    buyForm: string;
+    sellForm: string;
+  }>({
+    mode: "buy",
+    buyForm: "",
+    sellForm: "",
+  });
+  const [psiEstimates, setPsiEstimates] = useState<{
+    estimatedBuyEth?: string;
+    estimatedSellEth?: string;
+  }>({});
+  const [debounceIDs, setDebounceIDs] = useState<{
+    buyFormDebounceID?: NodeJS.Timeout;
+    sellFormDebounceID?: NodeJS.Timeout;
+  }>({});
+
+  function setFormFactory(
+    estimatedKey: string,
+    inputKey: string,
+    debounceKey: "buyFormDebounceID" | "sellFormDebounceID",
+    blockchainFunctionKey: string
+  ) {
+    return (input: string) => {
+      // Set form state
+      setState({
+        ...state,
+        [inputKey]: input,
+      });
+
+      const debounceID = debounceIDs[debounceKey];
+
+      // Cancel previous request
+      if (debounceID) {
+        clearTimeout(debounceID);
+      }
+
+      const toBuy = parseInt(input, 10);
+      console.log("toBuy", toBuy);
+      if (isNaN(toBuy)) {
+        // Set it to NaN without making the query
+        setPsiEstimates({
+          ...psiEstimates,
+          [estimatedKey]: undefined,
+        });
+        return;
+      }
+
+      // Set to undefined to get loading spinner
+      setPsiEstimates({ ...psiEstimates, [estimatedKey]: undefined });
+
+      const timeoutID = setTimeout(async () => {
+        const toBuyBigNum = pe(`${toBuy}`);
+        setPsiEstimates({
+          ...psiEstimates,
+          [estimatedKey]:
+            fe(await blockchain!.psi[blockchainFunctionKey](toBuyBigNum)) +
+            " ETH",
+        });
+      }, 1000);
+
+      setDebounceIDs({ ...debounceIDs, [debounceKey]: timeoutID });
+    };
+  }
+
+  const setBuyForm = setFormFactory(
+    "estimatedBuyEth",
+    "buyForm",
+    "buyFormDebounceID",
+    "quoteMint"
+  );
+
+  const setSellForm = setFormFactory(
+    "estimatedSellEth",
+    "sellForm",
+    "sellFormDebounceID",
+    "quoteBurn"
+  );
+
   return (
     <div style={{ background: "rgb(27,23,20)", padding: 40 }}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <h2
-          onClick={() => setMode("buy")}
-          style={mode == "buy" ? {} : { color: "grey", cursor: "pointer" }}
+          onClick={() => setState({ ...state, mode: "buy" })}
+          style={
+            state.mode == "buy" ? {} : { color: "grey", cursor: "pointer" }
+          }
         >
           Buy PSI
         </h2>
         <h2
-          onClick={() => setMode("sell")}
-          style={mode == "sell" ? {} : { color: "grey", cursor: "pointer" }}
+          onClick={() => setState({ ...state, mode: "sell" })}
+          style={
+            state.mode == "sell" ? {} : { color: "grey", cursor: "pointer" }
+          }
         >
           Sell PSI
         </h2>
       </div>
-      {mode == "buy" ? (
+      {state.mode == "buy" ? (
         <form>
           <p>Amount of PSI to buy:</p>
           <p>
-            <TextInput />
+            <TextInput input={state.buyForm} setInput={setBuyForm} />
           </p>
           <p>Estimated ETH required:</p>
-          <p style={{ fontFamily: "Inconsolata" }}>0.003 ETH</p>
+          <p style={{ fontFamily: "Inconsolata" }}>
+            {psiEstimates.estimatedBuyEth
+              ? psiEstimates.estimatedBuyEth
+              : "..."}
+          </p>
           <Button>Buy</Button>
         </form>
       ) : (
         <form>
           <p>Amount of PSI to sell:</p>
           <p>
-            <TextInput />
+            <TextInput input={state.sellForm} setInput={setSellForm} />
           </p>
           <p>Estimated ETH earned:</p>
-          <p style={{ fontFamily: "Inconsolata" }}>0.003 ETH</p>
+          <p style={{ fontFamily: "Inconsolata" }}>
+            {psiEstimates.estimatedSellEth
+              ? psiEstimates.estimatedSellEth
+              : "..."}
+          </p>
           <Button>Sell</Button>
         </form>
       )}
@@ -319,14 +455,28 @@ function BuyPSIBox() {
   );
 }
 
+type ForgeAGemState = {
+  psiForm: string;
+};
+
 function ForgeAGemBox() {
+  const initState: ForgeAGemState = {
+    psiForm: "",
+  };
+
+  const [state, setState] = useState(initState);
+
+  function setPsiForm(input: string) {
+    setState({ ...state, psiForm: input });
+  }
+
   return (
     <div style={{ background: "rgb(27,23,20)", padding: 40 }}>
       <h2>Forge a Gem</h2>
       <form>
         <p>Amount of PSI to forge the gem with:</p>
         <p>
-          <TextInput />
+          <TextInput input={state.psiForm} setInput={setPsiForm} />
         </p>
         <p>Your PSI balance:</p>
         <p style={{ fontFamily: "Inconsolata" }}>104.32930302 PSI</p>
@@ -389,7 +539,15 @@ function PendingGem({ style }: { style?: React.CSSProperties }) {
   );
 }
 
-function TextInput({ style }: { style?: React.CSSProperties }) {
+function TextInput({
+  style,
+  setInput,
+  input,
+}: {
+  style?: React.CSSProperties;
+  setInput: (x: string) => void;
+  input: string;
+}) {
   return (
     <input
       style={{
@@ -401,6 +559,8 @@ function TextInput({ style }: { style?: React.CSSProperties }) {
         ...style,
       }}
       type="text"
+      value={input}
+      onChange={(e) => setInput(e.target.value)}
     />
   );
 }
