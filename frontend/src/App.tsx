@@ -455,16 +455,12 @@ function BuyPSIBox({ blockchain }: { blockchain?: Blockchain }) {
   );
 }
 
-type ForgeAGemState = {
-  psiForm: string;
-};
-
 function ForgeAGemBox() {
-  const initState: ForgeAGemState = {
+  const [state, setState] = useState<{
+    psiForm: string;
+  }>({
     psiForm: "",
-  };
-
-  const [state, setState] = useState(initState);
+  });
 
   function setPsiForm(input: string) {
     setState({ ...state, psiForm: input });
