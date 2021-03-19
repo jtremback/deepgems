@@ -1,4 +1,10 @@
-import React, { ReactNode, useEffect, useState, useRef } from "react";
+import React, {
+  CSSProperties,
+  ReactNode,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import background from "./background.jpg";
 import "./App.css";
 import psi0example from "./images/0psi.jpg";
@@ -18,6 +24,7 @@ import {
   getUserData,
   getRecentGems,
 } from "./API";
+import { Modal } from "reactstrap";
 const gemArtifact = require("./DeepGems.json");
 const psiArtifact = require("./PSI.json");
 
@@ -49,10 +56,37 @@ function useInterval(callback: () => void, delay: number) {
   }, [callback, delay]);
 }
 
+const fontStyles: CSSProperties = {
+  fontSize: 24,
+  fontWeight: "lighter",
+  color: "white",
+  backgroundColor: "rgba(0,0,0,0.7)",
+};
+
+type ModalData = BuyModalData | SellModalData | GemModalData;
+
+type BuyModalData = {
+  type: "BuyModal";
+  amountToBuy: number;
+  ethToSpend: string;
+};
+
+type SellModalData = {
+  type: "SellModal";
+  amountToSell: number;
+  minEthToGet: string;
+};
+
+type GemModalData = {
+  type: "GemModal";
+  imageUrl: string;
+};
+
 function App() {
   const [blockchain, setBlockchain] = useState<Blockchain>();
   const [userAddress, setUserAddress] = useState<string>();
   const [userData, setUserData] = useState<UserData>();
+  const [modalData, setModalData] = useState<ModalData>();
 
   // TODO: get rid of this api polling hook thing cause
   // it sucks and do it yourself with useInterval
@@ -78,42 +112,76 @@ function App() {
   }
 
   return (
-    <div
-      style={{
-        backgroundImage: `url(${background})`,
-        backgroundPositionX: "center",
-        backgroundRepeat: "no-repeat",
-        backgroundColor: "black",
-        width: "100%",
-        overflowY: "auto",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-end",
-        alignItems: "center",
-      }}
-    >
-      <DigDeeper />
-      <PageTitle />
-      <RecentGems gemData={recentGems} />
+    <>
       <div
         style={{
-          maxWidth: "1024px",
-          fontSize: 24,
-          fontWeight: "lighter",
-          color: "white",
-          backgroundColor: "rgba(0,0,0,0.7)",
-          padding: 30,
+          backgroundImage: `url(${background})`,
+          backgroundPositionX: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundColor: "black",
+          width: "100%",
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+          alignItems: "center",
         }}
       >
-        <ExplainerText />
-        <BlockchainInteraction
-          blockchain={blockchain}
-          connectProvider={triggerConnectProvider}
-          userData={userData}
-        />
+        <DigDeeper />
+        <PageTitle />
+        <RecentGems gemData={recentGems} />
+        <div
+          style={{
+            ...fontStyles,
+            maxWidth: "1024px",
+            padding: 30,
+          }}
+        >
+          <ExplainerText />
+          <BlockchainInteraction
+            blockchain={blockchain}
+            connectProvider={triggerConnectProvider}
+            userData={userData}
+          />
+        </div>
       </div>
-    </div>
+      {modalData && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+          }}
+        >
+          <div
+            style={{
+              ...fontStyles,
+              margin: 40,
+              overflow: "scroll",
+              padding: 20,
+            }}
+          >
+            <Modal modalData={modalData} />
+          </div>
+        </div>
+      )}
+    </>
   );
+}
+
+function Modal({ modalData }: { modalData: ModalData }) {
+  switch (modalData.type) {
+    case "BuyModal":
+      return <div>BuyModal</div>;
+    case "SellModal":
+      return <div>SellModal</div>;
+    case "GemModal":
+      return <div>GemModal</div>;
+  }
 }
 
 function DigDeeper() {

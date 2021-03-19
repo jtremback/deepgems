@@ -114,21 +114,18 @@ export type UserData = {
 };
 
 export async function connectProvider() {
-  //   setBlockchain: (x: Blockchain | undefined) => void
-  console.log("CONNECT B CHAIN");
   //  Enable session (triggers QR Code modal)
   const provider = new ethers.providers.Web3Provider(await web3Modal.connect());
   const gems = (new ethers.Contract(
     GEMS_CONTRACT,
     gemArtifact.abi,
-    provider
+    provider.getSigner()
   ) as any) as DeepGems;
 
   const psi = (new ethers.Contract(
     PSI_CONTRACT,
     psiArtifact.abi,
-    provider
+    provider.getSigner()
   ) as any) as PSI;
-  console.log("CONNECT B CHAIN");
   return { provider, gems, psi };
 }

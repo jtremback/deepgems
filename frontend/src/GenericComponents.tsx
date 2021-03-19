@@ -58,6 +58,7 @@ export function Button({
   return (
     <button
       onClick={onClick}
+      type="button"
       style={{
         fontFamily: "Bebas Neue",
         background: "blue",

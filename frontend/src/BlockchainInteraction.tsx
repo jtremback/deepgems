@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState, useRef } from "react";
 import background from "./background.jpg";
 import "./App.css";
 import psi0example from "./images/0psi.jpg";
@@ -50,7 +50,7 @@ export function BlockchainInteraction({
       >
         <>
           <BuyPSIBox blockchain={blockchain} />
-          <ForgeAGemBox userData={userData} />
+          <ForgeAGemBox blockchain={blockchain} userData={userData} />
         </>
       </div>
       {blockchain && <YourGems />}
@@ -75,6 +75,29 @@ export function BlockchainInteraction({
   );
 }
 
+// If there is a number entered into the buy or sell box, the blockchain should be polled to get the current price
+//
+
+function useInterval(callback: () => void, delay: number) {
+  const savedCallback = useRef(callback);
+
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  useEffect(() => {
+    function tick() {
+      savedCallback.current();
+    }
+    if (delay !== null) {
+      const id = setInterval(tick, delay);
+      return () => {
+        clearInterval(id);
+      };
+    }
+  }, [callback, delay]);
+}
+
 function BuyPSIBox({ blockchain }: { blockchain?: Blockchain }) {
   const [state, setState] = useState<{
     mode: "buy" | "sell";
@@ -93,6 +116,27 @@ function BuyPSIBox({ blockchain }: { blockchain?: Blockchain }) {
     buyFormDebounceID?: NodeJS.Timeout;
     sellFormDebounceID?: NodeJS.Timeout;
   }>({});
+
+  useInterval(async () => {
+    const toBuy = parseInt(state.buyForm, 10);
+
+    // Set it to undefined without making the query
+    if (isNaN(toBuy)) {
+      setPsiEstimates({
+        ...psiEstimates,
+        estimatedBuyEth: undefined,
+      });
+      return;
+    }
+
+    // Go ahead and make the query
+    const toBuyBigNum = pe(`${toBuy}`);
+    setPsiEstimates({
+      ...psiEstimates,
+      estimatedBuyEth:
+        fe(await blockchain!.psi.quoteMint(toBuyBigNum)) + " ETH",
+    });
+  }, 5000);
 
   function setFormFactory(
     estimatedKey: string,
@@ -115,7 +159,6 @@ function BuyPSIBox({ blockchain }: { blockchain?: Blockchain }) {
       }
 
       const toBuy = parseInt(input, 10);
-      console.log("toBuy", toBuy);
       if (isNaN(toBuy)) {
         // Set it to NaN without making the query
         setPsiEstimates({
@@ -188,7 +231,14 @@ function BuyPSIBox({ blockchain }: { blockchain?: Blockchain }) {
               ? psiEstimates.estimatedBuyEth
               : "..."}
           </p>
-          <Button>Buy</Button>
+          <Button
+            onClick={() => {
+              //   const psiBigNum = pe(psiForm);
+              //   psiBigNum && blockchain!.gems.forge(psiBigNum);
+            }}
+          >
+            Buy
+          </Button>
         </form>
       ) : (
         <form>
@@ -216,15 +266,7 @@ function ForgeAGemBox({
   userData?: UserData;
   blockchain?: Blockchain;
 }) {
-  const [state, setState] = useState<{
-    psiForm: string;
-  }>({
-    psiForm: "",
-  });
-
-  function setPsiForm(input: string) {
-    setState({ ...state, psiForm: input });
-  }
+  const [psiForm, setPsiForm] = useState("");
 
   return (
     <div style={{ background: "rgb(27,23,20)", padding: 40 }}>
@@ -232,13 +274,18 @@ function ForgeAGemBox({
       <form>
         <p>Amount of PSI to forge the gem with:</p>
         <p>
-          <TextInput input={state.psiForm} setInput={setPsiForm} />
+          <TextInput input={psiForm} setInput={setPsiForm} />
         </p>
         <p>Your PSI balance:</p>
         <p style={{ fontFamily: "Inconsolata" }}>
           {userData && fe(userData.psiBalance)} PSI
         </p>
-        <Button onClick={() => blockchain!.gems.forge(pe(state.psiForm))}>
+        <Button
+          onClick={() => {
+            const psiBigNum = pe(psiForm);
+            psiBigNum && blockchain!.gems.forge(psiBigNum);
+          }}
+        >
           Forge
         </Button>
       </form>
