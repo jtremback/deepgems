@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState, useRef } from "react";
 import background from "./background.jpg";
 import "./App.css";
 import psi0example from "./images/0psi.jpg";
@@ -6,10 +6,18 @@ import psi100example from "./images/100psi.jpg";
 import psi300example from "./images/300psi.jpg";
 import useAPIPolling, { APIPollingOptions } from "use-api-polling";
 import WalletConnectProvider from "@walletconnect/web3-provider";
-import { ethers } from "ethers";
+import { ethers, BigNumber } from "ethers";
 import Web3Modal from "web3modal";
 import { DeepGems } from "../../solidity/typechain/DeepGems";
 import { PSI } from "../../solidity/typechain/PSI";
+import { Blockchain, BlockchainInteraction } from "./BlockchainInteraction";
+import {
+  connectProvider,
+  UserData,
+  GemData,
+  getUserData,
+  getRecentGems,
+} from "./API";
 const gemArtifact = require("./DeepGems.json");
 const psiArtifact = require("./PSI.json");
 
@@ -21,110 +29,54 @@ const PSI_CONTRACT = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 const fe = ethers.utils.formatEther;
 const pe = ethers.utils.parseEther;
 
-const providerOptions = {
-  walletconnect: {
-    package: WalletConnectProvider, // required
-    options: {
-      infuraId: "INFURA_ID", // required
-    },
-  },
-};
+function useInterval(callback: () => void, delay: number) {
+  const savedCallback = useRef(callback);
 
-const web3Modal = new Web3Modal({
-  network: "mainnet", // optional
-  cacheProvider: true, // optional
-  providerOptions, // required
-});
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
 
-const recentGemsQuery = `{
-  gems(orderBy: forgeTime, orderDirection: desc, first: 7){
-    id
-    psi
-    owner
-    forgeTime
-    forgeBlock
-  }
-}`;
-
-async function getRecentGems() {
-  return (
-    await (
-      await fetch(GRAPHQL_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ query: recentGemsQuery }),
-      })
-    ).json()
-  ).data.gems;
+  useEffect(() => {
+    function tick() {
+      savedCallback.current();
+    }
+    if (delay !== null) {
+      const id = setInterval(tick, delay);
+      return () => {
+        clearInterval(id);
+      };
+    }
+  }, [callback, delay]);
 }
-
-type GemDataResponse = GemData[];
-
-type GemData = {
-  id: string;
-};
-
-type Blockchain = {
-  provider: ethers.providers.BaseProvider;
-  gems: DeepGems;
-  psi: PSI;
-};
 
 function App() {
   const [blockchain, setBlockchain] = useState<Blockchain>();
+  const [userAddress, setUserAddress] = useState<string>();
+  const [userData, setUserData] = useState<UserData>();
 
-  const fetchFunc = async () => {
-    return await getRecentGems();
-  };
-
-  const options: APIPollingOptions<GemDataResponse> = {
-    fetchFunc,
+  // TODO: get rid of this api polling hook thing cause
+  // it sucks and do it yourself with useInterval
+  const recentGems = useAPIPolling<GemData[]>({
+    fetchFunc: getRecentGems,
     initialState: [],
     delay: 5000,
-  };
+  });
 
-  const data = useAPIPolling(options);
-
-  async function connectProvider() {
-    //  Enable session (triggers QR Code modal)
-    const provider = new ethers.providers.Web3Provider(
-      await web3Modal.connect()
-    );
-    const gems = (new ethers.Contract(
-      GEMS_CONTRACT,
-      gemArtifact.abi,
-      provider
-    ) as any) as DeepGems;
-
-    const psi = (new ethers.Contract(
-      PSI_CONTRACT,
-      psiArtifact.abi,
-      provider
-    ) as any) as PSI;
-
-    setBlockchain({ provider, gems, psi });
+  function getBlockchain() {
+    return blockchain;
   }
 
-  async function quoteBuyPsi(amountPsi: number) {
-    return blockchain!.psi.quoteMint(amountPsi);
+  useInterval(async () => {
+    const userData = await getUserData(blockchain, userAddress);
+    setUserData(userData);
+  }, 5000);
+
+  async function triggerConnectProvider() {
+    const blockchain = await connectProvider();
+    setBlockchain(blockchain);
+    setUserAddress(await blockchain.provider.getSigner().getAddress());
   }
 
-  async function quoteSellPsi(amountPsi: number) {
-    return blockchain!.psi.quoteBurn(amountPsi);
-  }
-
-  async function buyPSI(amountPsi: number, amountEth: number) {
-    blockchain!.psi.mint(amountPsi, { value: amountEth });
-  }
-
-  async function sellPSI(amountPsi: number, minEth: number) {
-    blockchain!.psi.burn(amountPsi, minEth);
-  }
-
-  console.log(blockchain);
   return (
     <div
       style={{
@@ -142,7 +94,7 @@ function App() {
     >
       <DigDeeper />
       <PageTitle />
-      <RecentGems gemData={data} />
+      <RecentGems gemData={recentGems} />
       <div
         style={{
           maxWidth: "1024px",
@@ -156,7 +108,8 @@ function App() {
         <ExplainerText />
         <BlockchainInteraction
           blockchain={blockchain}
-          connectProvider={connectProvider}
+          connectProvider={triggerConnectProvider}
+          userData={userData}
         />
       </div>
     </div>
@@ -199,7 +152,7 @@ function PageTitle() {
   );
 }
 
-function RecentGems({ gemData }: { gemData: GemDataResponse }) {
+function RecentGems({ gemData }: { gemData: GemData[] }) {
   return (
     <div style={{ overflow: "hidden", width: "100%", whiteSpace: "nowrap" }}>
       {gemData.map((gem) => (
@@ -274,393 +227,6 @@ function ExplainerText() {
       PSI back out. But be careful! When you burn a gem you only get 99% of its
       PSI out. 1% is lost forever.
     </>
-  );
-}
-
-function BlockchainInteraction({
-  connectProvider,
-  blockchain,
-}: {
-  connectProvider: () => void;
-  blockchain?: Blockchain;
-}) {
-  return (
-    <div style={{ position: "relative" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-around",
-          paddingTop: 40,
-          paddingBottom: 40,
-        }}
-      >
-        <>
-          <BuyPSIBox blockchain={blockchain} />
-          <ForgeAGemBox />
-        </>
-      </div>
-      {blockchain && <YourGems />}
-      {!blockchain && (
-        <div
-          style={{
-            position: "absolute",
-            background: "rgba(0,0,0,0.8)",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Button onClick={connectProvider}>Connect Wallet</Button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function BuyPSIBox({ blockchain }: { blockchain?: Blockchain }) {
-  const [state, setState] = useState<{
-    mode: "buy" | "sell";
-    buyForm: string;
-    sellForm: string;
-  }>({
-    mode: "buy",
-    buyForm: "",
-    sellForm: "",
-  });
-  const [psiEstimates, setPsiEstimates] = useState<{
-    estimatedBuyEth?: string;
-    estimatedSellEth?: string;
-  }>({});
-  const [debounceIDs, setDebounceIDs] = useState<{
-    buyFormDebounceID?: NodeJS.Timeout;
-    sellFormDebounceID?: NodeJS.Timeout;
-  }>({});
-
-  function setFormFactory(
-    estimatedKey: string,
-    inputKey: string,
-    debounceKey: "buyFormDebounceID" | "sellFormDebounceID",
-    blockchainFunctionKey: string
-  ) {
-    return (input: string) => {
-      // Set form state
-      setState({
-        ...state,
-        [inputKey]: input,
-      });
-
-      const debounceID = debounceIDs[debounceKey];
-
-      // Cancel previous request
-      if (debounceID) {
-        clearTimeout(debounceID);
-      }
-
-      const toBuy = parseInt(input, 10);
-      console.log("toBuy", toBuy);
-      if (isNaN(toBuy)) {
-        // Set it to NaN without making the query
-        setPsiEstimates({
-          ...psiEstimates,
-          [estimatedKey]: undefined,
-        });
-        return;
-      }
-
-      // Set to undefined to get loading spinner
-      setPsiEstimates({ ...psiEstimates, [estimatedKey]: undefined });
-
-      const timeoutID = setTimeout(async () => {
-        const toBuyBigNum = pe(`${toBuy}`);
-        setPsiEstimates({
-          ...psiEstimates,
-          [estimatedKey]:
-            fe(await blockchain!.psi[blockchainFunctionKey](toBuyBigNum)) +
-            " ETH",
-        });
-      }, 1000);
-
-      setDebounceIDs({ ...debounceIDs, [debounceKey]: timeoutID });
-    };
-  }
-
-  const setBuyForm = setFormFactory(
-    "estimatedBuyEth",
-    "buyForm",
-    "buyFormDebounceID",
-    "quoteMint"
-  );
-
-  const setSellForm = setFormFactory(
-    "estimatedSellEth",
-    "sellForm",
-    "sellFormDebounceID",
-    "quoteBurn"
-  );
-
-  return (
-    <div style={{ background: "rgb(27,23,20)", padding: 40 }}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <h2
-          onClick={() => setState({ ...state, mode: "buy" })}
-          style={
-            state.mode == "buy" ? {} : { color: "grey", cursor: "pointer" }
-          }
-        >
-          Buy PSI
-        </h2>
-        <h2
-          onClick={() => setState({ ...state, mode: "sell" })}
-          style={
-            state.mode == "sell" ? {} : { color: "grey", cursor: "pointer" }
-          }
-        >
-          Sell PSI
-        </h2>
-      </div>
-      {state.mode == "buy" ? (
-        <form>
-          <p>Amount of PSI to buy:</p>
-          <p>
-            <TextInput input={state.buyForm} setInput={setBuyForm} />
-          </p>
-          <p>Estimated ETH required:</p>
-          <p style={{ fontFamily: "Inconsolata" }}>
-            {psiEstimates.estimatedBuyEth
-              ? psiEstimates.estimatedBuyEth
-              : "..."}
-          </p>
-          <Button>Buy</Button>
-        </form>
-      ) : (
-        <form>
-          <p>Amount of PSI to sell:</p>
-          <p>
-            <TextInput input={state.sellForm} setInput={setSellForm} />
-          </p>
-          <p>Estimated ETH earned:</p>
-          <p style={{ fontFamily: "Inconsolata" }}>
-            {psiEstimates.estimatedSellEth
-              ? psiEstimates.estimatedSellEth
-              : "..."}
-          </p>
-          <Button>Sell</Button>
-        </form>
-      )}
-    </div>
-  );
-}
-
-function ForgeAGemBox() {
-  const [state, setState] = useState<{
-    psiForm: string;
-  }>({
-    psiForm: "",
-  });
-
-  function setPsiForm(input: string) {
-    setState({ ...state, psiForm: input });
-  }
-
-  return (
-    <div style={{ background: "rgb(27,23,20)", padding: 40 }}>
-      <h2>Forge a Gem</h2>
-      <form>
-        <p>Amount of PSI to forge the gem with:</p>
-        <p>
-          <TextInput input={state.psiForm} setInput={setPsiForm} />
-        </p>
-        <p>Your PSI balance:</p>
-        <p style={{ fontFamily: "Inconsolata" }}>104.32930302 PSI</p>
-        <Button>Forge</Button>
-      </form>
-    </div>
-  );
-}
-
-function StatusBar() {
-  return (
-    <div
-      style={{
-        width: "100%",
-        background: "rgb(27,23,20)",
-        padding: 10,
-        fontFamily: "Inconsolata",
-      }}
-    >
-      Your PSI balance: 0.0022
-    </div>
-  );
-}
-
-function YourGems() {
-  return (
-    <>
-      <h2>Your gems:</h2>
-      <div style={{ display: "flex", flexWrap: "wrap" }}>
-        {[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map(() => {
-          return <PendingGem style={{ margin: 5 }} />;
-        })}
-      </div>
-    </>
-  );
-}
-
-function PendingGem({ style }: { style?: React.CSSProperties }) {
-  return (
-    <div
-      style={{
-        background: "grey",
-        borderRadius: 1000,
-        width: 100,
-        height: 100,
-        ...style,
-      }}
-    >
-      <div
-        style={{
-          filter: "blur(15px)",
-          overflow: "hidden",
-        }}
-      >
-        <div className="hue-rotate">
-          <Spinner />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TextInput({
-  style,
-  setInput,
-  input,
-}: {
-  style?: React.CSSProperties;
-  setInput: (x: string) => void;
-  input: string;
-}) {
-  return (
-    <input
-      style={{
-        backgroundColor: "grey",
-        paddingLeft: 10,
-        paddingRight: 10,
-        display: "block",
-        fontFamily: "Inconsolata",
-        ...style,
-      }}
-      type="text"
-      value={input}
-      onChange={(e) => setInput(e.target.value)}
-    />
-  );
-}
-
-function Button({
-  children,
-  onClick,
-}: {
-  children: ReactNode;
-  onClick?: React.MouseEventHandler;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        fontFamily: "Bebas Neue",
-        background: "blue",
-        display: "block",
-        padding: "10px 20px",
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Spinner() {
-  return (
-    <svg
-      width="100px"
-      height="100px"
-      viewBox="0 0 100 100"
-      preserveAspectRatio="xMidYMid"
-    >
-      <g transform="translate(50 50)">
-        <g transform="scale(0.7)">
-          <g transform="translate(-50 -50)">
-            <g>
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                repeatCount="indefinite"
-                values="0 50 50;360 50 50"
-                keyTimes="0;1"
-                dur="0.7575757575757576s"
-              ></animateTransform>
-              <path
-                fill-opacity="0.8"
-                fill="#ea3f34"
-                d="M50 50L50 0A50 50 0 0 1 100 50Z"
-              ></path>
-            </g>
-            <g>
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                repeatCount="indefinite"
-                values="0 50 50;360 50 50"
-                keyTimes="0;1"
-                dur="1.0101010101010102s"
-              ></animateTransform>
-              <path
-                fill-opacity="0.8"
-                fill="#f2982c"
-                d="M50 50L50 0A50 50 0 0 1 100 50Z"
-                transform="rotate(90 50 50)"
-              ></path>
-            </g>
-            <g>
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                repeatCount="indefinite"
-                values="0 50 50;360 50 50"
-                keyTimes="0;1"
-                dur="1.5151515151515151s"
-              ></animateTransform>
-              <path
-                fill-opacity="0.8"
-                fill="#52a360"
-                d="M50 50L50 0A50 50 0 0 1 100 50Z"
-                transform="rotate(180 50 50)"
-              ></path>
-            </g>
-            <g>
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                repeatCount="indefinite"
-                values="0 50 50;360 50 50"
-                keyTimes="0;1"
-                dur="3.0303030303030303s"
-              ></animateTransform>
-              <path
-                fill-opacity="0.8"
-                fill="#674794"
-                d="M50 50L50 0A50 50 0 0 1 100 50Z"
-                transform="rotate(270 50 50)"
-              ></path>
-            </g>
-          </g>
-        </g>
-      </g>
-    </svg>
   );
 }
 
