@@ -51,19 +51,25 @@ export function TextInput({
 export function Button({
   children,
   onClick,
+  active,
 }: {
   children: ReactNode;
   onClick?: React.MouseEventHandler;
+  active?: boolean;
 }) {
+  if (active === undefined) {
+    active = true;
+  }
   return (
     <button
-      onClick={onClick}
+      onClick={active ? onClick : undefined}
       type="button"
       style={{
         fontFamily: "Bebas Neue",
-        background: "blue",
+        background: active ? "blue" : "gray",
         display: "block",
         padding: "10px 20px",
+        cursor: active ? "pointer" : "auto",
       }}
     >
       {children}

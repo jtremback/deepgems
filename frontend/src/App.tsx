@@ -24,7 +24,7 @@ import {
   getUserData,
   getRecentGems,
 } from "./API";
-import { Modal } from "reactstrap";
+import { Modal, ModalData } from "./BlockchainInteraction";
 const gemArtifact = require("./DeepGems.json");
 const psiArtifact = require("./PSI.json");
 
@@ -61,25 +61,6 @@ const fontStyles: CSSProperties = {
   fontWeight: "lighter",
   color: "white",
   backgroundColor: "rgba(0,0,0,0.7)",
-};
-
-type ModalData = BuyModalData | SellModalData | GemModalData;
-
-type BuyModalData = {
-  type: "BuyModal";
-  amountToBuy: number;
-  ethToSpend: string;
-};
-
-type SellModalData = {
-  type: "SellModal";
-  amountToSell: number;
-  minEthToGet: string;
-};
-
-type GemModalData = {
-  type: "GemModal";
-  imageUrl: string;
 };
 
 function App() {
@@ -142,6 +123,7 @@ function App() {
             blockchain={blockchain}
             connectProvider={triggerConnectProvider}
             userData={userData}
+            setModalData={setModalData}
           />
         </div>
       </div>
@@ -171,17 +153,6 @@ function App() {
       )}
     </>
   );
-}
-
-function Modal({ modalData }: { modalData: ModalData }) {
-  switch (modalData.type) {
-    case "BuyModal":
-      return <div>BuyModal</div>;
-    case "SellModal":
-      return <div>SellModal</div>;
-    case "GemModal":
-      return <div>GemModal</div>;
-  }
 }
 
 function DigDeeper() {
