@@ -120,8 +120,8 @@ function BuyPSIBox({
     sell?: BigNumber;
   }>({});
   const [ethEstimates, setEthEstimates] = useState<{
-    buy?: string;
-    sell?: string;
+    buy?: BigNumber;
+    sell?: BigNumber;
   }>({});
   const [debounceIDs, setDebounceIDs] = useState<{
     buy?: NodeJS.Timeout;
@@ -178,7 +178,7 @@ function BuyPSIBox({
           : await blockchain!.psi.quoteBurn(psiInputBigNum);
       setEthEstimates({
         ...ethEstimates,
-        [type]: fe(estimate) + " ETH",
+        [type]: estimate,
       });
     }, 1000);
 
@@ -195,7 +195,7 @@ function BuyPSIBox({
           : await blockchain!.psi.quoteBurn(psiInputAmounts[type]!);
       setEthEstimates({
         ...ethEstimates,
-        [type]: fe(estimate) + " ETH",
+        [type]: estimate,
       });
     }
   }
@@ -235,15 +235,13 @@ function BuyPSIBox({
           </p>
           <p>Estimated ETH required:</p>
           <p style={{ fontFamily: "Inconsolata" }}>
-            {ethEstimates.buy ? ethEstimates.buy : "..."}
+            {ethEstimates.buy ? `${fe(ethEstimates.buy)} ETH` : "..."}
           </p>
           <Button
             active={!!psiInputAmounts.buy && !!ethEstimates.buy}
             onClick={() => {
-              setModalData({
-                type: "BuyModal",
-                psiToBuy: psiInputAmounts.buy!,
-                ethToPay: ethEstimates.buy!,
+              blockchain!.psi.mint(psiInputAmounts.buy!, {
+                value: ethEstimates.buy!,
               });
             }}
           >
@@ -261,16 +259,12 @@ function BuyPSIBox({
           </p>
           <p>Estimated ETH earned:</p>
           <p style={{ fontFamily: "Inconsolata" }}>
-            {ethEstimates.sell ? ethEstimates.sell : "..."}
+            {ethEstimates.sell ? `${fe(ethEstimates.sell)} ETH` : "..."}
           </p>
           <Button
             active={!!psiInputAmounts.sell && !!ethEstimates.sell}
             onClick={() => {
-              setModalData({
-                type: "SellModal",
-                psiToSell: psiInputAmounts.sell!,
-                minEthToGet: ethEstimates.sell!,
-              });
+              blockchain!.psi.burn(psiInputAmounts.sell!, ethEstimates.sell!);
             }}
           >
             Sell
@@ -364,9 +358,10 @@ function ForgeAGemBox({
         </p>
         <Button
           onClick={() => {
+            console.log("forging");
             psiInputAmount && blockchain!.gems.forge(psiInputAmount);
           }}
-          active={!!psiInputAmount}
+          active={!!psiInputAmount && psiInputAmount.lte(userData!.psiBalance)}
         >
           Forge
         </Button>
