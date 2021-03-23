@@ -10,7 +10,7 @@ const gemArtifact = require("../../solidity/artifacts/contracts/DeepGems.sol/Dee
 
 const {
   S3_JSON_CONTEXT_URL,
-  BLOCKS_PER_FETCH,
+  GEMS_PER_FETCH,
   RENDERER_URL,
   S3_DATA_BUCKET,
   S3_IMAGE_BUCKET,
@@ -27,7 +27,7 @@ const {
   GRAPHQL_URL,
 }: {
   S3_JSON_CONTEXT_URL: string;
-  BLOCKS_PER_FETCH: string;
+  GEMS_PER_FETCH: string;
   RENDERER_URL: string;
   S3_DATA_BUCKET: string;
   S3_IMAGE_BUCKET: string;
@@ -78,83 +78,96 @@ interface UserMapping {
 }
 
 interface Context {
-  lastBlockRetrieved: number;
+  lastGemRetrieved: number;
   // userIndex: string[];
 }
 
-const query = `query GetGems($fromBlock: Int!, $toBlock: Int!) {
+const query = `query GetGems($gt: Int!, $lte: Int!) {
   gems(where: {
-    forgeBlock_gte: $fromBlock,
-		forgeBlock_lte: $toBlock
-  }){
+    number_gt: $gt,
+		number_lte: $lte
+  }, orderBy: number, orderDirection: asc){
     id
     psi
     owner
     burned
     forgeTime
     forgeBlock
+    number
   }
 }`;
 
-async function getForgedGems(fromBlock: number, toBlock: number) {
-  return (
-    await (
-      await fetch(GRAPHQL_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ query, variables: { fromBlock, toBlock } }),
-      })
-    ).json()
-  ).data.gems;
+const highestGemQuery = `{
+  gems(orderBy: number, orderDirection: desc, first:1){
+    number
+  }
+}`;
+
+async function getHighestGem() {
+  const res = await (
+    await fetch(GRAPHQL_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ query: highestGemQuery }),
+    })
+  ).json();
+
+  return res.data.gems[0].number;
+}
+
+async function getForgedGems(gt: number, lte: number) {
+  const res = await (
+    await fetch(GRAPHQL_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ query, variables: { gt, lte } }),
+    })
+  ).json();
+  return res.data.gems;
 }
 
 async function run() {
   const rawContext = await (await fetch(S3_JSON_CONTEXT_URL)).json();
-  const context: Context = {
-    lastBlockRetrieved: parseInt(rawContext.lastBlockRetrieved, 10),
+  const { lastGemRetrieved }: Context = {
+    lastGemRetrieved: parseInt(rawContext.lastGemRetrieved, 10),
   };
 
-  const currentBlock = await provider.getBlockNumber();
+  const currentGem = await getHighestGem();
 
-  if (context.lastBlockRetrieved > currentBlock) {
-    throw new Error("Stored last block retrieved is higher than current block");
+  console.log("lastGemRetrieved", lastGemRetrieved, "currentGem", currentGem);
+
+  if (lastGemRetrieved > currentGem) {
+    throw new Error(
+      "Stored last gem retrieved is higher than current gem in graph index"
+    );
   }
 
-  const highestBlockToGet = Math.min(
-    currentBlock,
-    context.lastBlockRetrieved + parseInt(BLOCKS_PER_FETCH, 10)
-  );
-
   const gems = await getForgedGems(
-    context.lastBlockRetrieved + 1,
-    highestBlockToGet
-  );
-
-  console.log(
-    "lastBlockRetrieved",
-    context.lastBlockRetrieved,
-    "currentBlock",
-    currentBlock,
-    "highestBlockToGet",
-    highestBlockToGet
+    lastGemRetrieved,
+    lastGemRetrieved + parseInt(GEMS_PER_FETCH, 10)
   );
 
   console.log(`Got ${gems.length} events`);
-  console.log(`Gems: ${JSON.stringify(gems)}`);
 
   for (const gem of gems) {
-    console.log("wtf");
+    console.log("render gem: ", gem);
     await renderGem(gem.id);
   }
 
   // Upload context
-  context.lastBlockRetrieved = 0; //highestBlockToGet;
-
   uploadToS3(
-    Buffer.from(JSON.stringify(context)),
+    Buffer.from(
+      JSON.stringify({
+        lastGemRetrieved:
+          gems.length > 0 ? gems[gems.length - 1].number : lastGemRetrieved,
+      })
+    ),
     S3_DATA_BUCKET,
     `context.json`,
     "application/json"
@@ -165,7 +178,6 @@ async function renderGem(tokenId: string) {
   // Get metadata
   let metadata = await gems.getGemMetadata(tokenId);
 
-  console.log("METADATA", metadata);
   // Render gem
   const img = await (
     await fetch(
