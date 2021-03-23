@@ -1,23 +1,17 @@
-import React, { ReactNode, useState } from "react";
-import background from "./background.jpg";
 import "./App.css";
-import psi0example from "./images/0psi.jpg";
-import psi100example from "./images/100psi.jpg";
-import psi300example from "./images/300psi.jpg";
-import useAPIPolling, { APIPollingOptions } from "use-api-polling";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { ethers, BigNumber } from "ethers";
 import Web3Modal from "web3modal";
 import { DeepGems } from "../../solidity/typechain/DeepGems";
 import { PSI } from "../../solidity/typechain/PSI";
-import { Blockchain, BlockchainInteraction } from "./BlockchainInteraction";
+import { Blockchain } from "./BlockchainInteraction";
 const gemArtifact = require("./DeepGems.json");
 const psiArtifact = require("./PSI.json");
 
-const GRAPHQL_URL = "http://localhost:8000/subgraphs/name/jtremback/deepgems";
-const IMAGES_CDN = "https://deepgemscache.s3.us-west-2.amazonaws.com/";
-const GEMS_CONTRACT = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-const PSI_CONTRACT = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+const GRAPHQL_URL =
+  "https://api.thegraph.com/subgraphs/name/jtremback/deepgems";
+const GEMS_CONTRACT = "0xc5b323c98550D552d55b21d6dD370E5798373709";
+const PSI_CONTRACT = "0xA041c8D7278690C5310cFc4849d0f11A4Adb19C5";
 
 const fe = ethers.utils.formatEther;
 const pe = ethers.utils.parseEther;
