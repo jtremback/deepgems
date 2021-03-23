@@ -77,6 +77,27 @@ export function Button({
   );
 }
 
+export function CheapGemSpinner() {
+  return (
+    <svg width="100px" height="100px" viewBox="0 0 128 128">
+      <g>
+        <path
+          d="M64 128A64 64 0 0 1 18.34 19.16L21.16 22a60 60 0 1 0 52.8-17.17l.62-3.95A64 64 0 0 1 64 128z"
+          fill="#ffffff"
+        />
+        <animateTransform
+          attributeName="transform"
+          type="rotate"
+          from="0 64 64"
+          to="360 64 64"
+          dur="2400ms"
+          repeatCount="indefinite"
+        ></animateTransform>
+      </g>
+    </svg>
+  );
+}
+
 export function GemSpinner() {
   return (
     <svg
@@ -85,7 +106,12 @@ export function GemSpinner() {
       viewBox="0 0 100 100"
       preserveAspectRatio="xMidYMid"
     >
-      <g transform="translate(50 50)">
+      <defs>
+        <filter id="f1" x="0" y="0">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="15" />
+        </filter>
+      </defs>
+      <g transform="translate(50 50)" filter="url(#f1)">
         <g transform="scale(0.7)">
           <g transform="translate(-50 -50)">
             <g>

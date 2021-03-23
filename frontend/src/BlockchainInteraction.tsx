@@ -10,7 +10,12 @@ import { BigNumber, ethers } from "ethers";
 import Web3Modal from "web3modal";
 import { DeepGems } from "../../solidity/typechain/DeepGems";
 import { PSI } from "../../solidity/typechain/PSI";
-import { Button, TextInput, GemSpinner } from "./GenericComponents";
+import {
+  Button,
+  TextInput,
+  GemSpinner,
+  CheapGemSpinner,
+} from "./GenericComponents";
 import { UserData } from "./API";
 const gemArtifact = require("./DeepGems.json");
 const psiArtifact = require("./PSI.json");
@@ -55,7 +60,13 @@ export function BlockchainInteraction({
           <ForgeAGemBox blockchain={blockchain} userData={userData} />
         </>
       </div>
-      {blockchain && <YourGems />}
+      {blockchain && (
+        <YourGems
+          blockchain={blockchain!}
+          userData={userData!}
+          setModalData={setModalData}
+        />
+      )}
       {!blockchain && (
         <div
           style={{
@@ -275,47 +286,71 @@ function BuyPSIBox({
   );
 }
 
-export type ModalData = BuyModalData | SellModalData | GemModalData;
-
-export type BuyModalData = {
-  type: "BuyModal";
-  psiToBuy: BigNumber;
-  ethToPay: string;
-};
-
-export type SellModalData = {
-  type: "SellModal";
-  psiToSell: BigNumber;
-  minEthToGet: string;
-};
+export type ModalData = GemModalData;
 
 export type GemModalData = {
   type: "GemModal";
-  imageUrl: string;
+  tokenId: string;
 };
 
-export function Modal({ modalData }: { modalData: ModalData }) {
+export function Modal({
+  modalData,
+  blockchain,
+}: {
+  modalData: ModalData;
+  blockchain: Blockchain;
+}) {
   switch (modalData.type) {
-    case "BuyModal":
-      return (
-        <div>
-          <h2>Buy PSI</h2>
-          <p>Amount of PSI: {modalData.psiToBuy} PSI</p>
-          <p>Max Eth to pay: {modalData.ethToPay} ETH</p>
-          <Button>Buy</Button>
-        </div>
-      );
-    case "SellModal":
-      return (
-        <div>
-          <h2>Buy PSI</h2>
-          <p>Amount of PSI: {modalData.psiToSell} PSI</p>
-          <p>Max Eth to pay: {modalData.minEthToGet} ETH</p>
-          <Button>Buy</Button>
-        </div>
-      );
     case "GemModal":
-      return <div>GemModal</div>;
+      return (
+        <div
+          style={{
+            width: 256,
+          }}
+        >
+          <div
+            style={{
+              backgroundImage: `url(${IMAGES_CDN}${modalData.tokenId}.jpg)`,
+              backgroundSize: "cover",
+              backgroundRepeat: "no-repeat",
+              width: 256,
+              height: 256,
+            }}
+          />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <Button
+              onClick={() => {
+                blockchain!.gems.reforge(modalData.tokenId);
+              }}
+            >
+              Reforge
+            </Button>
+            <Button
+              onClick={() => {
+                blockchain!.gems.burn(modalData.tokenId);
+              }}
+            >
+              Burn
+            </Button>
+            <Button
+              onClick={() => {
+                blockchain!.gems.activate(modalData.tokenId);
+              }}
+            >
+              Activate
+            </Button>
+          </div>
+          <div style={{ fontSize: 16, marginTop: 10, marginBottom: 10 }}>
+            Reforging a gem creates a new gem using 99% of this gem's PSI.
+            Burning a gem destroys the gem and adds the PSI to your account.
+          </div>
+        </div>
+      );
   }
 }
 
@@ -370,38 +405,75 @@ function ForgeAGemBox({
   );
 }
 
-function YourGems() {
+function YourGems({
+  userData,
+  blockchain,
+  setModalData,
+}: {
+  userData: UserData;
+  blockchain: Blockchain;
+  setModalData: (x: ModalData) => void;
+}) {
   return (
     <>
       <h2>Your gems:</h2>
       <div style={{ display: "flex", flexWrap: "wrap" }}>
-        {[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0].map(() => {
-          return <PendingGem style={{ margin: 5 }} />;
-        })}
+        {userData &&
+          userData.gems.map((gem) => {
+            return (
+              <Gem
+                style={{ margin: 5 }}
+                tokenId={gem.id}
+                setModalData={setModalData}
+              />
+            );
+          })}
       </div>
     </>
   );
 }
 
-function PendingGem({ style }: { style?: React.CSSProperties }) {
+function Gem({
+  style,
+  tokenId,
+  setModalData,
+}: {
+  style?: React.CSSProperties;
+  tokenId: string;
+  setModalData: (x: ModalData) => void;
+}) {
   return (
     <div
       style={{
-        background: "grey",
         borderRadius: 1000,
         width: 100,
         height: 100,
+        overflow: "hidden",
         ...style,
       }}
     >
       <div
         style={{
-          filter: "blur(15px)",
           overflow: "hidden",
         }}
+        onClick={() =>
+          setModalData({
+            type: "GemModal",
+            tokenId,
+          })
+        }
       >
+        <div
+          style={{
+            backgroundImage: `url(${IMAGES_CDN}${tokenId}.jpg)`,
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            width: 100,
+            height: 100,
+          }}
+        />
         <div className="hue-rotate">
-          <GemSpinner />
+          <CheapGemSpinner />
         </div>
       </div>
     </div>

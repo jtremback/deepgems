@@ -27,7 +27,9 @@ const config: HardhatUserConfig = {
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
   },
   networks: {
-    hardhat: {},
+    hardhat: {
+      chainId: 1337,
+    },
     rinkeby: {
       url: "https://rinkeby.infura.io/v3/" + process.env.INFURA_PROJECT_ID,
       accounts: [process.env.DEPLOY_ADDRESS_PRIVKEY],

@@ -38,7 +38,7 @@ const web3Modal = new Web3Modal({
 });
 
 const recentGemsQuery = `{
-  gems(orderBy: forgeTime, orderDirection: desc, first: 7){
+  gems(orderBy: forgeTime, orderDirection: desc, first: 7, where: { burned: false }){
     id
     psi
     owner
@@ -48,7 +48,7 @@ const recentGemsQuery = `{
 }`;
 
 const userGemsQuery = `query UserGems($userAddress: Bytes!) {
-  gems(orderBy:forgeTime, orderDirection: desc, first: 7, where: {owner: $userAddress}){
+  gems(orderBy:forgeTime, orderDirection: asc, where: { owner: $userAddress, burned: false }){
     id
     psi
     owner
@@ -76,7 +76,7 @@ export async function getUserData(
   blockchain?: Blockchain,
   userAddress?: string
 ) {
-  console.log("GETUSERDDDAATA", blockchain);
+  console.log("GETUSERDDDAATA", blockchain, userAddress);
   if (!blockchain || !userAddress) {
     return;
   }

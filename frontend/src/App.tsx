@@ -137,17 +137,20 @@ function App() {
             right: 0,
             background: "rgba(0,0,0,0.5)",
             display: "flex",
+            justifyContent: "space-evenly",
+            alignItems: "center",
           }}
+          onClick={() => setModalData(undefined)}
         >
           <div
             style={{
               ...fontStyles,
               margin: 40,
-              overflow: "scroll",
+              overflow: "auto",
               padding: 20,
             }}
           >
-            <Modal modalData={modalData} />
+            <Modal blockchain={blockchain!} modalData={modalData} />
           </div>
         </div>
       )}
