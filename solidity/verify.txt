@@ -2,4 +2,10 @@ To verify, run
 
 Deepgems.sol:
 
-eval $(cat .env) npx hardhat verify --network rinkeby 0x8Aed54A628ff1Cac3beEba58cfE3D8eA5e7fc0d0
+eval $(cat .env) npx hardhat verify --network rinkeby <DeepGems Address>
+eval $(cat .env) npx hardhat verify --network rinkeby <PSI address> "<DeepGems Address>"
+
+Latest rinkeby deploy:
+
+DeepGems address: 0xc5b323c98550D552d55b21d6dD370E5798373709
+Psi address: 0xA041c8D7278690C5310cFc4849d0f11A4Adb19C5
