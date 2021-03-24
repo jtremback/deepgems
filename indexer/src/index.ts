@@ -1,12 +1,6 @@
-var http = require("http");
 import fetch from "make-fetch-happen";
-import { ethers } from "ethers";
-import fs from "fs";
+import { BigNumber } from "ethers";
 import AWS from "aws-sdk";
-import { DeepGems } from "../../solidity/typechain/DeepGems";
-import { createNotEmittedStatement } from "typescript";
-import { ConfigurationServicePlaceholders } from "aws-sdk/lib/config_service_placeholders";
-const gemArtifact = require("../../solidity/artifacts/contracts/DeepGems.sol/DeepGems.json");
 
 const {
   S3_JSON_CONTEXT_URL,
@@ -15,15 +9,8 @@ const {
   S3_DATA_BUCKET,
   S3_IMAGE_BUCKET,
   LOOP_TIME,
-  FORGED_EVENT_TOPIC,
-  REFORGED_EVENT_TOPIC,
-  BURNED_EVENT_TOPIC,
-  ACTIVATED_EVENT_TOPIC,
-  TRANSFERED_EVENT_TOPIC,
   AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY,
-  INFURA_KEY,
-  GEMS_CONTRACT,
   GRAPHQL_URL,
 }: {
   S3_JSON_CONTEXT_URL: string;
@@ -32,15 +19,8 @@ const {
   S3_DATA_BUCKET: string;
   S3_IMAGE_BUCKET: string;
   LOOP_TIME: string;
-  FORGED_EVENT_TOPIC: string;
-  REFORGED_EVENT_TOPIC: string;
-  BURNED_EVENT_TOPIC: string;
-  ACTIVATED_EVENT_TOPIC: string;
-  TRANSFERED_EVENT_TOPIC: string;
   AWS_ACCESS_KEY_ID: string;
   AWS_SECRET_ACCESS_KEY: string;
-  INFURA_KEY: string;
-  GEMS_CONTRACT: string;
   GRAPHQL_URL: string;
 } = process.env as any;
 
@@ -55,31 +35,13 @@ function loop() {
   }, parseInt(LOOP_TIME, 10));
 }
 
-// const provider = new ethers.providers.InfuraProvider("rinkeby", INFURA_KEY);
-const provider = new ethers.providers.JsonRpcProvider();
-
-const gems = new ethers.Contract(
-  GEMS_CONTRACT,
-  gemArtifact.abi,
-  provider
-) as DeepGems;
-
 const s3 = new AWS.S3({
   accessKeyId: AWS_ACCESS_KEY_ID,
   secretAccessKey: AWS_SECRET_ACCESS_KEY,
 });
 
-interface UserAccount {
-  gems: { [key: string]: { activated: boolean } };
-}
-
-interface UserMapping {
-  [key: string]: UserAccount;
-}
-
 interface Context {
   lastGemRetrieved: number;
-  // userIndex: string[];
 }
 
 const query = `query GetGems($gt: Int!, $lte: Int!) {
@@ -132,6 +94,24 @@ async function getForgedGems(gt: number, lte: number) {
   return res.data.gems;
 }
 
+function parseGemMetadata(tokenId: string) {
+  // Remove 0x
+  tokenId = tokenId.slice(2);
+
+  // Get latents
+  const latent1 = BigNumber.from("0x" + tokenId.slice(0, 8)).toNumber();
+  const latent2 = BigNumber.from("0x" + tokenId.slice(8, 16)).toNumber();
+  const latent3 = BigNumber.from("0x" + tokenId.slice(16, 24)).toNumber();
+  const latent4 = BigNumber.from("0x" + tokenId.slice(24, 32)).toNumber();
+
+  // Get PSI
+  const psi = BigNumber.from("0x" + tokenId.slice(32, 64))
+    .div(BigNumber.from("1000000000000000000"))
+    .toNumber();
+
+  return [latent1, latent2, latent3, latent4, psi];
+}
+
 async function run() {
   const rawContext = await (await fetch(S3_JSON_CONTEXT_URL)).json();
   const { lastGemRetrieved }: Context = {
@@ -176,7 +156,7 @@ async function run() {
 
 async function renderGem(tokenId: string) {
   // Get metadata
-  let metadata = await gems.getGemMetadata(tokenId);
+  let metadata = parseGemMetadata(tokenId);
 
   // Render gem
   const img = await (
