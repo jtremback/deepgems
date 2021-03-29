@@ -263,12 +263,16 @@ export class QuadraticBondingCurve extends Contract {
     quoteMint(
       tokensToMint: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    ): Promise<
+      [BigNumber, BigNumber] & { totalEther: BigNumber; artistCut: BigNumber }
+    >;
 
     "quoteMint(uint256)"(
       tokensToMint: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    ): Promise<
+      [BigNumber, BigNumber] & { totalEther: BigNumber; artistCut: BigNumber }
+    >;
 
     quoteMintRaw(
       tokensToMint: BigNumberish,
@@ -423,12 +427,16 @@ export class QuadraticBondingCurve extends Contract {
   quoteMint(
     tokensToMint: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  ): Promise<
+    [BigNumber, BigNumber] & { totalEther: BigNumber; artistCut: BigNumber }
+  >;
 
   "quoteMint(uint256)"(
     tokensToMint: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  ): Promise<
+    [BigNumber, BigNumber] & { totalEther: BigNumber; artistCut: BigNumber }
+  >;
 
   quoteMintRaw(
     tokensToMint: BigNumberish,
@@ -580,12 +588,16 @@ export class QuadraticBondingCurve extends Contract {
     quoteMint(
       tokensToMint: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    ): Promise<
+      [BigNumber, BigNumber] & { totalEther: BigNumber; artistCut: BigNumber }
+    >;
 
     "quoteMint(uint256)"(
       tokensToMint: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    ): Promise<
+      [BigNumber, BigNumber] & { totalEther: BigNumber; artistCut: BigNumber }
+    >;
 
     quoteMintRaw(
       tokensToMint: BigNumberish,

@@ -293,7 +293,12 @@ const _abi = [
     outputs: [
       {
         internalType: "uint256",
-        name: "",
+        name: "totalEther",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "artistCut",
         type: "uint256",
       },
     ],

@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsc && eval $(cat .env) node build/index.js"
+    "start": "tsc && eval $(cat .env) node build/index.js",
+    "test": "tsc && node build/parseGemMetadata.js"
   },
   "author": "",
   "license": "ISC",

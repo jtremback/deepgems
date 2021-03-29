@@ -37,26 +37,40 @@ abstract contract QuadraticBondingCurve is ERC20 {
         return numEther.div(1 ether * 1 ether);
     }
 
-    function quoteMint(uint256 tokensToMint) public view returns (uint256) {
+    function quoteMint(uint256 tokensToMint)
+        public
+        view
+        returns (uint256 totalEther, uint256 artistCut)
+    {
         // Scales the number by a constant to get to the level we want
         // We add one wei to absorb rounding error
-        return quoteMintRaw(tokensToMint).div(SCALING).add(1);
+        uint256 mintEther = quoteMintRaw(tokensToMint).div(SCALING).add(1);
+
+        // 5% of the mintEther is sent to the artist
+        artistCut = mintEther / 20;
+
+        // The total is how much the user needs to send in
+        totalEther = mintEther + artistCut;
     }
 
     function mint(uint256 tokensToMint) public payable {
         // CHECKS
 
-        uint256 numEther = quoteMint(tokensToMint);
+        // Check how many ether it will take to mint tokens at the current price level
+        (uint256 totalEther, uint256 artistCut) = quoteMint(tokensToMint);
 
-        require(numEther <= msg.value, "Did not send enough Ether");
+        require(totalEther <= msg.value, "Did not send enough Ether");
 
         // ACTIONS
 
         // Make tokens
         _mint(msg.sender, tokensToMint);
 
+        // Send 5% to the artist
+        safeTransferETH(0x2546BcD3c84621e976D8185a91A922aE77ECEc30, artistCut);
+
         // Send dust back to caller
-        safeTransferETH(msg.sender, msg.value.sub(numEther));
+        safeTransferETH(msg.sender, msg.value.sub(totalEther));
     }
 
     function quoteBurnRaw(uint256 tokensToBurn) public view returns (uint256) {
