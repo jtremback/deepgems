@@ -18,7 +18,7 @@ Might as well run the indexer manually too:
 First create an .env file in ./deepgems/indexer/ with these vars:
 
 S3_JSON_CONTEXT_URL
-BLOCKS_PER_FETCH
+GEMS_PER_FETCH
 RENDERER_URL
 S3_DATA_BUCKET
 S3_IMAGE_BUCKET

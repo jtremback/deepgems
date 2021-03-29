@@ -7,4 +7,4 @@ Type=simple
 ExecStart=npm run start
 Restart=always
 User=ubuntu
-WorkingDirectory=/home/ubuntu/deepgems/indexer/
+WorkingDirectory=/home/ubuntu/deepgems/deepgems_site/indexer/
