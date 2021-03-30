@@ -8,14 +8,30 @@ import { DeepGems } from "../typechain/DeepGems";
 const fe = ethers.utils.formatEther;
 const pe = ethers.utils.parseEther;
 
-describe("Deep gems NFT functionality", function () {
-  beforeEach(async function () {
-    await network.provider.request({
-      method: "hardhat_reset",
-      params: [],
-    });
+async function resetChain() {
+  await network.provider.request({
+    method: "hardhat_reset",
+    params: [],
   });
+}
 
+async function initContracts() {
+  const signers = await ethers.getSigners();
+  const DeepGemsContract = await ethers.getContractFactory("DeepGems");
+  const gems = (await DeepGemsContract.deploy()) as DeepGems;
+  const PSIContract = await ethers.getContractFactory("PSI");
+  const psi = (await PSIContract.deploy(gems.address)) as PSI;
+  await gems.initialize(
+    psi.address,
+    [signers[11].address, signers[12].address, signers[13].address],
+    [94, 3, 3],
+    "https://deepge.ms/tokenId/"
+  );
+
+  return { signers, gems, psi };
+}
+
+describe("Deep gems NFT functionality", function () {
   it("concats", async function () {
     const signers = await ethers.getSigners();
     const DeepGemsContract = await ethers.getContractFactory("DeepGems");
@@ -31,18 +47,20 @@ describe("Deep gems NFT functionality", function () {
   });
 
   it.only("gas test", async function () {
-    const signers = await ethers.getSigners();
-    const DeepGemsContract = await ethers.getContractFactory("DeepGems");
-    const gems = (await DeepGemsContract.deploy()) as DeepGems;
-    const PSIContract = await ethers.getContractFactory("PSI");
-    const psi = (await PSIContract.deploy(gems.address)) as PSI;
-    await gems.initialize(psi.address);
+    await resetChain();
+    const { signers, gems, psi } = await initContracts();
 
-    await psi.mint(pe(`100`), { value: pe(`100`), gasPrice: 0 });
+    await psi.mint(pe(`300`), { value: pe(`100`), gasPrice: 0 });
 
-    await psi.approve(gems.address, pe(`100`));
+    // await psi.approve(gems.address, pe(`200`));
 
     // forge one gem
+    await gems.forge(pe("100"));
+
+    // forge another gem
+    await gems.forge(pe("100"));
+
+    // forge another gem
     await gems.forge(pe("100"));
 
     // const events = await gems.queryFilter({
@@ -62,12 +80,7 @@ describe("Deep gems NFT functionality", function () {
   });
 
   it("happy path", async function () {
-    const signers = await ethers.getSigners();
-    const DeepGemsContract = await ethers.getContractFactory("DeepGems");
-    const gems = (await DeepGemsContract.deploy()) as DeepGems;
-    const PSIContract = await ethers.getContractFactory("PSI");
-    const psi = (await PSIContract.deploy(gems.address)) as PSI;
-    await gems.initialize(psi.address);
+    const { signers, gems, psi } = await initContracts();
 
     await psi.mint(pe(`200`), { value: pe(`10`), gasPrice: 0 });
 
@@ -163,12 +176,7 @@ describe("Deep gems NFT functionality", function () {
   });
 
   it("emits the right events", async function () {
-    const signers = await ethers.getSigners();
-    const DeepGemsContract = await ethers.getContractFactory("DeepGems");
-    const gems = (await DeepGemsContract.deploy()) as DeepGems;
-    const PSIContract = await ethers.getContractFactory("PSI");
-    const psi = (await PSIContract.deploy(gems.address)) as PSI;
-    await gems.initialize(psi.address);
+    const { signers, gems, psi } = await initContracts();
 
     await psi.mint(pe(`10`), { value: pe(`10`), gasPrice: 0 });
 

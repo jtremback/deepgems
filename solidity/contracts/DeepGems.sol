@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity 0.7.6;
+pragma solidity 0.8.3;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -8,7 +8,13 @@ import "./PSI.sol";
 contract DeepGems is ERC721 {
     constructor() ERC721("Deep Gems", "DEEP") {}
 
+    bool public state_initialized = false;
     address public state_psiContract;
+    address[] public state_artistAddresses;
+    uint8[] public state_artistPercentages;
+    string state_baseURI;
+
+    uint256 state_pendingArtistPayout = 0;
     mapping(uint256 => address) public state_unactivatedGems;
 
     event Forged(address indexed owner, uint256 indexed tokenId, uint128 psi);
@@ -41,14 +47,47 @@ contract DeepGems is ERC721 {
         pure
         returns (uint128)
     {
-        return (uint128(addr) << 64) | uint64(uint256(blckhash));
+        return (uint128(uint160(addr)) << 64) | uint64(uint256(blckhash));
     }
 
-    function initialize(address psiContract) public {
+    function initialize(
+        address psiContract,
+        address[] memory artistAddresses,
+        uint8[] memory artistPercentages,
+        string memory baseURI
+    ) public {
+        require(state_initialized == false, "cannot initialize twice");
+        require(
+            artistAddresses.length == artistPercentages.length,
+            "malformed artist info"
+        );
+
+        // Check that artist percentages add up to 100
+        uint8 totalPercentages = 0;
+        for (uint64 i = 0; i < artistPercentages.length; i++) {
+            totalPercentages = totalPercentages + artistPercentages[i];
+        }
+        require(
+            totalPercentages == 100,
+            "artist percentages must add up to 100"
+        );
+
         state_psiContract = psiContract;
+        state_artistAddresses = artistAddresses;
+        state_artistPercentages = artistPercentages;
+        state_baseURI = baseURI;
+        state_initialized = true;
+    }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return state_baseURI;
     }
 
     function _forge(uint256 amountPsi) private returns (uint256) {
+        // Calculate 5% artist commission
+        uint256 commission = amountPsi / 20;
+        uint256 psiInGem = amountPsi - commission;
+
         // Generate id
         uint256 tokenId =
             uint128sToUint256(
@@ -57,7 +96,7 @@ contract DeepGems is ERC721 {
                 // different psi levels.
                 // 5 blocks gives you about a minute to get your tx in.
                 packLatent(msg.sender, blockhash(block.number - 5)),
-                uint128(amountPsi)
+                uint128(psiInGem)
             );
 
         // This could be triggered if someone tries to mint twice in a block
@@ -69,9 +108,28 @@ contract DeepGems is ERC721 {
         // Transfer Psi to pay for gem
         PSI(state_psiContract).transferToDeepGems(msg.sender, amountPsi);
 
+        // Add gems to unactivated gems mapping
         state_unactivatedGems[tokenId] = msg.sender;
 
+        // Add commission to artist's pending payout
+        state_pendingArtistPayout = state_pendingArtistPayout + commission;
+
         return tokenId;
+    }
+
+    function artistWithdraw() public {
+        // Calculate 1% of artist payout
+        uint256 one_percent_of_payout = state_pendingArtistPayout / 100;
+        // Zero out pending payout
+        state_pendingArtistPayout = 0;
+
+        // Transfer coins out to artist addresses
+        for (uint64 i = 0; i < state_artistAddresses.length; i++) {
+            PSI(state_psiContract).transfer(
+                state_artistAddresses[i],
+                one_percent_of_payout * state_artistPercentages[i]
+            );
+        }
     }
 
     function forge(uint256 amountPsi) public returns (uint256) {
