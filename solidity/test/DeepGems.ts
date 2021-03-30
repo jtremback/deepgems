@@ -50,9 +50,9 @@ describe("Deep gems NFT functionality", function () {
     await resetChain();
     const { signers, gems, psi } = await initContracts();
 
-    await psi.mint(pe(`300`), { value: pe(`100`), gasPrice: 0 });
+    await psi.buy(pe(`300`), { value: pe(`100`), gasPrice: 0 });
 
-    // await psi.approve(gems.address, pe(`200`));
+    await psi.approve(gems.address, pe(`300`));
 
     // forge one gem
     await gems.forge(pe("100"));

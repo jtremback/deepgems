@@ -8,11 +8,11 @@ import "./PSI.sol";
 contract DeepGems is ERC721 {
     constructor() ERC721("Deep Gems", "DEEP") {}
 
-    bool public state_initialized = false;
-    address public state_psiContract;
-    address[] public state_artistAddresses;
-    uint8[] public state_artistPercentages;
-    string state_baseURI;
+    bool public INITIALIZED = false;
+    address public PSI_CONTRACT;
+    address[] public ARTIST_ADDRESSES;
+    uint8[] public ARTIST_PERCENTAGES;
+    string BASE_URI;
 
     uint256 state_pendingArtistPayout = 0;
     mapping(uint256 => address) public state_unactivatedGems;
@@ -56,7 +56,7 @@ contract DeepGems is ERC721 {
         uint8[] memory artistPercentages,
         string memory baseURI
     ) public {
-        require(state_initialized == false, "cannot initialize twice");
+        require(INITIALIZED == false, "cannot initialize twice");
         require(
             artistAddresses.length == artistPercentages.length,
             "malformed artist info"
@@ -72,15 +72,15 @@ contract DeepGems is ERC721 {
             "artist percentages must add up to 100"
         );
 
-        state_psiContract = psiContract;
-        state_artistAddresses = artistAddresses;
-        state_artistPercentages = artistPercentages;
-        state_baseURI = baseURI;
-        state_initialized = true;
+        PSI_CONTRACT = psiContract;
+        ARTIST_ADDRESSES = artistAddresses;
+        ARTIST_PERCENTAGES = artistPercentages;
+        BASE_URI = baseURI;
+        INITIALIZED = true;
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
-        return state_baseURI;
+        return BASE_URI;
     }
 
     function _forge(uint256 amountPsi) private returns (uint256) {
@@ -106,7 +106,7 @@ contract DeepGems is ERC721 {
         require(!_exists(tokenId), "gem exists");
 
         // Transfer Psi to pay for gem
-        PSI(state_psiContract).transferToDeepGems(msg.sender, amountPsi);
+        PSI(PSI_CONTRACT).transferFrom(msg.sender, address(this), amountPsi);
 
         // Add gems to unactivated gems mapping
         state_unactivatedGems[tokenId] = msg.sender;
@@ -123,11 +123,12 @@ contract DeepGems is ERC721 {
         // Zero out pending payout
         state_pendingArtistPayout = 0;
 
-        // Transfer coins out to artist addresses
-        for (uint64 i = 0; i < state_artistAddresses.length; i++) {
-            PSI(state_psiContract).transfer(
-                state_artistAddresses[i],
-                one_percent_of_payout * state_artistPercentages[i]
+        // Transfer coins out to artist addresses proportional to
+        // their percentages
+        for (uint64 i = 0; i < ARTIST_ADDRESSES.length; i++) {
+            PSI(PSI_CONTRACT).transfer(
+                ARTIST_ADDRESSES[i],
+                ARTIST_PERCENTAGES[i] * one_percent_of_payout
             );
         }
     }
@@ -178,10 +179,7 @@ contract DeepGems is ERC721 {
 
         // Casting tokenId to uint128 chops off the first 16 bytes,
         // leaving only the amount of psi the gem has.
-        IERC20(state_psiContract).transfer(
-            msg.sender,
-            uint256(uint128(tokenId))
-        );
+        IERC20(PSI_CONTRACT).transfer(msg.sender, uint256(uint128(tokenId)));
 
         emit Burned(msg.sender, tokenId);
     }
