@@ -18,42 +18,65 @@ function etherToDollars(n: BigNumberish) {
   return Number(fe(n)) * ETHER_PRICE;
 }
 
-const curve = {
+function almostEqual(a: BigNumber, b: BigNumber, within: BigNumber) {
+  return a.lt(b.add(within)) && a.gt(b.sub(within));
+}
+
+async function initContracts() {
+  const signers = await ethers.getSigners();
+
+  const PSIContract = await ethers.getContractFactory("PSI");
+  const psi = (await PSIContract.deploy()) as PSI;
+
+  const DeepGemsContract = await ethers.getContractFactory("DeepGems");
+  const gems = (await DeepGemsContract.deploy(
+    psi.address,
+    [signers[11].address, signers[12].address, signers[13].address],
+    [94, 3, 3],
+    "https://deepge.ms/tokenId/"
+  )) as DeepGems;
+
+  return { signers, gems, psi };
+}
+
+const curve: {
+  [key: number]: { marketCap: string; costToBuyOneMore: string };
+} = {
   100: {
     marketCap: "0.000000166666666667",
-    costToMintOneMore: "0.000000005050166667",
+    costToBuyOneMore: "0.000000005050166667",
   },
   1000: {
     marketCap: "0.000166666666666668",
-    costToMintOneMore: "0.000000500500166667",
+    costToBuyOneMore: "0.000000500500166667",
   },
   10000: {
     marketCap: "0.166666666666666669",
-    costToMintOneMore: "0.000050005000166667",
+    costToBuyOneMore: "0.000050005000166667",
   },
   20000: {
     marketCap: "1.333333333333333336",
-    costToMintOneMore: "0.000200010000166667",
+    costToBuyOneMore: "0.000200010000166667",
   },
   30000: {
     marketCap: "4.500000000000000003",
-    costToMintOneMore: "0.000450015000166667",
+    costToBuyOneMore: "0.000450015000166667",
   },
   50000: {
     marketCap: "20.833333333333333337",
-    costToMintOneMore: "0.001250025000166667",
+    costToBuyOneMore: "0.001250025000166667",
   },
   200000: {
     marketCap: "1333.333333333333333338",
-    costToMintOneMore: "0.020000100000166667",
+    costToBuyOneMore: "0.020000100000166667",
   },
   1000000: {
     marketCap: "166,666.666666667000000000",
-    costToMintOneMore: "0.500000500032000000",
+    costToBuyOneMore: "0.500000500032000000",
   },
   2000000: {
     marketCap: "1,333,333.333333330000000000",
-    costToMintOneMore: "2.000000999936000000",
+    costToBuyOneMore: "2.000000999936000000",
   },
 };
 
@@ -65,18 +88,14 @@ describe("Psi", function () {
     });
   });
 
-  it("mints tokens on correct curve", async function () {
+  it.only("buys tokens on correct curve", async function () {
     this.timeout(0);
-    const signers = await ethers.getSigners();
-    const DeepGemsContract = await ethers.getContractFactory("DeepGems");
-    const gems = (await DeepGemsContract.deploy()) as DeepGems;
-    const PSIContract = await ethers.getContractFactory("PSI");
-    const psi = (await PSIContract.deploy(gems.address)) as PSI;
+    const { signers, gems, psi } = await initContracts();
 
-    async function mint(num: number, value: number) {
+    async function buy(num: number, value: number) {
       let startingBalance = await psi.provider.getBalance(signers[0].address);
 
-      await psi.mint(pe(`${num}`), { value: pe(`${value}`), gasPrice: 0 });
+      await psi.buy(pe(`${num}`), { value: pe(`${value}`), gasPrice: 0 });
 
       let newBalance = await psi.provider.getBalance(signers[0].address);
 
@@ -92,66 +111,64 @@ describe("Psi", function () {
       fe(await psi.balanceOf(signers[0].address));
 
     // Only works with whole tokenNumber
-    async function mintCycle({
-      additionalMint,
-      tokenNumber,
-    }: {
-      additionalMint: number;
-      tokenNumber: number;
-    }) {
-      // We mint to get up to the desired level, and also check that quoteMint
-      // matches mint
-      const additionalMintQuote = fe(
-        await psi.quoteMint(pe(`${additionalMint}`))
-      );
+    async function buyCycle(tokensToBuy: number) {
+      const tokenNumber = Number(fe(await psi.totalSupply())) + tokensToBuy;
+
+      // We buy to get up to the desired level, and also check that quoteBuy
+      // matches buy
+      const quote = fe(await psi.quoteBuy(pe(`${tokensToBuy}`)));
 
       console.log(
-        `Minting ${additionalMint} tokens at ${tokenNumber} total will cost ${additionalMintQuote}`
+        `buying ${tokensToBuy} tokens at ${tokenNumber} total will cost ${quote}`
       );
 
-      expect(fe(await mint(additionalMint, 9000))).to.equal(
-        additionalMintQuote
-      );
+      expect(fe(await buy(tokensToBuy, 9000))).to.equal(quote);
 
       // We check the eth market cap
-      expect(await marketCap()).to.equal(curve[tokenNumber].marketCap);
+      expect(
+        almostEqual(
+          await psi.provider.getBalance(psi.address),
+          pe(curve[tokenNumber].marketCap),
+          pe("0.0000000001")
+        )
+      );
 
       // Check the psi balance of the signer
-      expect(await signerBalance()).to.equal(`${tokenNumber}.0`);
+      expect(await psi.balanceOf(signers[0].address)).to.equal(
+        pe(`${tokenNumber}`)
+      );
 
-      // Check the cost to mint one more
-      expect(fe(await psi.quoteMint(pe("1")))).to.equal(
-        curve[tokenNumber].costToMintOneMore
+      // Check the cost to buy one more
+      expect(
+        almostEqual(
+          await psi.quoteBuy(pe("1")),
+          pe(curve[tokenNumber].costToBuyOneMore),
+          pe("0.0000000001")
+        )
       );
     }
 
     // ------------------
 
-    await mintCycle({ additionalMint: 100, tokenNumber: 100 });
+    await buyCycle(100);
 
     // Going up to 1,000
-    await mintCycle({ additionalMint: 900, tokenNumber: 1000 });
+    await buyCycle(900);
 
     // Going up to 10,000
-    await mintCycle({ additionalMint: 9000, tokenNumber: 10000 });
+    await buyCycle(9000);
 
     // Going up to 20,000
-    await mintCycle({ additionalMint: 10000, tokenNumber: 20000 });
+    await buyCycle(10000);
 
     // Going up to 30,000
-    await mintCycle({ additionalMint: 10000, tokenNumber: 30000 });
+    await buyCycle(10000);
 
     // Going up to 50,000
-    await mintCycle({ additionalMint: 20000, tokenNumber: 50000 });
+    await buyCycle(20000);
 
     // Going up to 200,000
-    await mintCycle({ additionalMint: 150000, tokenNumber: 200000 });
-
-    // // Going up to 1,000,000
-    // await mintCycle({ additionalMint: 800000, tokenNumber: 1000000 });
-
-    // // Going up to 2,000,000
-    // await mintCycle({ additionalMint: 1000000, tokenNumber: 2000000 });
+    await buyCycle(150000);
   });
 
   it("exploit numerical instability", async function () {
