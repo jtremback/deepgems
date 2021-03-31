@@ -3,21 +3,45 @@ pragma solidity 0.8.3;
 
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "./PSI.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract DeepGems is ERC721 {
-    constructor() ERC721("Deep Gems", "DEEP") {}
+    constructor(
+        address psiContract,
+        address[] memory artistAddresses,
+        uint8[] memory artistPercentages,
+        string memory baseURI
+    ) ERC721("Deep Gems", "DEEP") {
+        require(
+            artistAddresses.length == artistPercentages.length,
+            "malformed artist info"
+        );
 
-    bool public INITIALIZED = false;
+        // Check that artist percentages add up to 100
+        uint8 totalPercentages = 0;
+        for (uint64 i = 0; i < artistPercentages.length; i++) {
+            totalPercentages = totalPercentages + artistPercentages[i];
+        }
+        require(
+            totalPercentages == 100,
+            "artist percentages must add up to 100"
+        );
+
+        PSI_CONTRACT = psiContract;
+        ARTIST_ADDRESSES = artistAddresses;
+        ARTIST_PERCENTAGES = artistPercentages;
+        BASE_URI = baseURI;
+    }
+
     address public PSI_CONTRACT;
     address[] public ARTIST_ADDRESSES;
     uint8[] public ARTIST_PERCENTAGES;
     string BASE_URI;
 
-    uint256 state_pendingArtistPayout = 0;
+    uint256 public state_pendingArtistPayout = 0;
     mapping(uint256 => address) public state_unactivatedGems;
 
-    event Forged(address indexed owner, uint256 indexed tokenId, uint128 psi);
+    event Forged(address indexed owner, uint256 indexed tokenId);
     event Reforged(
         address indexed owner,
         uint256 indexed oldTokenId,
@@ -50,35 +74,6 @@ contract DeepGems is ERC721 {
         return (uint128(uint160(addr)) << 64) | uint64(uint256(blckhash));
     }
 
-    function initialize(
-        address psiContract,
-        address[] memory artistAddresses,
-        uint8[] memory artistPercentages,
-        string memory baseURI
-    ) public {
-        require(INITIALIZED == false, "cannot initialize twice");
-        require(
-            artistAddresses.length == artistPercentages.length,
-            "malformed artist info"
-        );
-
-        // Check that artist percentages add up to 100
-        uint8 totalPercentages = 0;
-        for (uint64 i = 0; i < artistPercentages.length; i++) {
-            totalPercentages = totalPercentages + artistPercentages[i];
-        }
-        require(
-            totalPercentages == 100,
-            "artist percentages must add up to 100"
-        );
-
-        PSI_CONTRACT = psiContract;
-        ARTIST_ADDRESSES = artistAddresses;
-        ARTIST_PERCENTAGES = artistPercentages;
-        BASE_URI = baseURI;
-        INITIALIZED = true;
-    }
-
     function _baseURI() internal view virtual override returns (string memory) {
         return BASE_URI;
     }
@@ -105,9 +100,6 @@ contract DeepGems is ERC721 {
         require(state_unactivatedGems[tokenId] == address(0), "gem exists");
         require(!_exists(tokenId), "gem exists");
 
-        // Transfer Psi to pay for gem
-        PSI(PSI_CONTRACT).transferFrom(msg.sender, address(this), amountPsi);
-
         // Add gems to unactivated gems mapping
         state_unactivatedGems[tokenId] = msg.sender;
 
@@ -126,7 +118,7 @@ contract DeepGems is ERC721 {
         // Transfer coins out to artist addresses proportional to
         // their percentages
         for (uint64 i = 0; i < ARTIST_ADDRESSES.length; i++) {
-            PSI(PSI_CONTRACT).transfer(
+            IERC20(PSI_CONTRACT).transfer(
                 ARTIST_ADDRESSES[i],
                 ARTIST_PERCENTAGES[i] * one_percent_of_payout
             );
@@ -134,8 +126,11 @@ contract DeepGems is ERC721 {
     }
 
     function forge(uint256 amountPsi) public returns (uint256) {
+        // Transfer Psi to pay for gem
+        IERC20(PSI_CONTRACT).transferFrom(msg.sender, address(this), amountPsi);
+
         uint256 tokenId = _forge(amountPsi);
-        emit Forged(msg.sender, tokenId, uint128(amountPsi));
+        emit Forged(msg.sender, tokenId);
 
         return tokenId;
     }
