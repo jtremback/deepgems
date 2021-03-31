@@ -266,7 +266,7 @@ describe("Deep gems NFT functionality", function () {
     expect(burnedTokenId).to.equal(reforgedTokenId);
   });
 
-  it.only("generates the tokenId correctly", async function () {
+  it("generates the tokenId correctly", async function () {
     const { signers, gems, psi } = await initContracts();
 
     await psi.buy(pe(`100`), { value: pe(`10`), gasPrice: 0 });
