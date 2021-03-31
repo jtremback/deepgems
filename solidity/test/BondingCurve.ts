@@ -19,7 +19,9 @@ function etherToDollars(n: BigNumberish) {
 }
 
 function almostEqual(a: BigNumber, b: BigNumber, within: BigNumber) {
-  return a.lt(b.add(within)) && a.gt(b.sub(within));
+  const delta = a.sub(b).abs();
+  console.log("delta: ", delta.toString());
+  return delta.lt(within);
 }
 
 async function initContracts() {
@@ -43,40 +45,48 @@ const curve: {
   [key: number]: { marketCap: string; costToBuyOneMore: string };
 } = {
   100: {
-    marketCap: "0.000000166666666667",
-    costToBuyOneMore: "0.000000005050166667",
+    marketCap: "0.000000500000000000",
+    costToBuyOneMore: "0.000000010050000000",
   },
   1000: {
-    marketCap: "0.000166666666666668",
-    costToBuyOneMore: "0.000000500500166667",
+    marketCap: "0.000050000000000000",
+    costToBuyOneMore: "0.000000100050000000",
   },
   10000: {
-    marketCap: "0.166666666666666669",
-    costToBuyOneMore: "0.000050005000166667",
+    marketCap: "0.005000000000000000",
+    costToBuyOneMore: "0.000001000050000000",
   },
   20000: {
-    marketCap: "1.333333333333333336",
-    costToBuyOneMore: "0.000200010000166667",
+    marketCap: "0.020000000000000000",
+    costToBuyOneMore: "0.000002000050000000",
   },
   30000: {
-    marketCap: "4.500000000000000003",
-    costToBuyOneMore: "0.000450015000166667",
+    marketCap: "0.045000000000000000",
+    costToBuyOneMore: "0.000003000050000000",
   },
   50000: {
-    marketCap: "20.833333333333333337",
-    costToBuyOneMore: "0.001250025000166667",
+    marketCap: "0.125000000000000000",
+    costToBuyOneMore: "0.000005000050000000",
   },
   200000: {
-    marketCap: "1333.333333333333333338",
-    costToBuyOneMore: "0.020000100000166667",
+    marketCap: "2.000000000000000000",
+    costToBuyOneMore: "0.000020000050000000",
   },
   1000000: {
-    marketCap: "166,666.666666667000000000",
-    costToBuyOneMore: "0.500000500032000000",
+    marketCap: "50.000000000000000000",
+    costToBuyOneMore: "0.000100000050000000",
   },
   2000000: {
-    marketCap: "1,333,333.333333330000000000",
-    costToBuyOneMore: "2.000000999936000000",
+    marketCap: "200.000000000000000000",
+    costToBuyOneMore: "0.000200000050000000",
+  },
+  10000000: {
+    marketCap: "5000.000000000000000000",
+    costToBuyOneMore: "0.001000000050000000",
+  },
+  50000000: {
+    marketCap: "125000.000000000000000000",
+    costToBuyOneMore: "0.005000000050000000",
   },
 };
 
@@ -88,12 +98,16 @@ describe("Psi", function () {
     });
   });
 
-  it.only("buys tokens on correct curve", async function () {
+  it("buys and sells tokens on correct curve", async function () {
     this.timeout(0);
     const { signers, gems, psi } = await initContracts();
 
+    // Give signer 0 some extra ether
+
     async function buy(num: number, value: number) {
       let startingBalance = await psi.provider.getBalance(signers[0].address);
+
+      console.log("startingBalance", startingBalance.toString());
 
       await psi.buy(pe(`${num}`), { value: pe(`${value}`), gasPrice: 0 });
 
@@ -102,6 +116,18 @@ describe("Psi", function () {
       let ethIn = startingBalance.sub(newBalance);
 
       return ethIn;
+    }
+
+    async function sell(num: number, minEth: number) {
+      let startingBalance = await psi.provider.getBalance(signers[0].address);
+
+      await psi.sell(pe(`${num}`), pe(`${minEth}`), { gasPrice: 0 });
+
+      let newBalance = await psi.provider.getBalance(signers[0].address);
+
+      let ethOut = newBalance.sub(startingBalance);
+
+      return ethOut;
     }
 
     const marketCap = async () =>
@@ -131,7 +157,7 @@ describe("Psi", function () {
           pe(curve[tokenNumber].marketCap),
           pe("0.0000000001")
         )
-      );
+      ).to.be.that.which.is.true;
 
       // Check the psi balance of the signer
       expect(await psi.balanceOf(signers[0].address)).to.equal(
@@ -145,7 +171,44 @@ describe("Psi", function () {
           pe(curve[tokenNumber].costToBuyOneMore),
           pe("0.0000000001")
         )
+      ).to.be.that.which.is.true;
+    }
+
+    async function sellCycle(tokensToSell: number) {
+      const tokenNumber = Number(fe(await psi.totalSupply())) - tokensToSell;
+
+      // We buy to get up to the desired level, and also check that quoteBuy
+      // matches buy
+      const quote = fe(await psi.quoteSell(pe(`${tokensToSell}`)));
+
+      console.log(
+        `selling ${tokensToSell} tokens at ${tokenNumber} total will return ${quote}`
       );
+
+      expect(fe(await sell(tokensToSell, 0))).to.equal(quote);
+
+      // We check the eth market cap
+      expect(
+        almostEqual(
+          await psi.provider.getBalance(psi.address),
+          pe(curve[tokenNumber].marketCap),
+          pe("0.0000000001")
+        )
+      ).to.be.that.which.is.true;
+
+      // Check the psi balance of the signer
+      expect(await psi.balanceOf(signers[0].address)).to.equal(
+        pe(`${tokenNumber}`)
+      );
+
+      // Check the cost to buy one more
+      expect(
+        almostEqual(
+          await psi.quoteBuy(pe("1")),
+          pe(curve[tokenNumber].costToBuyOneMore),
+          pe("0.0000000001")
+        )
+      ).to.be.that.which.is.true;
     }
 
     // ------------------
@@ -169,15 +232,20 @@ describe("Psi", function () {
 
     // Going up to 200,000
     await buyCycle(150000);
+
+    // Going down to 30,000
+    await sellCycle(170000);
+
+    // Going up to 10,000,000
+    await buyCycle(9970000);
+
+    // Going down to 30,000
+    await sellCycle(9970000);
   });
 
-  it("exploit numerical instability", async function () {
+  it.skip("try to exploit numerical instability", async function () {
     this.timeout(0);
-    const signers = await ethers.getSigners();
-    const DeepGemsContract = await ethers.getContractFactory("DeepGems");
-    const gems = (await DeepGemsContract.deploy()) as DeepGems;
-    const PSIContract = await ethers.getContractFactory("PSI");
-    const psi = (await PSIContract.deploy(gems.address)) as PSI;
+    const { signers, gems, psi } = await initContracts();
 
     const marketCap = async () =>
       fe(await psi.provider.getBalance(psi.address));
@@ -185,20 +253,20 @@ describe("Psi", function () {
     const signerBalance = async () =>
       fe(await psi.balanceOf(signers[0].address));
 
-    await psi.mint(pe(`100`), { value: pe(`10`), gasPrice: 0 });
+    await psi.buy(pe(`100`), { value: pe(`10`), gasPrice: 0 });
 
     for (let i = 0; i < 40; i++) {
-      const toMint = 1;
-      const cycles = 10;
+      const tobuy = 1;
+      const cycles = 100;
 
-      let toBurn = 0;
+      let tosell = 0;
       for (let i = 0; i < cycles; i++) {
-        await psi.mint(pe(`${toMint}`), { value: pe(`10`), gasPrice: 0 });
-        toBurn = toBurn + toMint;
+        await psi.buy(pe(`${tobuy}`), { value: pe(`10`), gasPrice: 0 });
+        tosell = tosell + tobuy;
       }
 
       console.log(await signerBalance(), await marketCap());
-      await psi.burn(pe(`${toBurn}`), pe(`0`), { gasPrice: 0 });
+      await psi.sell(pe(`${tosell}`), pe(`0`), { gasPrice: 0 });
     }
   });
 });
