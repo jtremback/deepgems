@@ -38,7 +38,7 @@ contract DeepGems is ERC721 {
     uint8[] public ARTIST_PERCENTAGES;
     string BASE_URI;
 
-    uint256 public state_pendingArtistPayout = 0;
+    uint256 public state_pendingArtistPayout;
     mapping(uint256 => address) public state_unactivatedGems;
 
     event Forged(uint256 indexed tokenId);
@@ -47,7 +47,7 @@ contract DeepGems is ERC721 {
     event Burned(uint256 indexed tokenId);
 
     function uint128sToUint256(uint128 a, uint128 b)
-        public
+        internal
         pure
         returns (uint256)
     {
@@ -55,7 +55,7 @@ contract DeepGems is ERC721 {
     }
 
     function uint256ToUint128s(uint256 a)
-        public
+        internal
         pure
         returns (uint128, uint128)
     {
@@ -63,7 +63,7 @@ contract DeepGems is ERC721 {
     }
 
     function packLatent(address addr, bytes32 blckhash)
-        public
+        internal
         pure
         returns (uint128)
     {
@@ -74,7 +74,7 @@ contract DeepGems is ERC721 {
         return BASE_URI;
     }
 
-    function _forge(uint256 amountPsi) private returns (uint256) {
+    function _forge(uint256 amountPsi) internal returns (uint256) {
         // Calculate 5% artist commission
         uint256 commission = amountPsi / 20;
         uint256 psiInGem = amountPsi - commission;
@@ -134,7 +134,7 @@ contract DeepGems is ERC721 {
     function reforge(uint256 oldTokenId) public {
         require(
             state_unactivatedGems[oldTokenId] == msg.sender,
-            "either this gem is already activated, you don't own it, or it does not exist"
+            "gem is already activated, you don't own it, or it does not exist"
         );
 
         delete state_unactivatedGems[oldTokenId];
@@ -148,7 +148,7 @@ contract DeepGems is ERC721 {
     function activate(uint256 tokenId) public {
         require(
             state_unactivatedGems[tokenId] == msg.sender,
-            "either this gem is already activated, you don't own it, or it does not exist"
+            "gem is already activated, you don't own it, or it does not exist"
         );
 
         delete state_unactivatedGems[tokenId];
