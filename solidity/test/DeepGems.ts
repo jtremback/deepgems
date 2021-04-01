@@ -85,18 +85,18 @@ describe("Deep gems NFT functionality", function () {
 
     await gems.forge(pe(`${gem2Input}`));
 
-    let events = await gems.queryFilter({
-      address: gems.address,
-      topics: [
-        "0x7ad4b12ff4ce0fdd55b19da97f85fc9a091971912adda4a8bba51626c4cd5469",
-      ],
-    });
+    let events = (
+      await gems.queryFilter({
+        address: gems.address,
+        topics: [],
+      })
+    ).filter((event) => event.event === "Forged");
 
-    const forgedOwner = events[0].args.owner;
+    // const forgedOwner = events[0].args.owner;
     const forgedTokenId1 = events[0].args.tokenId;
     const forgedTokenId2 = events[1].args.tokenId;
 
-    expect(forgedOwner).to.equal(signers[0].address);
+    // expect(forgedOwner).to.equal(signers[0].address);
 
     const metadata1 = await gems.getGemMetadata(forgedTokenId1);
     console.log("gem 1 METADATA", metadata1);
@@ -104,19 +104,19 @@ describe("Deep gems NFT functionality", function () {
     const metadata2 = await gems.getGemMetadata(forgedTokenId2);
     console.log("gem 2 METADATA", metadata2);
 
-    expect(metadata1[4]).to.equal(gem1MetadataPsi, "frop");
-    expect(metadata2[4]).to.equal(gem2MetadataPsi, "ru");
+    expect(metadata1[4]).to.equal(gem1MetadataPsi);
+    expect(metadata2[4]).to.equal(gem2MetadataPsi);
 
     // REFORGE
 
     await gems.reforge(forgedTokenId1);
 
-    events = await gems.queryFilter({
-      address: gems.address,
-      topics: [
-        "0x178d4bb17ec1a0b60cda63c27afeafa706c4f4fe9f1f9f3aba895836fd4b94c1",
-      ],
-    });
+    events = (
+      await gems.queryFilter({
+        address: gems.address,
+        topics: [],
+      })
+    ).filter((event) => event.event === "Reforged");
 
     const reforgedTokenId = events[0].args.newTokenId;
 
@@ -138,14 +138,16 @@ describe("Deep gems NFT functionality", function () {
       reforgedTokenId
     );
 
-    events = await gems.queryFilter({
-      address: gems.address,
-      topics: [
-        "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-      ],
-    });
+    events = (
+      await gems.queryFilter({
+        address: gems.address,
+        topics: [
+          // "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+        ],
+      })
+    ).filter((event) => event.event === "Transfer");
 
-    expect(events[0].args.tokenId).to.equal(reforgedTokenId, "crike");
+    expect(events[0].args.tokenId).to.equal(reforgedTokenId);
 
     // BURN
 
@@ -198,53 +200,38 @@ describe("Deep gems NFT functionality", function () {
 
     let events = await gems.queryFilter({
       address: gems.address,
-      topics: [
-        "0x7ad4b12ff4ce0fdd55b19da97f85fc9a091971912adda4a8bba51626c4cd5469",
-      ],
     });
+    events = events.filter((event) => event.event === "Forged");
 
     const forgedTokenId = events[0].args.tokenId;
-    const forgedOwner = events[0].args.owner;
-
-    expect(forgedOwner).to.equal(signers[0].address);
-
-    console.log(forgedTokenId, forgedOwner);
 
     // REFORGE
     await gems.reforge(forgedTokenId);
 
     events = await gems.queryFilter({
       address: gems.address,
-      topics: [
-        "0x178d4bb17ec1a0b60cda63c27afeafa706c4f4fe9f1f9f3aba895836fd4b94c1",
-      ],
     });
+    events = events.filter((event) => event.event === "Reforged");
 
     const oldTokenId = events[0].args.oldTokenId;
     const reforgedTokenId = events[0].args.newTokenId;
-    const reforgedOwner = events[0].args.owner;
 
     console.log("REFORGE", events);
 
     expect(oldTokenId).to.equal(forgedTokenId);
-    expect(reforgedOwner).to.equal(signers[0].address);
 
     // ACTIVATE
     await gems.activate(reforgedTokenId);
 
     events = await gems.queryFilter({
       address: gems.address,
-      topics: [
-        "0xcffdf6de62e8d9ae544ba4c36565fe4bcef3c1a96f174abbe6c56e25e2b220ed",
-      ],
     });
+    events = events.filter((event) => event.event === "Activated");
 
     const activatedTokenId = events[0].args.tokenId;
-    const activatedOwner = events[0].args.owner;
 
     console.log("ACTIVATE", events);
 
-    expect(activatedOwner).to.equal(signers[0].address);
     expect(activatedTokenId).to.equal(reforgedTokenId);
 
     // BURN
@@ -252,17 +239,13 @@ describe("Deep gems NFT functionality", function () {
 
     events = await gems.queryFilter({
       address: gems.address,
-      topics: [
-        "0x696de425f79f4a40bc6d2122ca50507f0efbeabbff86a84871b7196ab8ea8df7",
-      ],
     });
+    events = events.filter((event) => event.event === "Burned");
 
     const burnedTokenId = events[0].args.tokenId;
-    const burnedOwner = events[0].args.owner;
 
     console.log("BURN", events);
 
-    expect(burnedOwner).to.equal(signers[0].address);
     expect(burnedTokenId).to.equal(reforgedTokenId);
   });
 

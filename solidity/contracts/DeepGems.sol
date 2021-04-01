@@ -41,14 +41,10 @@ contract DeepGems is ERC721 {
     uint256 public state_pendingArtistPayout = 0;
     mapping(uint256 => address) public state_unactivatedGems;
 
-    event Forged(address indexed owner, uint256 indexed tokenId);
-    event Reforged(
-        address indexed owner,
-        uint256 indexed oldTokenId,
-        uint256 indexed newTokenId
-    );
-    event Activated(address indexed owner, uint256 indexed tokenId);
-    event Burned(address indexed owner, uint256 indexed tokenId);
+    event Forged(uint256 indexed tokenId);
+    event Reforged(uint256 indexed oldTokenId, uint256 indexed newTokenId);
+    event Activated(uint256 indexed tokenId);
+    event Burned(uint256 indexed tokenId);
 
     function uint128sToUint256(uint128 a, uint128 b)
         public
@@ -130,7 +126,7 @@ contract DeepGems is ERC721 {
         IERC20(PSI_CONTRACT).transferFrom(msg.sender, address(this), amountPsi);
 
         uint256 tokenId = _forge(amountPsi);
-        emit Forged(msg.sender, tokenId);
+        emit Forged(tokenId);
 
         return tokenId;
     }
@@ -146,7 +142,7 @@ contract DeepGems is ERC721 {
         // pull the psi off the old token id by casting to uint128
         uint256 newTokenId = _forge(uint128(oldTokenId));
 
-        emit Reforged(msg.sender, oldTokenId, newTokenId);
+        emit Reforged(oldTokenId, newTokenId);
     }
 
     function activate(uint256 tokenId) public {
@@ -158,7 +154,7 @@ contract DeepGems is ERC721 {
         delete state_unactivatedGems[tokenId];
 
         _mint(msg.sender, tokenId);
-        emit Activated(msg.sender, tokenId);
+        emit Activated(tokenId);
     }
 
     function burn(uint256 tokenId) public {
@@ -176,7 +172,7 @@ contract DeepGems is ERC721 {
         // leaving only the amount of psi the gem has.
         IERC20(PSI_CONTRACT).transfer(msg.sender, uint256(uint128(tokenId)));
 
-        emit Burned(msg.sender, tokenId);
+        emit Burned(tokenId);
     }
 
     function getGemMetadata(uint256 tokenId)
