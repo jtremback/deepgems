@@ -442,10 +442,19 @@ function Gem({
   tokenId: string;
   setModalData: (x: ModalData) => void;
 }) {
+  const [showImage, setShowImage] = useState(true);
+
+  function onImageError() {
+    console.log("image error");
+    setShowImage(false);
+    setTimeout(() => {
+      setShowImage(true);
+    }, 1000);
+  }
+
   return (
     <div
       style={{
-        borderRadius: 1000,
         width: 100,
         height: 100,
         overflow: "hidden",
@@ -463,18 +472,16 @@ function Gem({
           })
         }
       >
-        <div
-          style={{
-            backgroundImage: `url(${IMAGES_CDN}${tokenId}.jpg)`,
-            backgroundSize: "cover",
-            backgroundRepeat: "no-repeat",
-            width: 100,
-            height: 100,
-          }}
-        />
-        <div className="hue-rotate">
-          <CheapGemSpinner />
-        </div>
+        {showImage && (
+          <img
+            style={{
+              width: 100,
+              height: 100,
+            }}
+            src={`${IMAGES_CDN}${tokenId}.jpg`}
+            onError={onImageError}
+          />
+        )}
       </div>
     </div>
   );

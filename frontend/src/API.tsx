@@ -8,6 +8,12 @@ import { Blockchain } from "./BlockchainInteraction";
 const gemArtifact = require("./DeepGems.json");
 const psiArtifact = require("./PSI.json");
 
+// TODO
+// - Add approve button before forging
+// - Deal with timing (have to wait 5 seconds after connecting wallet etc)
+// - Get buttons on gem modal to work
+// - use more rigorous margin of error etc on buys and sells
+
 const GRAPHQL_URL =
   "https://api.thegraph.com/subgraphs/name/jtremback/deepgems";
 const GEMS_CONTRACT = "0xc5b323c98550D552d55b21d6dD370E5798373709";
@@ -66,15 +72,7 @@ export async function getRecentGems() {
   ).data.gems;
 }
 
-export async function getUserData(
-  blockchain?: Blockchain,
-  userAddress?: string
-) {
-  console.log("GETUSERDDDAATA", blockchain, userAddress);
-  if (!blockchain || !userAddress) {
-    return;
-  }
-
+export async function getUserData(blockchain: Blockchain, userAddress: string) {
   const gems = (
     await (
       await fetch(GRAPHQL_URL, {

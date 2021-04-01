@@ -66,15 +66,23 @@ function App() {
     return blockchain;
   }
 
-  useInterval(async () => {
+  async function tryToGetuserData() {
+    if (!blockchain || !userAddress) {
+      return;
+    }
     const userData = await getUserData(blockchain, userAddress);
     setUserData(userData);
-  }, 5000);
+  }
+
+  useInterval(tryToGetuserData, 5000);
 
   async function triggerConnectProvider() {
     const blockchain = await connectProvider();
+    const userAddress = await blockchain.provider.getSigner().getAddress();
+    const userData = await getUserData(blockchain, userAddress);
+    setUserData(userData);
     setBlockchain(blockchain);
-    setUserAddress(await blockchain.provider.getSigner().getAddress());
+    setUserAddress(userAddress);
   }
 
   return (
@@ -183,7 +191,7 @@ function RecentGems({ gemData }: { gemData: GemData[] }) {
   return (
     <div style={{ overflow: "hidden", width: "100%", whiteSpace: "nowrap" }}>
       {gemData.map((gem) => (
-        <RecentGem gem={gem} />
+        <RecentGem tokenId={gem.id} />
       ))}
     </div>
   );
@@ -191,27 +199,47 @@ function RecentGems({ gemData }: { gemData: GemData[] }) {
 
 function RecentGem({
   style,
-  gem,
+  tokenId,
 }: {
   style?: React.CSSProperties;
-  gem: GemData;
+  tokenId: string;
 }) {
+  const [showImage, setShowImage] = useState(true);
+
+  function onImageError() {
+    console.log("image error");
+    setShowImage(false);
+    setTimeout(() => {
+      setShowImage(true);
+    }, 1000);
+  }
   return (
     <div
       style={{
         width: 300,
         height: 300,
-        backgroundImage: `url(${IMAGES_CDN}${gem.id}.jpg)`,
-        backgroundSize: "cover",
-        backgroundRepeat: "no-repeat",
-        backgroundColor: "black",
-        borderRadius: 10000,
+        // backgroundImage: `url(${IMAGES_CDN}${gem.id}.jpg)`,
+        // backgroundSize: "cover",
+        // backgroundRepeat: "no-repeat",
+        // backgroundColor: "black",
+        // borderRadius: 10000,
         marginRight: 40,
         marginBottom: 40,
         display: "inline-block",
         ...style,
       }}
-    ></div>
+    >
+      {showImage && (
+        <img
+          style={{
+            width: 300,
+            height: 300,
+          }}
+          src={`${IMAGES_CDN}${tokenId}.jpg`}
+          onError={onImageError}
+        />
+      )}
+    </div>
   );
 }
 
