@@ -4,6 +4,7 @@ pragma solidity 0.8.3;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./PSI.sol";
 
 contract DeepGems is ERC721 {
     constructor(
@@ -123,7 +124,8 @@ contract DeepGems is ERC721 {
 
     function forge(uint256 amountPsi) public returns (uint256) {
         // Transfer Psi to pay for gem
-        IERC20(PSI_CONTRACT).transferFrom(msg.sender, address(this), amountPsi);
+        // IERC20(PSI_CONTRACT).transferFrom(msg.sender, address(this), amountPsi);
+        PSI(PSI_CONTRACT).transferToDeepGems(msg.sender, amountPsi);
 
         uint256 tokenId = _forge(amountPsi);
         emit Forged(tokenId);

@@ -38,6 +38,11 @@ async function initContracts() {
     "https://deepge.ms/tokenId/"
   )) as DeepGems;
 
+  await psi.initialize(gems.address);
+
+  // Would be very bad if you could initialize twice
+  expect(psi.initialize(signers[0].address)).to.be.reverted;
+
   return { signers, gems, psi };
 }
 
@@ -47,7 +52,7 @@ function takeCommission(x: BigNumber) {
 }
 
 describe("Deep gems NFT functionality", function () {
-  it("happy path", async function () {
+  it.only("happy path", async function () {
     const { signers, gems, psi } = await initContracts();
 
     const gem1Input = 104;
@@ -69,7 +74,8 @@ describe("Deep gems NFT functionality", function () {
 
     await psi.buy(pe(`200`), { value: pe(`10`), gasPrice: 0 });
 
-    await psi.approve(gems.address, MAXUINT256);
+    // Make sure that transferToDeepGems can only be called by deepgems
+    expect(psi.transferToDeepGems(signers[0].address, pe("1"))).to.be.reverted;
 
     // FORGE
 
@@ -192,8 +198,6 @@ describe("Deep gems NFT functionality", function () {
     const { signers, gems, psi } = await initContracts();
 
     await psi.buy(pe(`10`), { value: pe(`10`), gasPrice: 0 });
-
-    await psi.approve(gems.address, MAXUINT256);
 
     // FORGE
     await gems.forge(pe("1"));
