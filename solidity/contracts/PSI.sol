@@ -4,7 +4,7 @@ pragma solidity 0.8.3;
 import "./LinearBondingCurve.sol";
 
 contract PSI is LinearBondingCurve {
-    address DEEP_GEMS_CONTRACT;
+    address public DEEP_GEMS_CONTRACT;
 
     constructor() LinearBondingCurve("PSI", "PSI", 10000000000) {}
 
