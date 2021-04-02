@@ -1,6 +1,11 @@
 import fetch from "make-fetch-happen";
-import { BigNumber } from "ethers";
 import AWS from "aws-sdk";
+import { BigNumber } from "ethers";
+import dotenv from "dotenv";
+
+if (dotenv.config().error) {
+  throw new Error("could not read .env");
+}
 
 const {
   S3_JSON_CONTEXT_URL,
@@ -25,11 +30,7 @@ const {
 } = process.env as any;
 
 function loop() {
-  try {
-    run();
-  } catch (e) {
-    console.error(e);
-  }
+  run();
   setTimeout(() => {
     loop();
   }, parseInt(LOOP_TIME, 10));
@@ -42,6 +43,16 @@ const s3 = new AWS.S3({
 
 interface Context {
   lastGemRetrieved: number;
+}
+
+interface Gem {
+  burned: boolean;
+  forgeBlock: string;
+  forgeTime: string;
+  id: string;
+  number: string;
+  owner: string;
+  psi: string;
 }
 
 const query = `query GetGems($gt: Int!, $lte: Int!) {
@@ -65,8 +76,8 @@ const highestGemQuery = `{
   }
 }`;
 
-async function getHighestGem() {
-  const res = await (
+async function getHighestGem(): Promise<number | undefined> {
+  const text = await (
     await fetch(GRAPHQL_URL, {
       method: "POST",
       headers: {
@@ -75,13 +86,21 @@ async function getHighestGem() {
       },
       body: JSON.stringify({ query: highestGemQuery }),
     })
-  ).json();
+  ).text();
 
-  return res.data.gems[0].number;
+  let json;
+
+  try {
+    json = JSON.parse(text);
+  } catch (e) {
+    throw new Error(e.message + " " + text);
+  }
+
+  return json.data.gems[0]?.number;
 }
 
 async function getForgedGems(gt: number, lte: number) {
-  const res = await (
+  const text = await (
     await fetch(GRAPHQL_URL, {
       method: "POST",
       headers: {
@@ -90,8 +109,17 @@ async function getForgedGems(gt: number, lte: number) {
       },
       body: JSON.stringify({ query, variables: { gt, lte } }),
     })
-  ).json();
-  return res.data.gems;
+  ).text();
+
+  let json;
+
+  try {
+    json = JSON.parse(text);
+  } catch (e) {
+    throw new Error(e.message + " " + text);
+  }
+
+  return json.data.gems;
 }
 
 function parseGemMetadata(tokenId: string) {
@@ -113,12 +141,16 @@ function parseGemMetadata(tokenId: string) {
 }
 
 async function run() {
+  const currentGem = await getHighestGem();
+
+  if (!currentGem) {
+    throw new Error("No gems currently indexed by the graph");
+  }
+
   const rawContext = await (await fetch(S3_JSON_CONTEXT_URL)).json();
   const { lastGemRetrieved }: Context = {
     lastGemRetrieved: parseInt(rawContext.lastGemRetrieved, 10),
   };
-
-  const currentGem = await getHighestGem();
 
   console.log("lastGemRetrieved", lastGemRetrieved, "currentGem", currentGem);
 
@@ -138,6 +170,7 @@ async function run() {
   for (const gem of gems) {
     console.log("render gem: ", gem);
     await renderGem(gem.id);
+    uploadMetadata(gem);
   }
 
   // Upload context
@@ -150,6 +183,20 @@ async function run() {
     ),
     S3_DATA_BUCKET,
     `context.json`,
+    "application/json"
+  );
+}
+
+function uploadMetadata(gem: Gem) {
+  uploadToS3(
+    Buffer.from(
+      JSON.stringify({
+        name: `#${gem.number} - ${gem.psi}PSI`,
+        image: `https://deepge.ms/images/${gem.id}`,
+      })
+    ),
+    S3_DATA_BUCKET,
+    `${gem.id}.json`,
     "application/json"
   );
 }
