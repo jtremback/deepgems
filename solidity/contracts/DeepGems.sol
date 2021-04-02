@@ -39,7 +39,8 @@ contract DeepGems is ERC721 {
     uint8[] public ARTIST_PERCENTAGES;
     string BASE_URI;
 
-    uint256 public state_pendingArtistPayout;
+    uint256 public state_commissionCollected;
+    uint256 public state_commissionPaid;
     mapping(uint256 => address) public state_unactivatedGems;
     bytes32 state_lastArtistWithdrawBlock;
 
@@ -56,12 +57,12 @@ contract DeepGems is ERC721 {
         return (uint128(a >> 128), uint128(a));
     }
 
-    function packLatent(uint32 counter, uint96 blckhash)
+    function packLatent(uint64 counter, uint64 blckhash)
         internal
         pure
         returns (uint128)
     {
-        return (uint128(counter) << 96) | blckhash;
+        return (uint128(counter) << 64) | blckhash;
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
@@ -77,7 +78,7 @@ contract DeepGems is ERC721 {
         uint256 commission = amountPsi / 20;
         uint256 psiInGem = amountPsi - commission;
 
-        uint256 pendingArtistPayout = state_pendingArtistPayout + commission;
+        uint256 commissionCollected = state_commissionCollected + commission;
 
         // Generate id
         uint256 tokenId =
@@ -88,53 +89,43 @@ contract DeepGems is ERC721 {
                     // that looks identical to an existing gem, since the state_pendingArtistPayout is
                     // used as an incrementing counter in the latent. Quantizing
                     // greatly reduces the search space to find an identical looking
-                    // gem. If pendingArtistPayout goes over 429,496,729.6, this
-                    // number will stop incrementing and it will only be possible
-                    // to mine one gem per block.
-                    uint32(pendingArtistPayout / 1e17),
-                    uint96(uint256(blockhash(block.number - 1)))
+                    // gem.
+                    uint64(commissionCollected / 1e17),
+                    uint64(uint256(blockhash(block.number - 1)))
                 ),
                 uint128(psiInGem)
             );
 
         // This error will be triggered if the amount of PSI that was used to forge
         // the gem was not enough to ensure that the quantized commission was
-        // larger than 0, since in this case the state_pendingArtistPayout will not be
-        // incremented, and will have the same tokenId as the last gem.
-        // The threshold amount is 2 PSI with a 5% artist commission and
+        // larger than 0, since in this case the commissionCollected will not be
+        // incremented, and will have the same tokenId as the last gem in the block.
+        // The threshold amount is around 2 PSI with a 5% artist commission and
         // quantization to 1 decimal place, since (2 / 20) = 0.1
-        // This error will also be triggered if the pendingArtistPayout is the same twice in
-        // one block. This can happen if artistWithdraw is called during the block. For instance,
-        // there could be a pendingArtistPayout of 10, then artistWithdraw is called, then another
-        // gem is forged which puts pendingArtistPayout back up to 10. This forging will fail.
         require(
             state_unactivatedGems[tokenId] == address(0),
             "try forging with more PSI"
         );
         require(!_exists(tokenId), "try forging with more PSI");
 
-        return (tokenId, pendingArtistPayout);
+        return (tokenId, commissionCollected);
     }
 
     function artistWithdraw() public {
-        require(
-            state_lastArtistWithdrawBlock != blockhash(block.number - 1),
-            "cannot withdraw twice in one block"
-        );
-
-        // Calculate 1% of artist payout
-        uint256 one_percent_of_payout = state_pendingArtistPayout / 100;
+        // Calculate pending payout
+        uint256 pendingArtistPayout =
+            state_commissionCollected - state_commissionPaid;
+        // Calculate 1% of pending payout
+        uint256 onePercentOfPayout = pendingArtistPayout / 100;
         // Zero out pending payout
-        state_pendingArtistPayout = 0;
-        // Save block hash
-        state_lastArtistWithdrawBlock = blockhash(block.number - 1);
+        state_commissionPaid = state_commissionCollected;
 
         // Transfer coins out to artist addresses proportional to
         // their percentages
         for (uint64 i = 0; i < ARTIST_ADDRESSES.length; i++) {
             IERC20(PSI_CONTRACT).transfer(
                 ARTIST_ADDRESSES[i],
-                ARTIST_PERCENTAGES[i] * one_percent_of_payout
+                ARTIST_PERCENTAGES[i] * onePercentOfPayout
             );
         }
     }
@@ -143,13 +134,13 @@ contract DeepGems is ERC721 {
         // Transfer Psi to pay for gem
         PSI(PSI_CONTRACT).transferToDeepGems(msg.sender, amountPsi);
 
-        (uint256 tokenId, uint256 pendingArtistPayout) = _forge(amountPsi);
+        (uint256 tokenId, uint256 commissionCollected) = _forge(amountPsi);
 
         // Add gem to unactivated gems mapping
         state_unactivatedGems[tokenId] = msg.sender;
 
         // Update artist's pending payout
-        state_pendingArtistPayout = pendingArtistPayout;
+        state_commissionCollected = commissionCollected;
 
         emit Forged(tokenId);
 
@@ -165,14 +156,14 @@ contract DeepGems is ERC721 {
         delete state_unactivatedGems[oldTokenId];
 
         // pull the psi off the old token id by casting to uint128
-        (uint256 newTokenId, uint256 pendingArtistPayout) =
+        (uint256 newTokenId, uint256 commissionCollected) =
             _forge(uint128(oldTokenId));
 
         // Add gem to unactivated gems mapping
         state_unactivatedGems[newTokenId] = msg.sender;
 
         // Update artist's pending payout
-        state_pendingArtistPayout = pendingArtistPayout;
+        state_commissionCollected = commissionCollected;
 
         emit Reforged(oldTokenId, newTokenId);
 
