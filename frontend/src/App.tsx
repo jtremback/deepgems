@@ -5,7 +5,6 @@ import psi0example from "./images/0psi.jpg";
 import psi100example from "./images/100psi.jpg";
 import psi300example from "./images/300psi.jpg";
 import useAPIPolling from "use-api-polling";
-import { ethers } from "ethers";
 import { Blockchain, BlockchainInteraction } from "./BlockchainInteraction";
 import {
   connectProvider,
@@ -17,9 +16,6 @@ import {
 import { Modal, ModalData } from "./BlockchainInteraction";
 
 const IMAGES_CDN = "https://deepgemscache.s3.us-west-2.amazonaws.com/";
-
-const fe = ethers.utils.formatEther;
-const pe = ethers.utils.parseEther;
 
 function useInterval(callback: () => void, delay: number) {
   const savedCallback = useRef(callback);
@@ -61,10 +57,6 @@ function App() {
     initialState: [],
     delay: 5000,
   });
-
-  function getBlockchain() {
-    return blockchain;
-  }
 
   async function tryToGetuserData() {
     if (!blockchain || !userAddress) {
@@ -235,6 +227,7 @@ function RecentGem({
             width: 300,
             height: 300,
           }}
+          alt=""
           src={`${IMAGES_CDN}${tokenId}.jpg`}
           onError={onImageError}
         />
@@ -270,6 +263,7 @@ function ExplainerText() {
             <div style={{ maxWidth: 200, textAlign: "center" }}>
               <img
                 src={data[0]}
+                alt=""
                 style={{ paddingBottom: 20, width: "100%" }}
               ></img>
               {data[1]}

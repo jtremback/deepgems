@@ -1,29 +1,12 @@
-import React, { ReactNode, useEffect, useState, useRef } from "react";
-import background from "./background.jpg";
+import React, { useEffect, useState, useRef } from "react";
 import "./App.css";
-import psi0example from "./images/0psi.jpg";
-import psi100example from "./images/100psi.jpg";
-import psi300example from "./images/300psi.jpg";
-import useAPIPolling, { APIPollingOptions } from "use-api-polling";
-import WalletConnectProvider from "@walletconnect/web3-provider";
 import { BigNumber, ethers } from "ethers";
-import Web3Modal from "web3modal";
 import { DeepGems } from "../../solidity/typechain/DeepGems";
 import { PSI } from "../../solidity/typechain/PSI";
-import {
-  Button,
-  TextInput,
-  GemSpinner,
-  CheapGemSpinner,
-} from "./GenericComponents";
+import { Button, TextInput } from "./GenericComponents";
 import { UserData } from "./API";
-const gemArtifact = require("./DeepGems.json");
-const psiArtifact = require("./PSI.json");
 
-const GRAPHQL_URL = "http://localhost:8000/subgraphs/name/jtremback/deepgems";
 const IMAGES_CDN = "https://deepgemscache.s3.us-west-2.amazonaws.com/";
-const GEMS_CONTRACT = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-const PSI_CONTRACT = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 
 const fe = ethers.utils.formatEther;
 const pe = ethers.utils.parseEther;
@@ -185,8 +168,8 @@ function BuyPSIBox({
     const timeoutID = setTimeout(async () => {
       const estimate =
         type === "buy"
-          ? await blockchain!.psi.quoteMint(psiInputBigNum)
-          : await blockchain!.psi.quoteBurn(psiInputBigNum);
+          ? await blockchain!.psi.quoteBuy(psiInputBigNum)
+          : await blockchain!.psi.quoteSell(psiInputBigNum);
       setEthEstimates({
         ...ethEstimates,
         [type]: estimate,
@@ -202,8 +185,8 @@ function BuyPSIBox({
     if (psiInputAmounts[type]) {
       const estimate =
         type === "buy"
-          ? await blockchain!.psi.quoteMint(psiInputAmounts[type]!)
-          : await blockchain!.psi.quoteBurn(psiInputAmounts[type]!);
+          ? await blockchain!.psi.quoteBuy(psiInputAmounts[type]!)
+          : await blockchain!.psi.quoteSell(psiInputAmounts[type]!);
       setEthEstimates({
         ...ethEstimates,
         [type]: estimate,
@@ -224,18 +207,18 @@ function BuyPSIBox({
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <h2
           onClick={() => setMode("buy")}
-          style={mode == "buy" ? {} : { color: "grey", cursor: "pointer" }}
+          style={mode === "buy" ? {} : { color: "grey", cursor: "pointer" }}
         >
           Buy PSI
         </h2>
         <h2
           onClick={() => setMode("sell")}
-          style={mode == "sell" ? {} : { color: "grey", cursor: "pointer" }}
+          style={mode === "sell" ? {} : { color: "grey", cursor: "pointer" }}
         >
           Sell PSI
         </h2>
       </div>
-      {mode == "buy" ? (
+      {mode === "buy" ? (
         <form>
           <p>Amount of PSI to buy:</p>
           <p>
@@ -251,7 +234,7 @@ function BuyPSIBox({
           <Button
             active={!!psiInputAmounts.buy && !!ethEstimates.buy}
             onClick={() => {
-              blockchain!.psi.mint(psiInputAmounts.buy!, {
+              blockchain!.psi.buy(psiInputAmounts.buy!, {
                 value: ethEstimates.buy!,
               });
             }}
@@ -275,7 +258,7 @@ function BuyPSIBox({
           <Button
             active={!!psiInputAmounts.sell && !!ethEstimates.sell}
             onClick={() => {
-              blockchain!.psi.burn(psiInputAmounts.sell!, ethEstimates.sell!);
+              blockchain!.psi.sell(psiInputAmounts.sell!, ethEstimates.sell!);
             }}
           >
             Sell
@@ -478,6 +461,7 @@ function Gem({
               width: 100,
               height: 100,
             }}
+            alt=""
             src={`${IMAGES_CDN}${tokenId}.jpg`}
             onError={onImageError}
           />

@@ -3,11 +3,18 @@ import { PSI } from "../typechain/PSI";
 import { DeepGems } from "../typechain/DeepGems";
 
 async function main() {
-  const DeepGemsContract = await ethers.getContractFactory("DeepGems");
-  const gems = (await DeepGemsContract.deploy()) as DeepGems;
   const PSIContract = await ethers.getContractFactory("PSI");
-  const psi = (await PSIContract.deploy(gems.address)) as PSI;
-  await gems.initialize(psi.address);
+  const psi = (await PSIContract.deploy()) as PSI;
+
+  const DeepGemsContract = await ethers.getContractFactory("DeepGems");
+  const gems = (await DeepGemsContract.deploy(
+    psi.address,
+    ["0xAB24c97524De9f7Bc8D6f1b8cF5c3ceC77323387"],
+    [100],
+    "https://deepge.ms/tokenId/"
+  )) as DeepGems;
+
+  await psi.initialize(gems.address);
 
   console.log("DeepGems address:", gems.address);
   console.log("Psi address:", psi.address);

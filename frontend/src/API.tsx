@@ -5,8 +5,9 @@ import Web3Modal from "web3modal";
 import { DeepGems } from "../../solidity/typechain/DeepGems";
 import { PSI } from "../../solidity/typechain/PSI";
 import { Blockchain } from "./BlockchainInteraction";
-const gemArtifact = require("./DeepGems.json");
-const psiArtifact = require("./PSI.json");
+
+import gemArtifact from "./artifacts/contracts/DeepGems.sol/DeepGems.json";
+import psiArtifact from "./artifacts/contracts/PSI.sol/PSI.json";
 
 // TODO
 // - Add approve button before forging
@@ -16,11 +17,8 @@ const psiArtifact = require("./PSI.json");
 
 const GRAPHQL_URL =
   "https://api.thegraph.com/subgraphs/name/jtremback/deepgems";
-const GEMS_CONTRACT = "0xc5b323c98550D552d55b21d6dD370E5798373709";
-const PSI_CONTRACT = "0xA041c8D7278690C5310cFc4849d0f11A4Adb19C5";
-
-const fe = ethers.utils.formatEther;
-const pe = ethers.utils.parseEther;
+const GEMS_CONTRACT = "0x5da58028D6305f541695B54412BbE356F5D8757C";
+const PSI_CONTRACT = "0xCA552ACe5ED13FfA1edA9e7DeDA0DCc62BD9567b";
 
 const providerOptions = {
   walletconnect: {
