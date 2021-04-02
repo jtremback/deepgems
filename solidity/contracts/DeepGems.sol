@@ -103,6 +103,10 @@ contract DeepGems is ERC721 {
         // incremented, and will have the same tokenId as the last gem.
         // The threshold amount is 2 PSI with a 5% artist commission and
         // quantization to 1 decimal place, since (2 / 20) = 0.1
+        // This error will also be triggered if the pendingArtistPayout is the same twice in
+        // one block. This can happen if artistWithdraw is called during the block. For instance,
+        // there could be a pendingArtistPayout of 10, then artistWithdraw is called, then another
+        // gem is forged which puts pendingArtistPayout back up to 10. This forging will fail.
         require(
             state_unactivatedGems[tokenId] == address(0),
             "try forging with more PSI"
