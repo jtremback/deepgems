@@ -99,7 +99,7 @@ async function getHighestGem(): Promise<number | undefined> {
   return json.data.gems[0]?.number;
 }
 
-async function getForgedGems(gt: number, lte: number) {
+async function getForgedGems(gt: number, lte: number): Promise<Gem[]> {
   const text = await (
     await fetch(GRAPHQL_URL, {
       method: "POST",
@@ -169,8 +169,7 @@ async function run() {
 
   for (const gem of gems) {
     console.log("render gem: ", gem);
-    await renderGem(gem.id);
-    uploadMetadata(gem);
+    await renderGem(gem);
   }
 
   // Upload context
@@ -187,23 +186,9 @@ async function run() {
   );
 }
 
-function uploadMetadata(gem: Gem) {
-  uploadToS3(
-    Buffer.from(
-      JSON.stringify({
-        name: `#${gem.number} - ${gem.psi}PSI`,
-        image: `https://deepge.ms/images/${gem.id}`,
-      })
-    ),
-    S3_DATA_BUCKET,
-    `${gem.id}.json`,
-    "application/json"
-  );
-}
-
-async function renderGem(tokenId: string) {
+async function renderGem(gem: Gem) {
   // Get metadata
-  let metadata = parseGemMetadata(tokenId);
+  let metadata = parseGemMetadata(gem.id);
 
   // Render gem
   const img = await (
@@ -218,8 +203,32 @@ async function renderGem(tokenId: string) {
     )
   ).buffer();
 
+  uploadImageAndMetadata(gem, img);
+}
+
+async function uploadImageAndMetadata(gem: Gem, img: Buffer) {
   // Upload image to s3
-  uploadToS3(img, S3_IMAGE_BUCKET, `${tokenId}.jpg`, "image/jpeg");
+  let res = await uploadToS3(
+    img,
+    S3_IMAGE_BUCKET,
+    `${gem.id}.jpg`,
+    "image/jpeg"
+  );
+  console.log(`image uploaded successfully. ${res.Location}`);
+
+  // Upload metadata to s3
+  res = await uploadToS3(
+    Buffer.from(
+      JSON.stringify({
+        name: `#${gem.number} - ${gem.psi}PSI`,
+        image: `https://deepge.ms/images/${gem.id}`,
+      })
+    ),
+    S3_DATA_BUCKET,
+    `${gem.id}.json`,
+    "application/json"
+  );
+  console.log(`metadata uploaded successfully. ${res.Location}`);
 }
 
 function uploadToS3(
@@ -227,21 +236,27 @@ function uploadToS3(
   bucket: string,
   key: string,
   contentType: string
-) {
-  // Setting up S3 upload parameters
-  const params: AWS.S3.PutObjectRequest = {
-    Body: data,
-    Bucket: bucket,
-    Key: key, // File name you want to save as in S3
-    ContentType: contentType,
-  };
+): Promise<AWS.S3.ManagedUpload.SendData> {
+  return new Promise((resolve, reject) => {
+    // Setting up S3 upload parameters
+    const params: AWS.S3.PutObjectRequest = {
+      Body: data,
+      Bucket: bucket,
+      Key: key, // File name you want to save as in S3
+      ContentType: contentType,
+    };
 
-  // Uploading files to the bucket
-  s3.upload(params, function (err: Error, data: AWS.S3.ManagedUpload.SendData) {
-    if (err) {
-      throw err;
-    }
-    console.log(`File uploaded successfully. ${data.Location}`);
+    // Uploading files to the bucket
+    s3.upload(
+      params,
+      function (err: Error, data: AWS.S3.ManagedUpload.SendData) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
+        }
+      }
+    );
   });
 }
 
