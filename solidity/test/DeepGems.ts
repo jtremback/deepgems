@@ -52,7 +52,7 @@ function takeCommission(x: BigNumber) {
 }
 
 describe("Deep gems NFT functionality", function () {
-  it.only("happy path", async function () {
+  it("happy path", async function () {
     const { signers, gems, psi } = await initContracts();
 
     const gem1Input = 104;

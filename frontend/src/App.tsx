@@ -6,6 +6,7 @@ import psi100example from "./images/100psi.jpg";
 import psi300example from "./images/300psi.jpg";
 import useAPIPolling from "use-api-polling";
 import { Blockchain, BlockchainInteraction } from "./BlockchainInteraction";
+import { CheapGemSpinner } from "./GenericComponents";
 import {
   connectProvider,
   UserData,
@@ -181,7 +182,21 @@ function PageTitle() {
 
 function RecentGems({ gemData }: { gemData: GemData[] }) {
   return (
-    <div style={{ overflow: "hidden", width: "100%", whiteSpace: "nowrap" }}>
+    <div
+      style={{
+        width: "100%",
+        whiteSpace: "nowrap",
+        display: "flex",
+        flexDirection: "row-reverse",
+      }}
+    >
+      <div
+        style={{
+          width: 200,
+          height: 200,
+          display: "inline-block",
+        }}
+      ></div>
       {gemData.map((gem) => (
         <RecentGem tokenId={gem.id} />
       ))}
@@ -208,29 +223,25 @@ function RecentGem({
   return (
     <div
       style={{
-        width: 300,
-        height: 300,
-        // backgroundImage: `url(${IMAGES_CDN}${gem.id}.jpg)`,
-        // backgroundSize: "cover",
-        // backgroundRepeat: "no-repeat",
-        // backgroundColor: "black",
-        // borderRadius: 10000,
-        marginRight: 40,
-        marginBottom: 40,
+        width: 200,
+        height: 200,
         display: "inline-block",
+        background: "black",
         ...style,
       }}
     >
-      {showImage && (
+      {showImage ? (
         <img
           style={{
-            width: 300,
-            height: 300,
+            width: 200,
+            height: 200,
           }}
           alt=""
           src={`${IMAGES_CDN}${tokenId}.jpg`}
           onError={onImageError}
         />
+      ) : (
+        <CheapGemSpinner size={200} />
       )}
     </div>
   );
