@@ -3,7 +3,7 @@ import "./App.css";
 import { BigNumber, ethers } from "ethers";
 import { DeepGems } from "../../solidity/typechain/DeepGems";
 import { PSI } from "../../solidity/typechain/PSI";
-import { Button, TextInput } from "./GenericComponents";
+import { Button, CheapGemSpinner, TextInput } from "./GenericComponents";
 import { UserData } from "./API";
 
 const IMAGES_CDN = "https://deepgemscache.s3.us-west-2.amazonaws.com/";
@@ -288,49 +288,87 @@ export function Modal({
       return (
         <div
           style={{
-            width: 256,
+            width: 384,
           }}
         >
           <div
             style={{
-              backgroundImage: `url(${IMAGES_CDN}${modalData.tokenId}.jpg)`,
-              backgroundSize: "cover",
-              backgroundRepeat: "no-repeat",
-              width: 256,
-              height: 256,
+              width: 384,
+              height: 300,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
             }}
-          />
+          >
+            <div
+              style={{
+                backgroundImage: `url(${IMAGES_CDN}${modalData.tokenId}.jpg)`,
+                backgroundSize: "cover",
+                backgroundRepeat: "no-repeat",
+                width: 256,
+                height: 256,
+              }}
+            />
+          </div>
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
+              marginBottom: 10,
             }}
           >
-            <Button
-              onClick={() => {
-                blockchain!.gems.reforge(modalData.tokenId);
-              }}
-            >
-              Reforge
-            </Button>
-            <Button
-              onClick={() => {
-                blockchain!.gems.burn(modalData.tokenId);
-              }}
-            >
-              Burn
-            </Button>
-            <Button
-              onClick={() => {
-                blockchain!.gems.activate(modalData.tokenId);
-              }}
-            >
-              Activate
-            </Button>
+            <div style={{ marginRight: 10 }}>
+              <Button
+                onClick={() => {
+                  blockchain!.gems.reforge(modalData.tokenId);
+                }}
+              >
+                Reforge
+              </Button>
+            </div>
+            <div style={{ fontSize: 16 }}>
+              Reforging a gem creates a new gem using 99% of this gem's PSI.
+            </div>
           </div>
-          <div style={{ fontSize: 16, marginTop: 10, marginBottom: 10 }}>
-            Reforging a gem creates a new gem using 99% of this gem's PSI.
-            Burning a gem destroys the gem and adds the PSI to your account.
+
+          <div
+            style={{
+              display: "flex",
+              marginBottom: 10,
+            }}
+          >
+            <div style={{ marginRight: 10 }}>
+              <Button
+                onClick={() => {
+                  blockchain!.gems.burn(modalData.tokenId);
+                }}
+              >
+                Burn
+              </Button>
+            </div>
+            <div style={{ fontSize: 16 }}>
+              Burning a gem destroys the gem and adds the PSI to your account.
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              marginBottom: 10,
+            }}
+          >
+            <div style={{ marginRight: 10 }}>
+              <Button
+                onClick={() => {
+                  blockchain!.gems.activate(modalData.tokenId);
+                }}
+              >
+                Activate
+              </Button>
+            </div>
+            <div style={{ fontSize: 16 }}>
+              Activating a gem turns it into a full NFT and allows you to sell
+              it on exchanges such as OpenSea.
+            </div>
           </div>
         </div>
       );
@@ -455,7 +493,7 @@ function Gem({
           })
         }
       >
-        {showImage && (
+        {showImage ? (
           <img
             style={{
               width: 100,
@@ -465,6 +503,8 @@ function Gem({
             src={`${IMAGES_CDN}${tokenId}.jpg`}
             onError={onImageError}
           />
+        ) : (
+          <CheapGemSpinner size={100} />
         )}
       </div>
     </div>

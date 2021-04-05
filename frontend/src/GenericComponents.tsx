@@ -56,9 +56,9 @@ export function Button({
   );
 }
 
-export function CheapGemSpinner() {
+export function CheapGemSpinner({ size }: { size: number }) {
   return (
-    <svg width="100px" height="100px" viewBox="0 0 128 128">
+    <svg width={`${size}px`} height={`${size}px`} viewBox="0 0 128 128">
       <g>
         <path
           d="M64 128A64 64 0 0 1 18.34 19.16L21.16 22a60 60 0 1 0 52.8-17.17l.62-3.95A64 64 0 0 1 64 128z"

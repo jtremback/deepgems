@@ -36,7 +36,7 @@ const web3Modal = new Web3Modal({
 });
 
 const recentGemsQuery = `{
-  gems(orderBy: forgeTime, orderDirection: desc, first: 7, where: { burned: false }){
+  gems(orderBy: forgeTime, orderDirection: desc, first: 10, where: { burned: false }){
     id
     psi
     owner
