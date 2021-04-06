@@ -1,9 +1,10 @@
 import React, { CSSProperties, useEffect, useState, useRef } from "react";
 import background from "./background.jpg";
 import "./App.css";
-import psi0example from "./images/0psi.jpg";
-import psi100example from "./images/100psi.jpg";
-import psi300example from "./images/300psi.jpg";
+import psi50example from "./images/00056-000032-0.5.jpg";
+import psi100example from "./images/00056-000032-1.jpg";
+import psi200example from "./images/00056-000032-2.jpg";
+import psi300example from "./images/00056-000032-3.jpg";
 import useAPIPolling from "use-api-polling";
 import { Blockchain, BlockchainInteraction } from "./BlockchainInteraction";
 import { CheapGemSpinner } from "./GenericComponents";
@@ -17,6 +18,7 @@ import {
 import { Modal, ModalData } from "./BlockchainInteraction";
 
 const IMAGES_CDN = "https://deepgemscache.s3.us-west-2.amazonaws.com/";
+const METADATA_CDN = "https://deepgemsdata.s3.us-west-2.amazonaws.com/";
 
 function useInterval(callback: () => void, delay: number) {
   const savedCallback = useRef(callback);
@@ -188,6 +190,7 @@ function RecentGems({ gemData }: { gemData: GemData[] }) {
         whiteSpace: "nowrap",
         display: "flex",
         flexDirection: "row-reverse",
+        marginBottom: 20,
       }}
     >
       <div
@@ -198,7 +201,7 @@ function RecentGems({ gemData }: { gemData: GemData[] }) {
         }}
       ></div>
       {gemData.map((gem) => (
-        <RecentGem tokenId={gem.id} />
+        <RecentGem gem={gem} />
       ))}
     </div>
   );
@@ -206,15 +209,14 @@ function RecentGems({ gemData }: { gemData: GemData[] }) {
 
 function RecentGem({
   style,
-  tokenId,
+  gem,
 }: {
   style?: React.CSSProperties;
-  tokenId: string;
+  gem: GemData;
 }) {
   const [showImage, setShowImage] = useState(true);
 
   function onImageError() {
-    console.log("image error");
     setShowImage(false);
     setTimeout(() => {
       setShowImage(true);
@@ -223,10 +225,9 @@ function RecentGem({
   return (
     <div
       style={{
-        width: 200,
-        height: 200,
         display: "inline-block",
-        background: "black",
+        background: "rgba(0,0,0,0.7)",
+        margin: 5,
         ...style,
       }}
     >
@@ -237,12 +238,15 @@ function RecentGem({
             height: 200,
           }}
           alt=""
-          src={`${IMAGES_CDN}${tokenId}.jpg`}
+          src={`${IMAGES_CDN}${gem.id}.jpg`}
           onError={onImageError}
         />
       ) : (
         <CheapGemSpinner size={200} />
       )}
+      <div
+        style={{ color: "white", textAlign: "center" }}
+      >{`#${gem.number} - ${gem.psi} PSI`}</div>
     </div>
   );
 }
@@ -251,12 +255,9 @@ function ExplainerText() {
   return (
     <>
       Deep Gems are completely unique AI-generated NFT gemstones. Some are
-      beautiful, some are ugly. Only one gem can be mined every block. Deep Gems
-      are powered by PSI. You can mine a gem without any PSI, but it will be
-      boring. Every PSI-less gem looks exactly the same. When you mine a gem
-      with PSI, it takes on a more distinct color and form. You see that none of
-      the other infinite possible Deep Gems is exactly like yours. The more PSI
-      you add, the more interesting your gem becomes.
+      beautiful, some are ugly. Nobody knows what a gem will look like until the
+      moment it is forged. Deep Gems are powered by PSI. The more PSI you forge
+      a gem with, the more interesting it becomes.
       <div
         style={{
           display: "flex",
@@ -266,8 +267,9 @@ function ExplainerText() {
         }}
       >
         {[
-          [psi0example, "0 PSI"],
+          [psi50example, "50 PSI"],
           [psi100example, "100 PSI"],
+          [psi200example, "200 PSI"],
           [psi300example, "300 PSI"],
         ].map((data) => {
           return (
@@ -282,10 +284,12 @@ function ExplainerText() {
           );
         })}
       </div>
-      You can get PSI on a bonding curve. The more people get into Deep Gems,
-      the more it will cost you. You can also burn an existing gem to get its
-      PSI back out. But be careful! When you burn a gem you only get 99% of its
-      PSI out. 1% is lost forever.
+      When you forge gem, only 95% of the PSI goes into the gem. The other 5%
+      goes to the artists behind Deep Gems. You can get PSI on a bonding curve.
+      The more people get into Deep Gems, the more it will cost you. If you
+      don't like how a gem turned out, you can reforge it to try again, or burn
+      it to get the PSI back out. To sell a gem on an NFT exchange, you can
+      activate it to turn it into a transferable NFT.
     </>
   );
 }

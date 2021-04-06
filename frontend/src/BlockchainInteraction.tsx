@@ -466,7 +466,6 @@ function Gem({
   const [showImage, setShowImage] = useState(true);
 
   function onImageError() {
-    console.log("image error");
     setShowImage(false);
     setTimeout(() => {
       setShowImage(true);
@@ -479,6 +478,7 @@ function Gem({
         width: 100,
         height: 100,
         overflow: "hidden",
+        cursor: "pointer",
         ...style,
       }}
     >
