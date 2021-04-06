@@ -221,7 +221,7 @@ async function uploadImageAndMetadata(gem: Gem, img: Buffer) {
     Buffer.from(
       JSON.stringify({
         name: `#${gem.number} - ${gem.psi}PSI`,
-        image: `https://deepge.ms/images/${gem.id}`,
+        image: `https://cdn.deepge.ms/${gem.id}.jpg`,
       })
     ),
     S3_DATA_BUCKET,
