@@ -36,27 +36,29 @@ const web3Modal = new Web3Modal({
 });
 
 const recentGemsQuery = `{
-  gems(orderBy: forgeTime, orderDirection: desc, first: 10, where: { burned: false }){
+  gems(orderBy: number, orderDirection: desc, first: 10, where: { burned: false }){
     id
     psi
     owner
     forgeTime
     forgeBlock
+    number
   }
 }`;
 
 const userGemsQuery = `query UserGems($userAddress: Bytes!) {
-  gems(orderBy:forgeTime, orderDirection: asc, where: { owner: $userAddress, burned: false }){
+  gems(orderBy:number, orderDirection: asc, where: { owner: $userAddress, burned: false }){
     id
     psi
     owner
     forgeTime
     forgeBlock
+    number
   }
 }`;
 
 export async function getRecentGems() {
-  return (
+  const graphGems = (
     await (
       await fetch(GRAPHQL_URL, {
         method: "POST",
@@ -68,6 +70,7 @@ export async function getRecentGems() {
       })
     ).json()
   ).data.gems;
+  return graphGems;
 }
 
 export async function getUserData(blockchain: Blockchain, userAddress: string) {
@@ -96,6 +99,8 @@ export async function getUserData(blockchain: Blockchain, userAddress: string) {
 
 export type GemData = {
   id: string;
+  psi: string;
+  number: string;
 };
 
 export type UserData = {
