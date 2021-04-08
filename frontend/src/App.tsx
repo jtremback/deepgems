@@ -6,19 +6,12 @@ import psi100example from "./images/00056-000032-1.jpg";
 import psi200example from "./images/00056-000032-2.jpg";
 import psi300example from "./images/00056-000032-3.jpg";
 import useAPIPolling from "use-api-polling";
-import { Blockchain, BlockchainInteraction } from "./BlockchainInteraction";
-import { CheapGemSpinner } from "./GenericComponents";
-import {
-  connectProvider,
-  UserData,
-  GemData,
-  getUserData,
-  getRecentGems,
-} from "./API";
-import { Modal, ModalData } from "./BlockchainInteraction";
+import { BlockchainInteraction } from "./BlockchainInteraction";
+import { LargeGem } from "./Shared";
+import { connectProvider, getUserData, getRecentGems } from "./API";
+import { Modal } from "./BlockchainInteraction";
 
-const IMAGES_CDN = "https://deepgemscache.s3.us-west-2.amazonaws.com/";
-const METADATA_CDN = "https://deepgemsdata.s3.us-west-2.amazonaws.com/";
+import { Blockchain, UserData, GemData, ModalData } from "./Types";
 
 function useInterval(callback: () => void, delay: number) {
   const savedCallback = useRef(callback);
@@ -201,52 +194,8 @@ function RecentGems({ gemData }: { gemData: GemData[] }) {
         }}
       ></div>
       {gemData.map((gem) => (
-        <RecentGem gem={gem} />
+        <LargeGem gem={gem} />
       ))}
-    </div>
-  );
-}
-
-function RecentGem({
-  style,
-  gem,
-}: {
-  style?: React.CSSProperties;
-  gem: GemData;
-}) {
-  const [showImage, setShowImage] = useState(true);
-
-  function onImageError() {
-    setShowImage(false);
-    setTimeout(() => {
-      setShowImage(true);
-    }, 1000);
-  }
-  return (
-    <div
-      style={{
-        display: "inline-block",
-        background: "rgba(0,0,0,0.7)",
-        margin: 5,
-        ...style,
-      }}
-    >
-      {showImage ? (
-        <img
-          style={{
-            width: 200,
-            height: 200,
-          }}
-          alt=""
-          src={`${IMAGES_CDN}${gem.id}.jpg`}
-          onError={onImageError}
-        />
-      ) : (
-        <CheapGemSpinner size={200} />
-      )}
-      <div
-        style={{ color: "white", textAlign: "center" }}
-      >{`#${gem.number} - ${gem.psi} PSI`}</div>
     </div>
   );
 }
@@ -273,7 +222,7 @@ function ExplainerText() {
           [psi300example, "300 PSI"],
         ].map((data) => {
           return (
-            <div style={{ maxWidth: 200, textAlign: "center" }}>
+            <div style={{ maxWidth: 100, textAlign: "center" }}>
               <img
                 src={data[0]}
                 alt=""
@@ -284,7 +233,7 @@ function ExplainerText() {
           );
         })}
       </div>
-      When you forge gem, only 95% of the PSI goes into the gem. The other 5%
+      When you forge a gem, only 95% of the PSI goes into the gem. The other 5%
       goes to the artists behind Deep Gems. You can get PSI on a bonding curve.
       The more people get into Deep Gems, the more it will cost you. If you
       don't like how a gem turned out, you can reforge it to try again, or burn

@@ -4,21 +4,15 @@ import { ethers, BigNumber } from "ethers";
 import Web3Modal from "web3modal";
 import { DeepGems } from "../../solidity/typechain/DeepGems";
 import { PSI } from "../../solidity/typechain/PSI";
-import { Blockchain } from "./BlockchainInteraction";
+import { Blockchain } from "./Types";
 
 import gemArtifact from "./artifacts/contracts/DeepGems.sol/DeepGems.json";
 import psiArtifact from "./artifacts/contracts/PSI.sol/PSI.json";
+import { GRAPHQL_URL, GEMS_CONTRACT, PSI_CONTRACT } from "./Shared";
 
 // TODO
-// - Add approve button before forging
-// - Deal with timing (have to wait 5 seconds after connecting wallet etc)
 // - Get buttons on gem modal to work
 // - use more rigorous margin of error etc on buys and sells
-
-const GRAPHQL_URL =
-  "https://api.thegraph.com/subgraphs/name/jtremback/deepgems";
-const GEMS_CONTRACT = "0x5da58028D6305f541695B54412BbE356F5D8757C";
-const PSI_CONTRACT = "0xCA552ACe5ED13FfA1edA9e7DeDA0DCc62BD9567b";
 
 const providerOptions = {
   walletconnect: {
@@ -96,17 +90,6 @@ export async function getUserData(blockchain: Blockchain, userAddress: string) {
 
   return { gems, psiBalance };
 }
-
-export type GemData = {
-  id: string;
-  psi: string;
-  number: string;
-};
-
-export type UserData = {
-  psiBalance: BigNumber;
-  gems: GemData[];
-};
 
 export async function connectProvider() {
   //  Enable session (triggers QR Code modal)

@@ -1,21 +1,17 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./App.css";
 import { BigNumber, ethers } from "ethers";
-import { DeepGems } from "../../solidity/typechain/DeepGems";
-import { PSI } from "../../solidity/typechain/PSI";
-import { Button, CheapGemSpinner, TextInput } from "./GenericComponents";
-import { UserData } from "./API";
-
-const IMAGES_CDN = "https://deepgemscache.s3.us-west-2.amazonaws.com/";
+import {
+  Button,
+  TextInput,
+  IMAGES_CDN,
+  GemThumbnail,
+  LargeGem,
+} from "./Shared";
+import { GemData, UserData, Blockchain, ModalData } from "./Types";
 
 const fe = ethers.utils.formatEther;
 const pe = ethers.utils.parseEther;
-
-export type Blockchain = {
-  provider: ethers.providers.Web3Provider;
-  gems: DeepGems;
-  psi: PSI;
-};
 
 export function BlockchainInteraction({
   connectProvider,
@@ -269,13 +265,6 @@ function BuyPSIBox({
   );
 }
 
-export type ModalData = GemModalData;
-
-export type GemModalData = {
-  type: "GemModal";
-  tokenId: string;
-};
-
 export function Modal({
   modalData,
   blockchain,
@@ -300,33 +289,25 @@ export function Modal({
               alignItems: "center",
             }}
           >
-            <div
-              style={{
-                backgroundImage: `url(${IMAGES_CDN}${modalData.tokenId}.jpg)`,
-                backgroundSize: "cover",
-                backgroundRepeat: "no-repeat",
-                width: 256,
-                height: 256,
-              }}
-            />
+            <LargeGem gem={modalData.gem} />
           </div>
           <div
             style={{
-              display: "flex",
+              display: modalData.gem.activated ? "none" : "flex",
               marginBottom: 10,
             }}
           >
             <div style={{ marginRight: 10 }}>
               <Button
                 onClick={() => {
-                  blockchain!.gems.reforge(modalData.tokenId);
+                  blockchain!.gems.reforge(modalData.gem.id);
                 }}
               >
                 Reforge
               </Button>
             </div>
             <div style={{ fontSize: 16 }}>
-              Reforging a gem creates a new gem using 99% of this gem's PSI.
+              Reforging a gem creates a new gem using this gem's PSI.
             </div>
           </div>
 
@@ -339,7 +320,7 @@ export function Modal({
             <div style={{ marginRight: 10 }}>
               <Button
                 onClick={() => {
-                  blockchain!.gems.burn(modalData.tokenId);
+                  blockchain!.gems.burn(modalData.gem.id);
                 }}
               >
                 Burn
@@ -352,23 +333,32 @@ export function Modal({
 
           <div
             style={{
-              display: "flex",
               marginBottom: 10,
+              display: modalData.gem.activated ? "none" : "flex",
             }}
           >
             <div style={{ marginRight: 10 }}>
               <Button
                 onClick={() => {
-                  blockchain!.gems.activate(modalData.tokenId);
+                  blockchain!.gems.activate(modalData.gem.id);
                 }}
               >
                 Activate
               </Button>
             </div>
             <div style={{ fontSize: 16 }}>
-              Activating a gem turns it into a full NFT and allows you to sell
-              it on exchanges such as OpenSea.
+              Activating a gem turns it into a full NFT and allows you to
+              transfer it and trade it on NFT exchanges.
             </div>
+          </div>
+          <div
+            style={{
+              fontSize: 16,
+              display: modalData.gem.activated ? "flex" : "none",
+            }}
+          >
+            This gem has been activated and can be transferred to other accounts
+            and traded on NFT exchanges.
           </div>
         </div>
       );
@@ -442,71 +432,14 @@ function YourGems({
         {userData &&
           userData.gems.map((gem) => {
             return (
-              <Gem
+              <GemThumbnail
                 style={{ margin: 5 }}
-                tokenId={gem.id}
+                gem={gem}
                 setModalData={setModalData}
               />
             );
           })}
       </div>
     </>
-  );
-}
-
-function Gem({
-  style,
-  tokenId,
-  setModalData,
-}: {
-  style?: React.CSSProperties;
-  tokenId: string;
-  setModalData: (x: ModalData) => void;
-}) {
-  const [showImage, setShowImage] = useState(true);
-
-  function onImageError() {
-    setShowImage(false);
-    setTimeout(() => {
-      setShowImage(true);
-    }, 1000);
-  }
-
-  return (
-    <div
-      style={{
-        width: 100,
-        height: 100,
-        overflow: "hidden",
-        cursor: "pointer",
-        ...style,
-      }}
-    >
-      <div
-        style={{
-          overflow: "hidden",
-        }}
-        onClick={() =>
-          setModalData({
-            type: "GemModal",
-            tokenId,
-          })
-        }
-      >
-        {showImage ? (
-          <img
-            style={{
-              width: 100,
-              height: 100,
-            }}
-            alt=""
-            src={`${IMAGES_CDN}${tokenId}.jpg`}
-            onError={onImageError}
-          />
-        ) : (
-          <CheapGemSpinner size={100} />
-        )}
-      </div>
-    </div>
   );
 }
