@@ -17,6 +17,7 @@ const {
   AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY,
   GRAPHQL_URL,
+  CDN_DOMAIN_FOR_METADATA,
 }: {
   S3_JSON_CONTEXT_URL: string;
   GEMS_PER_FETCH: string;
@@ -27,6 +28,7 @@ const {
   AWS_ACCESS_KEY_ID: string;
   AWS_SECRET_ACCESS_KEY: string;
   GRAPHQL_URL: string;
+  CDN_DOMAIN_FOR_METADATA: string;
 } = process.env as any;
 
 function loop() {
@@ -168,7 +170,7 @@ async function run() {
   console.log(`Got ${gems.length} events`);
 
   for (const gem of gems) {
-    console.log("render gem: ", gem);
+    console.log("render gem: ", JSON.stringify(gem));
     await renderGem(gem);
   }
 
@@ -221,7 +223,7 @@ async function uploadImageAndMetadata(gem: Gem, img: Buffer) {
     Buffer.from(
       JSON.stringify({
         name: `#${gem.number} - ${gem.psi}PSI`,
-        image: `https://cdn.deepge.ms/${gem.id}.jpg`,
+        image: `${CDN_DOMAIN_FOR_METADATA}${gem.id}.jpg`,
       })
     ),
     S3_DATA_BUCKET,
