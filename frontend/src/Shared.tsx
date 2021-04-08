@@ -1,5 +1,13 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState } from "react";
 import "./App.css";
+import { GemData, ModalData } from "./Types";
+
+export const IMAGES_CDN = "https://cdn.deepge.ms/";
+export const METADATA_CDN = "https://cdn.deepge.ms/";
+export const GRAPHQL_URL =
+  "https://api.thegraph.com/subgraphs/name/jtremback/deepgems";
+export const GEMS_CONTRACT = "0x5da58028D6305f541695B54412BbE356F5D8757C";
+export const PSI_CONTRACT = "0xCA552ACe5ED13FfA1edA9e7DeDA0DCc62BD9567b";
 
 export function TextInput({
   style,
@@ -56,6 +64,50 @@ export function Button({
   );
 }
 
+export function LargeGem({
+  style,
+  gem,
+}: {
+  style?: React.CSSProperties;
+  gem: GemData;
+}) {
+  const [showImage, setShowImage] = useState(true);
+
+  function onImageError() {
+    setShowImage(false);
+    setTimeout(() => {
+      setShowImage(true);
+    }, 1000);
+  }
+  return (
+    <div
+      style={{
+        display: "inline-block",
+        background: "rgba(0,0,0,0.7)",
+        margin: 5,
+        ...style,
+      }}
+    >
+      {showImage ? (
+        <img
+          style={{
+            width: 200,
+            height: 200,
+          }}
+          alt=""
+          src={`${IMAGES_CDN}${gem.id}.jpg`}
+          onError={onImageError}
+        />
+      ) : (
+        <CheapGemSpinner size={200} />
+      )}
+      <div
+        style={{ color: "white", textAlign: "center", fontSize: 16 }}
+      >{`#${gem.number} - ${gem.psi} PSI`}</div>
+    </div>
+  );
+}
+
 export function CheapGemSpinner({ size }: { size: number }) {
   return (
     <svg width={`${size}px`} height={`${size}px`} viewBox="0 0 128 128">
@@ -74,6 +126,63 @@ export function CheapGemSpinner({ size }: { size: number }) {
         ></animateTransform>
       </g>
     </svg>
+  );
+}
+
+export function GemThumbnail({
+  style,
+  gem,
+  setModalData,
+}: {
+  style?: React.CSSProperties;
+  gem: GemData;
+  setModalData: (x: ModalData) => void;
+}) {
+  const [showImage, setShowImage] = useState(true);
+
+  function onImageError() {
+    setShowImage(false);
+    setTimeout(() => {
+      setShowImage(true);
+    }, 1000);
+  }
+
+  return (
+    <div
+      style={{
+        width: 100,
+        height: 100,
+        overflow: "hidden",
+        cursor: "pointer",
+        ...style,
+      }}
+    >
+      <div
+        style={{
+          overflow: "hidden",
+        }}
+        onClick={() =>
+          setModalData({
+            type: "GemModal",
+            gem,
+          })
+        }
+      >
+        {showImage ? (
+          <img
+            style={{
+              width: 100,
+              height: 100,
+            }}
+            alt=""
+            src={`${IMAGES_CDN}${gem.id}.jpg`}
+            onError={onImageError}
+          />
+        ) : (
+          <CheapGemSpinner size={100} />
+        )}
+      </div>
+    </div>
   );
 }
 
