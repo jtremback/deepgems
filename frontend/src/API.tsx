@@ -37,6 +37,7 @@ const recentGemsQuery = `{
     forgeTime
     forgeBlock
     number
+    activated
   }
 }`;
 
@@ -48,6 +49,7 @@ const userGemsQuery = `query UserGems($userAddress: Bytes!) {
     forgeTime
     forgeBlock
     number
+    activated
   }
 }`;
 
