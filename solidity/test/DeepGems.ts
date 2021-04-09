@@ -24,6 +24,23 @@ async function mineBlock() {
   });
 }
 
+// async function getCurrentBlockNumber() {
+//   return BigNumber.from(
+//     await network.provider.request({
+//       method: "eth_blockNumber",
+//       params: [],
+//     })
+//   ).toNumber();
+// }
+
+// async function getBlockByNumber(num: number) {
+//   let hexNum = BigNumber.from(num).toHexString();
+//   return await network.provider.request({
+//     method: "eth_getBlockByNumber",
+//     params: [hexNum, false],
+//   });
+// }
+
 async function getEvents(contract: Contract, topic: string) {
   return contract.queryFilter({
     address: contract.address,
@@ -59,7 +76,7 @@ function takeCommission(x: BigNumber) {
 }
 
 describe("Deep gems NFT functionality", function () {
-  it.only("forges", async function () {
+  it("forges", async function () {
     const { signers, gems, psi } = await initContracts();
 
     for (let i = 0; i < 260; i++) {
@@ -308,32 +325,26 @@ describe("Deep gems NFT functionality", function () {
       topics: [],
     });
 
-    const blocknumbers = events.map((event) => event.blockNumber);
+    const minus1Hash = events[events.length - 2].blockHash;
 
-    console.log(blocknumbers);
+    const minus255Hash = events[events.length - 256].blockHash;
 
-    // const event255BlocksAgo = events[0];
-    // const event100BlocksAgo = events[155];
-    // const event10BlocksAgo = events[0];
-    // const event1BlockAgo = events[0];
-    // const currentEvent = events[5];
-    // expect(event5BlocksAgo.blockNumber).to.equal(currentEvent.blockNumber - 5);
+    const blockhashEntropy = minus1Hash.slice(-1) + minus255Hash.slice(-2, -1);
 
-    // const tokenId = currentEvent.args!.tokenId.toHexString();
+    const tokenId = events[events.length - 1].args!.tokenId.toHexString();
 
-    // const blockHash5BlocksAgo = event5BlocksAgo.blockHash;
-    // const creatorAddress = signers[0].address;
-    // const psiInGem = takeCommission(pe("1"))[0]
-    //   .toHexString()
-    //   .slice(2)
-    //   .padStart(32, "0");
+    const psiInGem = takeCommission(pe("2"))[0]
+      .toHexString()
+      .slice(2)
+      .padStart(32, "0");
 
-    // const expectedTokenId =
-    //   "0x" +
-    //   creatorAddress.toLowerCase().slice(-16) +
-    //   blockHash5BlocksAgo.slice(-16) +
-    //   psiInGem.slice(-64);
+    const expectedTokenId =
+      "0x" +
+      // 256 to hex
+      (256).toString(16) +
+      blockhashEntropy +
+      psiInGem.slice(-64);
 
-    // expect(tokenId).to.equal(expectedTokenId);
+    expect(BigNumber.from(tokenId)).to.equal(BigNumber.from(expectedTokenId));
   });
 });

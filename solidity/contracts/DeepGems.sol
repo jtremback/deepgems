@@ -57,32 +57,22 @@ contract DeepGems is ERC721 {
         return (uint128(a >> 128), uint128(a));
     }
 
-    function append2bits(uint8 a, uint8 b) internal pure returns (uint8) {
-        // We left shift a by 2, adding 2 zero bits onto the end.
-        // Then we right shift b by 6, moving the first 2 bits to the end and making the rest 0.
-        // Then we XOR them, effectively putting the first 2 bits of b into the last 2 bits of b
-        // a << 2:  |11111111| -> |11111100|
-        // b >> 30: |11111111| -> |00000011|
-        // a | b:                 |11111111|
-        return (a << 2) | (b >> 6);
-    }
-
     function blockHashEntropy() internal view returns (uint8) {
-        // 4 different blocks to make it more expensive for a miner to be able to determine this number.
+        // We add in entropy from two blocks to make things more random. A miner who
+        // finds blockhash(block.number - 1) will have increased their search space
+        // for identical gems by 4 bits. A miner who finds blockhash(block.number - 255)
+        // will have increased their search space by the same amount, but only if nobody else
+        // forges a gem in the following 255 blocks, because that will throw off their calculations
+
+        // We left shift a by 4, adding 4 zero bits onto the end.
+        // Then we right shift b by 4, moving the first 4 bits to the end and making the rest 0.
+        // Then we XOR them, effectively creating a byte with the last 4 bits of a and the first 4 bits of b
+        // a << 4:  |11111111| -> |11110000|
+        // b >> 4:  |11111111| -> |00001111|
+        // a | b:                 |11111111|
         return
-            append2bits(
-                append2bits(
-                    append2bits(
-                        append2bits(
-                            0,
-                            uint8(bytes1(blockhash(block.number - 1)))
-                        ),
-                        uint8(bytes1(blockhash(block.number - 10)))
-                    ),
-                    uint8(bytes1(blockhash(block.number - 100)))
-                ),
-                uint8(bytes1(blockhash(block.number - 255)))
-            );
+            (uint8(uint256(blockhash(block.number - 1))) << 4) |
+            (uint8(uint256(blockhash(block.number - 255))) >> 4);
     }
 
     function packLatent(uint120 counter, uint8 blockhashEntropy)
@@ -123,15 +113,6 @@ contract DeepGems is ERC721 {
                 ),
                 uint128(psiInGem)
             );
-
-        console.log("quantizedCommission");
-        console.logBytes15(bytes15(uint120(commissionCollected / 1e17)));
-
-        console.log("blockhashEntropy");
-        console.logBytes1(bytes1(blockHashEntropy()));
-
-        console.log("tokenId");
-        console.logBytes32(bytes32(tokenId));
 
         // This error will be triggered if the amount of PSI that was used to forge
         // the gem was not enough to ensure that the quantized commission was
