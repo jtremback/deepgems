@@ -57,12 +57,38 @@ contract DeepGems is ERC721 {
         return (uint128(a >> 128), uint128(a));
     }
 
-    function packLatent(uint64 counter, uint64 blckhash)
-        internal
-        pure
-        returns (uint128)
-    {
-        return (uint128(counter) << 64) | blckhash;
+    function append2bits(bytes16 a, bytes16 b) internal pure returns (bytes16) {
+        // We left shift a by 2, adding 2 zero bits onto the end.
+        // Then we right shift b by 30, moving the first 2 bits to the end and making the rest 0.
+        // Then we XOR them, effectively putting the first 2 bits of b into the last 2 bits of b
+        // a << 2:  |1111...1111| -> |1111...1100|
+        // b >> 30: |1111...1111| -> |0000...0011|
+        // a | b:                    |1111...1111|
+        return (a << 2) | (b >> 30);
+    }
+
+    function packLatent(
+        uint120 counter,
+        bytes16 blockhash1,
+        bytes16 blockhash2,
+        bytes16 blockhash3,
+        bytes16 blockhash4
+    ) internal pure returns (uint128) {
+        bytes16 counterBytes = bytes16(uint128(counter));
+
+        return
+            uint128(
+                append2bits(
+                    append2bits(
+                        append2bits(
+                            append2bits(counterBytes, blockhash1),
+                            blockhash2
+                        ),
+                        blockhash3
+                    ),
+                    blockhash4
+                )
+            );
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
@@ -86,12 +112,25 @@ contract DeepGems is ERC721 {
                 packLatent(
                     // Dividing by 1e17 quantizes the payout to one decimal place.
                     // This prevents attacks where someone could mine for a gem
-                    // that looks identical to an existing gem, since the state_pendingArtistPayout is
+                    // that looks identical to an existing gem, since the commissionCollected is
                     // used as an incrementing counter in the latent. Quantizing
                     // greatly reduces the search space to find an identical looking
                     // gem.
-                    uint64(commissionCollected / 1e17),
-                    uint64(uint256(blockhash(block.number - 1)))
+                    // We want to reduce the ability for a non-miner to search for identical gems by adding
+                    // in a component of the block hash. At the same time, we also want to make it harder for
+                    // a miner to search for identical gems using the extra space given to them by the block hash.
+                    // So we use the hashes of several blocks in the past. A miner would need to be able to find several
+                    // blocks, many blocks apart, and make an accurate prediction as to what the state of the
+                    // commissionCollected counter will be. It seems like this would be expensive
+                    // probably only possible at all if deep gems was not getting any use during those blocks
+                    // (since the counter wouldn't increment in that case).
+                    // Still, we are under no illusions that this is the same as a true random number, so it could
+                    // happen if there was enough financial incentive.
+                    uint120(commissionCollected / 1e17),
+                    bytes16(blockhash(block.number - 1)),
+                    bytes16(blockhash(block.number - 10)),
+                    bytes16(blockhash(block.number - 100)),
+                    bytes16(blockhash(block.number - 255))
                 ),
                 uint128(psiInGem)
             );

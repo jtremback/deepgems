@@ -52,7 +52,7 @@ function takeCommission(x: BigNumber) {
 }
 
 describe("Deep gems NFT functionality", function () {
-  it("happy path", async function () {
+  it.only("happy path", async function () {
     const { signers, gems, psi } = await initContracts();
 
     const gem1Input = 104;
@@ -179,7 +179,11 @@ describe("Deep gems NFT functionality", function () {
 
     // ARTIST COMMISSION
 
-    expect(await gems.state_pendingArtistPayout()).to.equal(totalCommission);
+    expect(
+      (await gems.state_commissionCollected()).sub(
+        await gems.state_commissionPaid()
+      )
+    ).to.equal(totalCommission);
 
     await gems.artistWithdraw();
 
@@ -253,7 +257,7 @@ describe("Deep gems NFT functionality", function () {
     expect(burnedTokenId).to.equal(reforgedTokenId);
   });
 
-  it("generates the tokenId correctly", async function () {
+  it.skip("generates the tokenId correctly", async function () {
     const { signers, gems, psi } = await initContracts();
 
     await psi.buy(pe(`100`), { value: pe(`10`), gasPrice: 0 });
