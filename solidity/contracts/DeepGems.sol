@@ -1,7 +1,6 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.3;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./PSI.sol";
@@ -57,12 +56,30 @@ contract DeepGems is ERC721 {
         return (uint128(a >> 128), uint128(a));
     }
 
-    function packLatent(uint64 counter, uint64 blckhash)
+    function blockHashEntropy() internal view returns (uint8) {
+        // We add in entropy from two blocks to make things more random. A miner who
+        // finds blockhash(block.number - 1) will have increased their search space
+        // for identical gems by 4 bits. A miner who finds blockhash(block.number - 255)
+        // will have increased their search space by the same amount, but only if nobody else
+        // forges a gem in the following 255 blocks, because that will throw off their calculations
+
+        // We left shift a by 4, adding 4 zero bits onto the end.
+        // Then we right shift b by 4, moving the first 4 bits to the end and making the rest 0.
+        // Then we XOR them, effectively creating a byte with the last 4 bits of a and the first 4 bits of b
+        // a << 4:  |11111111| -> |11110000|
+        // b >> 4:  |11111111| -> |00001111|
+        // a | b:                 |11111111|
+        return
+            (uint8(uint256(blockhash(block.number - 1))) << 4) |
+            (uint8(uint256(blockhash(block.number - 255))) >> 4);
+    }
+
+    function packLatent(uint120 counter, uint8 blockhashEntropy)
         internal
         pure
         returns (uint128)
     {
-        return (uint128(counter) << 64) | blckhash;
+        return (uint128(counter) << 8) | blockhashEntropy;
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
@@ -85,13 +102,13 @@ contract DeepGems is ERC721 {
             packTokenId(
                 packLatent(
                     // Dividing by 1e17 quantizes the payout to one decimal place.
-                    // This prevents attacks where someone could mine for a gem
-                    // that looks identical to an existing gem, since the state_pendingArtistPayout is
+                    // This mitigates attacks where someone could mine for a gem
+                    // that looks identical to an existing gem, since the commissionCollected is
                     // used as an incrementing counter in the latent. Quantizing
                     // greatly reduces the search space to find an identical looking
                     // gem.
-                    uint64(commissionCollected / 1e17),
-                    uint64(uint256(blockhash(block.number - 1)))
+                    uint120(commissionCollected / 1e17),
+                    blockHashEntropy()
                 ),
                 uint128(psiInGem)
             );
@@ -99,7 +116,7 @@ contract DeepGems is ERC721 {
         // This error will be triggered if the amount of PSI that was used to forge
         // the gem was not enough to ensure that the quantized commission was
         // larger than 0, since in this case the commissionCollected will not be
-        // incremented, and will have the same tokenId as the last gem in the block.
+        // incremented, and will have the same tokenId as the previous gem in the block.
         // The threshold amount is around 2 PSI with a 5% artist commission and
         // quantization to 1 decimal place, since (2 / 20) = 0.1
         require(
