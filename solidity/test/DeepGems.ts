@@ -17,6 +17,13 @@ async function resetChain() {
   });
 }
 
+async function mineBlock() {
+  await network.provider.request({
+    method: "evm_mine",
+    params: [],
+  });
+}
+
 async function getEvents(contract: Contract, topic: string) {
   return contract.queryFilter({
     address: contract.address,
@@ -52,7 +59,36 @@ function takeCommission(x: BigNumber) {
 }
 
 describe("Deep gems NFT functionality", function () {
-  it.only("happy path", async function () {
+  it.only("forges", async function () {
+    const { signers, gems, psi } = await initContracts();
+
+    for (let i = 0; i < 260; i++) {
+      await mineBlock();
+    }
+
+    await psi.buy(pe(`200`), { value: pe(`10`), gasPrice: 0 });
+
+    await gems.forge(pe("104"));
+
+    await gems.forge(pe("96"));
+
+    let events = (
+      await gems.queryFilter({
+        address: gems.address,
+        topics: [],
+      })
+    ).filter((event) => event.event === "Forged");
+
+    const forgedTokenId = events[0].args.tokenId;
+
+    console.log(forgedTokenId.toHexString());
+  });
+
+  it("happy path", async function () {
+    for (let i = 0; i < 260; i++) {
+      await mineBlock();
+    }
+
     const { signers, gems, psi } = await initContracts();
 
     const gem1Input = 104;
@@ -105,10 +141,10 @@ describe("Deep gems NFT functionality", function () {
     // expect(forgedOwner).to.equal(signers[0].address);
 
     const metadata1 = await gems.getGemMetadata(forgedTokenId1);
-    console.log("gem 1 METADATA", metadata1);
+    console.log("gem 1 METADATA", forgedTokenId1, metadata1);
 
     const metadata2 = await gems.getGemMetadata(forgedTokenId2);
-    console.log("gem 2 METADATA", metadata2);
+    console.log("gem 2 METADATA", forgedTokenId2, metadata2);
 
     expect(metadata1[4]).to.equal(gem1MetadataPsi);
     expect(metadata2[4]).to.equal(gem2MetadataPsi);
@@ -257,44 +293,47 @@ describe("Deep gems NFT functionality", function () {
     expect(burnedTokenId).to.equal(reforgedTokenId);
   });
 
-  it.skip("generates the tokenId correctly", async function () {
+  it("generates the tokenId correctly", async function () {
+    this.timeout(0);
     const { signers, gems, psi } = await initContracts();
 
-    await psi.buy(pe(`100`), { value: pe(`10`), gasPrice: 0 });
+    await psi.buy(pe(`1000`), { value: pe(`10`), gasPrice: 0 });
 
-    await psi.approve(gems.address, MAXUINT256);
-
-    await gems.forge(pe("1"));
-    await gems.forge(pe("1"));
-    await gems.forge(pe("1"));
-    await gems.forge(pe("1"));
-    await gems.forge(pe("1"));
-    await gems.forge(pe("1"));
+    for (let i = 0; i < 256; i++) {
+      await gems.forge(pe("2"));
+    }
 
     const events = await gems.queryFilter({
       address: gems.address,
       topics: [],
     });
 
-    const event5BlocksAgo = events[0];
-    const currentEvent = events[5];
-    expect(event5BlocksAgo.blockNumber).to.equal(currentEvent.blockNumber - 5);
+    const blocknumbers = events.map((event) => event.blockNumber);
 
-    const tokenId = currentEvent.args!.tokenId.toHexString();
+    console.log(blocknumbers);
 
-    const blockHash5BlocksAgo = event5BlocksAgo.blockHash;
-    const creatorAddress = signers[0].address;
-    const psiInGem = takeCommission(pe("1"))[0]
-      .toHexString()
-      .slice(2)
-      .padStart(32, "0");
+    // const event255BlocksAgo = events[0];
+    // const event100BlocksAgo = events[155];
+    // const event10BlocksAgo = events[0];
+    // const event1BlockAgo = events[0];
+    // const currentEvent = events[5];
+    // expect(event5BlocksAgo.blockNumber).to.equal(currentEvent.blockNumber - 5);
 
-    const expectedTokenId =
-      "0x" +
-      creatorAddress.toLowerCase().slice(-16) +
-      blockHash5BlocksAgo.slice(-16) +
-      psiInGem.slice(-64);
+    // const tokenId = currentEvent.args!.tokenId.toHexString();
 
-    expect(tokenId).to.equal(expectedTokenId);
+    // const blockHash5BlocksAgo = event5BlocksAgo.blockHash;
+    // const creatorAddress = signers[0].address;
+    // const psiInGem = takeCommission(pe("1"))[0]
+    //   .toHexString()
+    //   .slice(2)
+    //   .padStart(32, "0");
+
+    // const expectedTokenId =
+    //   "0x" +
+    //   creatorAddress.toLowerCase().slice(-16) +
+    //   blockHash5BlocksAgo.slice(-16) +
+    //   psiInGem.slice(-64);
+
+    // expect(tokenId).to.equal(expectedTokenId);
   });
 });
