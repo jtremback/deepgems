@@ -12,6 +12,7 @@ import { connectProvider, getUserData, getRecentGems } from "./API";
 import { Modal } from "./BlockchainInteraction";
 
 import { Blockchain, UserData, GemData, ModalData } from "./Types";
+import MyChart from "./BondingCurveChart";
 
 function useInterval(callback: () => void, delay: number) {
   const savedCallback = useRef(callback);
@@ -239,6 +240,8 @@ function ExplainerText() {
       don't like how a gem turned out, you can reforge it to try again, or burn
       it to get the PSI back out. To sell a gem on an NFT exchange, you can
       activate it to turn it into a transferable NFT.
+      <MyChart />
+      {/* <ReactChartJs /> */}
     </>
   );
 }
