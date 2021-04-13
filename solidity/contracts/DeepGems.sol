@@ -41,7 +41,6 @@ contract DeepGems is ERC721 {
     uint256 public state_commissionCollected;
     uint256 public state_commissionPaid;
     mapping(uint256 => address) public state_unactivatedGems;
-    bytes32 state_lastArtistWithdrawBlock;
 
     event Forged(uint256 indexed tokenId);
     event Reforged(uint256 indexed oldTokenId, uint256 indexed newTokenId);
@@ -61,7 +60,7 @@ contract DeepGems is ERC721 {
         // finds blockhash(block.number - 1) will have increased their search space
         // for identical gems by 4 bits. A miner who finds blockhash(block.number - 255)
         // will have increased their search space by the same amount, but only if nobody else
-        // forges a gem in the following 255 blocks, because that will throw off their calculations
+        // forges a gem in the following 255 blocks, because that will throw off their calculations.
 
         // We left shift a by 4, adding 4 zero bits onto the end.
         // Then we right shift b by 4, moving the first 4 bits to the end and making the rest 0.
@@ -101,12 +100,20 @@ contract DeepGems is ERC721 {
         uint256 tokenId =
             packTokenId(
                 packLatent(
-                    // Dividing by 1e17 quantizes the payout to one decimal place.
-                    // This mitigates attacks where someone could mine for a gem
-                    // that looks identical to an existing gem, since the commissionCollected is
-                    // used as an incrementing counter in the latent. Quantizing
-                    // greatly reduces the search space to find an identical looking
-                    // gem.
+                    // Deep gems uses a combination of entropy from the commission counter and
+                    // two block hashes to determine the latent vector (seed) of a gem.
+                    // This is OK, because there is no objective rarity or lottery-like mechanic in Deep gems.
+                    // The value of each gem is based on how attractive people find it.
+                    // The only attack possible is one where someone searches for a latent vector that
+                    // produces a gem indistinguishable from one that has already been forged.
+                    //
+                    // Dividing by 1e17 quantizes the commission counter to one decimal place.
+                    // Quantizing greatly reduces the search space to find an identical looking
+                    // gem. Supposing PSI is worth $1, an attacker would need to spend up to $10,000 at
+                    // a 5% artist commission rate to get a search space of 5,000 possible gems. This is
+                    // probably too low to successfully find an identical gem. A miner who could determine
+                    // the hashes of two blocks might be able to increase this search space by 8 bits, or
+                    // up to 1,280,000 possible gems
                     uint120(commissionCollected / 1e17),
                     blockHashEntropy()
                 ),

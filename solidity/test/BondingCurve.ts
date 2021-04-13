@@ -269,4 +269,59 @@ describe("Psi", function () {
       await psi.sell(pe(`${tosell}`), pe(`0`), { gasPrice: 0 });
     }
   });
+
+  it.only("generate plot", async function () {
+    this.timeout(0);
+    const { signers, gems, psi } = await initContracts();
+
+    const costToBuyOneMore = async () => fe(await psi.quoteBuy(pe("1")));
+
+    const marketCap = async () =>
+      fe(await psi.provider.getBalance(psi.address));
+
+    const signerBalance = async () =>
+      fe(await psi.balanceOf(signers[0].address));
+
+    await psi.buy(pe(`100`), { value: pe(`999999`), gasPrice: 0 });
+
+    console.log("cost to buy one", await costToBuyOneMore());
+    console.log("market cap", await marketCap());
+    console.log("number bought", await signerBalance());
+
+    await psi.buy(pe(`900`), { value: pe(`999999`), gasPrice: 0 });
+
+    console.log("cost to buy one", await costToBuyOneMore());
+    console.log("market cap", await marketCap());
+    console.log("number bought", await signerBalance());
+
+    await psi.buy(pe(`9000`), { value: pe(`999999`), gasPrice: 0 });
+
+    console.log("cost to buy one", await costToBuyOneMore());
+    console.log("market cap", await marketCap());
+    console.log("number bought", await signerBalance());
+
+    await psi.buy(pe(`90000`), { value: pe(`999999`), gasPrice: 0 });
+
+    console.log("cost to buy one", await costToBuyOneMore());
+    console.log("market cap", await marketCap());
+    console.log("number bought", await signerBalance());
+
+    await psi.buy(pe(`900000`), { value: pe(`999999`), gasPrice: 0 });
+
+    console.log("cost to buy one", await costToBuyOneMore());
+    console.log("market cap", await marketCap());
+    console.log("number bought", await signerBalance());
+
+    await psi.buy(pe(`9000000`), { value: pe(`999999`), gasPrice: 0 });
+
+    console.log("cost to buy one", await costToBuyOneMore());
+    console.log("market cap", await marketCap());
+    console.log("number bought", await signerBalance());
+
+    await psi.buy(pe(`90000000`), { value: pe(`999999`), gasPrice: 0 });
+
+    console.log("cost to buy one", await costToBuyOneMore());
+    console.log("market cap", await marketCap());
+    console.log("number bought", await signerBalance());
+  });
 });
