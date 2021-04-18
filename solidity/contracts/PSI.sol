@@ -1,12 +1,16 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.3;
 
-import "./LinearBondingCurve.sol";
+import "./QuadraticBondingCurve.sol";
 
-contract PSI is LinearBondingCurve {
+contract PSI is QuadraticBondingCurve {
     address public DEEP_GEMS_CONTRACT;
 
-    constructor() LinearBondingCurve("PSI", "PSI", 10000000000) {}
+    // constructor() LinearBondingCurve("PSI", "PSI", 4000000000) {}
+
+    constructor() QuadraticBondingCurve("PSI", "PSI", 10000000000000) {}
+
+    // constructor() CubicBondingCurve("PSI", "PSI", 10000000000000000) {}
 
     function initialize(address deepGemsContract) public {
         require(DEEP_GEMS_CONTRACT == address(0), "already initialized");

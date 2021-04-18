@@ -282,46 +282,69 @@ describe("Psi", function () {
     const signerBalance = async () =>
       fe(await psi.balanceOf(signers[0].address));
 
-    await psi.buy(pe(`100`), { value: pe(`999999`), gasPrice: 0 });
+    let graph = [];
 
-    console.log("cost to buy one", await costToBuyOneMore());
-    console.log("market cap", await marketCap());
-    console.log("number bought", await signerBalance());
+    console.log("buy number, cost to buy one, market cap, number bought");
 
-    await psi.buy(pe(`900`), { value: pe(`999999`), gasPrice: 0 });
+    for (let i = 50; i < 1000; i++) {
+      const buyNumber = i ** 1.5;
+      await psi.buy(pe(`${buyNumber}`), { value: pe(`999999`), gasPrice: 0 });
+      const costToBuy = Number(await costToBuyOneMore());
+      const pool = Number(await marketCap());
+      const numberBought = Number(await signerBalance());
+      const mcap = Number(costToBuy) * Number(numberBought);
+      // console.log(`${buyNumber}, ${costToBuy}, ${pool}, ${numberBought}`);
 
-    console.log("cost to buy one", await costToBuyOneMore());
-    console.log("market cap", await marketCap());
-    console.log("number bought", await signerBalance());
+      // if (pool * 2000 < 900000) {
+      //   continue;
+      // }
 
-    await psi.buy(pe(`9000`), { value: pe(`999999`), gasPrice: 0 });
+      if (pool * 2000 > 100000000) {
+        break;
+      }
 
-    console.log("cost to buy one", await costToBuyOneMore());
-    console.log("market cap", await marketCap());
-    console.log("number bought", await signerBalance());
+      const record = {
+        reservePool: pool * 2000,
+        price: costToBuy * 2000,
+        totalSupply: numberBought,
+        marketCap: mcap * 2000,
+      };
 
-    await psi.buy(pe(`90000`), { value: pe(`999999`), gasPrice: 0 });
+      console.log(record);
 
-    console.log("cost to buy one", await costToBuyOneMore());
-    console.log("market cap", await marketCap());
-    console.log("number bought", await signerBalance());
+      graph[i] = record;
+    }
 
-    await psi.buy(pe(`900000`), { value: pe(`999999`), gasPrice: 0 });
+    console.log(JSON.stringify(graph));
 
-    console.log("cost to buy one", await costToBuyOneMore());
-    console.log("market cap", await marketCap());
-    console.log("number bought", await signerBalance());
+    // await psi.buy(pe(`9000`), { value: pe(`999999`), gasPrice: 0 });
 
-    await psi.buy(pe(`9000000`), { value: pe(`999999`), gasPrice: 0 });
+    // console.log("cost to buy one", await costToBuyOneMore());
+    // console.log("market cap", await marketCap());
+    // console.log("number bought", await signerBalance());
 
-    console.log("cost to buy one", await costToBuyOneMore());
-    console.log("market cap", await marketCap());
-    console.log("number bought", await signerBalance());
+    // await psi.buy(pe(`90000`), { value: pe(`999999`), gasPrice: 0 });
 
-    await psi.buy(pe(`90000000`), { value: pe(`999999`), gasPrice: 0 });
+    // console.log("cost to buy one", await costToBuyOneMore());
+    // console.log("market cap", await marketCap());
+    // console.log("number bought", await signerBalance());
 
-    console.log("cost to buy one", await costToBuyOneMore());
-    console.log("market cap", await marketCap());
-    console.log("number bought", await signerBalance());
+    // await psi.buy(pe(`900000`), { value: pe(`999999`), gasPrice: 0 });
+
+    // console.log("cost to buy one", await costToBuyOneMore());
+    // console.log("market cap", await marketCap());
+    // console.log("number bought", await signerBalance());
+
+    // await psi.buy(pe(`9000000`), { value: pe(`999999`), gasPrice: 0 });
+
+    // console.log("cost to buy one", await costToBuyOneMore());
+    // console.log("market cap", await marketCap());
+    // console.log("number bought", await signerBalance());
+
+    // await psi.buy(pe(`90000000`), { value: pe(`999999`), gasPrice: 0 });
+
+    // console.log("cost to buy one", await costToBuyOneMore());
+    // console.log("market cap", await marketCap());
+    // console.log("number bought", await signerBalance());
   });
 });

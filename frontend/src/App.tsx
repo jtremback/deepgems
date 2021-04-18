@@ -241,7 +241,6 @@ function ExplainerText() {
       it to get the PSI back out. To sell a gem on an NFT exchange, you can
       activate it to turn it into a transferable NFT.
       <MyChart />
-      {/* <ReactChartJs /> */}
     </>
   );
 }

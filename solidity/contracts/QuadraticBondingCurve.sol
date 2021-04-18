@@ -6,7 +6,7 @@ import "hardhat/console.sol";
 
 // Uses quadratic bonding curve integral formula from
 // https://blog.relevant.community/how-to-make-bonding-curves-for-continuous-token-models-3784653f8b17
-abstract contract LinearBondingCurve is ERC20 {
+abstract contract QuadraticBondingCurve is ERC20 {
     constructor(
         string memory name,
         string memory symbol,
@@ -28,12 +28,14 @@ abstract contract LinearBondingCurve is ERC20 {
         returns (uint256)
     {
         uint256 newPsiSupply = currentPsiSupply + tokensToBuy;
+        console.log("new psi supply", newPsiSupply);
 
         // How much is the pool's ether balance
-        uint256 currentPoolBalance = (currentPsiSupply * currentPsiSupply) / 2;
-
+        uint256 currentPoolBalance =
+            (currentPsiSupply * currentPsiSupply * currentPsiSupply) / 3;
         // How much the pool's ether balance will be after minting
-        uint256 newPoolBalance = (newPsiSupply * newPsiSupply) / 2;
+        uint256 newPoolBalance =
+            (newPsiSupply * newPsiSupply * newPsiSupply) / 3;
 
         // How much it costs to increase the supply by tokensToBuy
         uint256 numEther = newPoolBalance - currentPoolBalance;
@@ -41,7 +43,7 @@ abstract contract LinearBondingCurve is ERC20 {
         // Scale by 1e18 (ether precision) to cancel out exponentiation
         // Scales the number by a constant to get to the level we want
         // We add one wei to absorb rounding error
-        return ((numEther / 1 ether) / SCALING) + 1;
+        return ((numEther / (1 ether * 1 ether)) / SCALING) + 1;
     }
 
     function quoteBuy(uint256 tokensToBuy) public view returns (uint256) {
@@ -69,16 +71,18 @@ abstract contract LinearBondingCurve is ERC20 {
         uint256 newPsiSupply = currentPsiSupply - tokensToSell;
 
         // How much the pool's ether balance
-        uint256 currentPoolBalance = (currentPsiSupply * currentPsiSupply) / 2;
+        uint256 currentPoolBalance =
+            (currentPsiSupply * currentPsiSupply * currentPsiSupply) / 3;
 
         // How much the pool's ether balance will be after
-        uint256 newPoolBalance = (newPsiSupply * newPsiSupply) / 2;
+        uint256 newPoolBalance =
+            (newPsiSupply * newPsiSupply * newPsiSupply) / 3;
 
         // How much you get when you decrease the supply by tokensToSell
         uint256 numEther = currentPoolBalance - newPoolBalance;
 
         // Scale by 1e18 (ether precision) to cancel out exponentiation
-        return numEther / 1 ether;
+        return numEther / (1 ether * 1 ether);
     }
 
     function quoteSell(uint256 tokensToSell) public view returns (uint256) {
