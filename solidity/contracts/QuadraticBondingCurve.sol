@@ -2,7 +2,6 @@
 pragma solidity 0.8.3;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "hardhat/console.sol";
 
 // Uses quadratic bonding curve integral formula from
 // https://blog.relevant.community/how-to-make-bonding-curves-for-continuous-token-models-3784653f8b17
@@ -28,7 +27,6 @@ abstract contract QuadraticBondingCurve is ERC20 {
         returns (uint256)
     {
         uint256 newPsiSupply = currentPsiSupply + tokensToBuy;
-        console.log("new psi supply", newPsiSupply);
 
         // How much is the pool's ether balance
         uint256 currentPoolBalance =
