@@ -1,11 +1,18 @@
 import fetch from "make-fetch-happen";
 import AWS from "aws-sdk";
-import { BigNumber } from "ethers";
+import { ethers, BigNumber } from "ethers";
 import dotenv from "dotenv";
+import { PSI } from "./typechain/PSI";
+import psiArtifact from "./artifacts/contracts/PSI.sol/PSI.json";
+const PSI_CONTRACT = "0xCA552ACe5ED13FfA1edA9e7DeDA0DCc62BD9567b";
+const ETHUSD_URL = "https://api.etherscan.io/api?module=stats&action=ethprice";
 
 if (dotenv.config().error) {
   throw new Error("could not read .env");
 }
+
+const fe = ethers.utils.formatEther;
+const pe = ethers.utils.parseEther;
 
 const {
   S3_JSON_CONTEXT_URL,
@@ -61,7 +68,7 @@ const query = `query GetGems($gt: Int!, $lte: Int!) {
   gems(where: {
     number_gt: $gt,
 		number_lte: $lte
-  }, orderBy: number, orderDirection: asc){
+  }, orderBy: number, orderDirection: asc) {
     id
     psi
     owner
@@ -73,10 +80,44 @@ const query = `query GetGems($gt: Int!, $lte: Int!) {
 }`;
 
 const highestGemQuery = `{
-  gems(orderBy: number, orderDirection: desc, first:1){
+  gems(orderBy: number, orderDirection: desc, first:1) {
     number
   }
 }`;
+
+const provider = new ethers.providers.JsonRpcProvider(
+  "https://rinkeby.infura.io/v3/28b587d8cdde4eea926069342c002e01"
+);
+
+const psi = (new ethers.Contract(
+  PSI_CONTRACT,
+  psiArtifact.abi,
+  provider
+) as any) as PSI;
+
+// https://api.etherscan.io/api?module=stats&action=ethprice
+
+async function getEthUsd(): Promise<number> {
+  const text = await (
+    await fetch(ETHUSD_URL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    })
+  ).text();
+
+  let json;
+
+  try {
+    json = JSON.parse(text);
+  } catch (e) {
+    throw new Error(e.message + " " + text);
+  }
+
+  return Number(json.result.ethusd);
+}
 
 async function getHighestGem(): Promise<number | undefined> {
   const text = await (
@@ -186,6 +227,37 @@ async function run() {
     `context.json`,
     "application/json"
   );
+
+  // Get psi stats from contract
+  const psiStats = await getPsiStats();
+  console.log("got psi stats", psiStats);
+  // Upload psi stats
+  uploadToS3(
+    Buffer.from(JSON.stringify(psiStats)),
+    S3_DATA_BUCKET,
+    `psiStats.json`,
+    "application/json"
+  );
+}
+
+async function getPsiStats() {
+  const totalSupply = Number(fe(`${await psi.totalSupply()}`));
+  const price = Number(fe(`${await psi.quoteBuy(pe("1"))}`));
+  const marketCap = totalSupply * price;
+  const etherPrice = await getEthUsd();
+
+  return {
+    totalSupply,
+    etherPrice: etherPrice,
+    eth: {
+      price,
+      marketCap,
+    },
+    dollars: {
+      price: price * etherPrice,
+      marketCap: marketCap * etherPrice,
+    },
+  };
 }
 
 async function renderGem(gem: Gem) {
