@@ -7,50 +7,43 @@ Chart.register(...registerables, ChartDataLabels);
 
 const randomInt = () => Math.floor(Math.random() * (10 - 1 + 1)) + 1;
 
-function parseData(
-  data: {
-    reservePool: number;
-    price: number;
-    totalSupply: number;
-    marketCap: number;
-  }[]
-) {
+interface CurveDataPoint {
+  price: number;
+  totalSupply: number;
+  marketCap: number;
+}
+
+function parseData(data: CurveDataPoint[]): { x: number; y: number }[] {
   return data.map((record) => ({
     x: record.totalSupply,
     y: record.price,
-    marketCap: record.marketCap,
   }));
 }
 
 const pointerData = parseData([
   {
-    reservePool: 65446945.750675924,
     price: 197.5532572050197,
     totalSupply: 993863.8197262969,
     marketCap: 196341034.80515245,
   },
 ]);
 
-function calculateLabelAlignment(pointerData: {
-  x: number;
-  y: number;
-  marketCap: number;
-}) {
+function calculateLabelAlignment(pointerData: CurveDataPoint) {
   let alignment = -52;
-  if (pointerData.x > 200000) {
+  if (pointerData.totalSupply > 200000) {
     alignment = -90;
   }
-  if (pointerData.x > 600000) {
+  if (pointerData.totalSupply > 600000) {
     alignment = 180;
   }
-  if (pointerData.x > 800000) {
+  if (pointerData.totalSupply > 800000) {
     alignment = -225;
   }
 
   return alignment;
 }
 
-const MyChart = () => {
+const MyChart = ({ pointerData }: { pointerData: CurveDataPoint }) => {
   const chartContainer = useRef<HTMLCanvasElement>(null);
   const [chartInstance, setChartInstance] = useState<Chart | undefined>(
     undefined
@@ -63,22 +56,13 @@ const MyChart = () => {
         data: {
           datasets: [
             {
-              showLine: true,
-              pointRadius: 0,
-              data: parseData(data),
-              datalabels: {
-                display: false,
-              },
-            },
-            {
               type: "line",
               pointRadius: 8,
               backgroundColor: "white",
-              data: pointerData,
+              data: parseData([pointerData]),
               datalabels: {
-                // display: false,
                 backgroundColor: "rgba(255,255,255,1)",
-                align: calculateLabelAlignment(pointerData[0]),
+                align: calculateLabelAlignment(pointerData),
                 offset: 20,
                 borderRadius: 4,
                 clamp: true,
@@ -93,8 +77,16 @@ const MyChart = () => {
                   const formattedMarketCap = numeral(value.marketCap).format(
                     "$0a"
                   );
-                  return `Current PSI:\nSupply: ${formattedSupply}\nPrice: ${formattedPrice}\nMarket cap: ${formattedMarketCap}`;
+                  return `Current PSI stats:\nSupply: ${formattedSupply}\nPrice: ${formattedPrice}\nMarket cap: ${formattedMarketCap}`;
                 },
+              },
+            },
+            {
+              showLine: true,
+              pointRadius: 0,
+              data: parseData(data),
+              datalabels: {
+                display: false,
               },
             },
           ],
@@ -113,13 +105,11 @@ const MyChart = () => {
           plugins: {
             legend: {
               display: false,
-              // position: "bottom",
             },
           },
           scales: {
             x: {
               display: true,
-              // type: "logarithmic",
               grid: {
                 color: "grey",
                 tickColor: "white",
