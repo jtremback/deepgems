@@ -3,3 +3,5 @@
 
 cp -rf solidity/artifacts frontend/src/artifacts
 cp -rf solidity/artifacts indexer/src/artifacts
+cp -rf solidity/typechain frontend/src/typechain
+cp -rf solidity/typechain indexer/src/typechain
