@@ -9,11 +9,14 @@ abstract contract QuadraticBondingCurve is ERC20 {
     constructor(
         string memory name,
         string memory symbol,
-        uint256 scaling
+        uint256 scaling,
+        uint256 supplyCap
     ) ERC20(name, symbol) {
         SCALING = scaling;
+        SUPPLY_CAP = supplyCap;
     }
 
+    uint256 public SUPPLY_CAP;
     uint256 private SCALING;
 
     function safeTransferETH(address to, uint256 value) internal {
@@ -45,7 +48,12 @@ abstract contract QuadraticBondingCurve is ERC20 {
     }
 
     function quoteBuy(uint256 tokensToBuy) public view returns (uint256) {
-        return quoteBuyRaw(tokensToBuy, totalSupply());
+        uint256 supply = totalSupply();
+        require(
+            supply + tokensToBuy < SUPPLY_CAP,
+            "Supply cap exceeded, no more tokens can be minted."
+        );
+        return quoteBuyRaw(tokensToBuy, supply);
     }
 
     function buy(uint256 tokensToBuy) public payable {

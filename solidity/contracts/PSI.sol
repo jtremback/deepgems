@@ -6,11 +6,9 @@ import "./QuadraticBondingCurve.sol";
 contract PSI is QuadraticBondingCurve {
     address public DEEP_GEMS_CONTRACT;
 
-    // constructor() LinearBondingCurve("PSI", "PSI", 4000000000) {}
-
-    constructor() QuadraticBondingCurve("PSI", "PSI", 10000000000000) {}
-
-    // constructor() CubicBondingCurve("PSI", "PSI", 10000000000000000) {}
+    constructor()
+        QuadraticBondingCurve("PSI", "PSI", 1000000000000, 1000000 ether)
+    {}
 
     function initialize(address deepGemsContract) public {
         require(DEEP_GEMS_CONTRACT == address(0), "already initialized");

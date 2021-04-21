@@ -299,7 +299,7 @@ describe("Psi", function () {
       //   continue;
       // }
 
-      if (pool * 2000 > 100000000) {
+      if (mcap * 2000 > 100000000) {
         break;
       }
 
@@ -316,35 +316,5 @@ describe("Psi", function () {
     }
 
     console.log(JSON.stringify(graph));
-
-    // await psi.buy(pe(`9000`), { value: pe(`999999`), gasPrice: 0 });
-
-    // console.log("cost to buy one", await costToBuyOneMore());
-    // console.log("market cap", await marketCap());
-    // console.log("number bought", await signerBalance());
-
-    // await psi.buy(pe(`90000`), { value: pe(`999999`), gasPrice: 0 });
-
-    // console.log("cost to buy one", await costToBuyOneMore());
-    // console.log("market cap", await marketCap());
-    // console.log("number bought", await signerBalance());
-
-    // await psi.buy(pe(`900000`), { value: pe(`999999`), gasPrice: 0 });
-
-    // console.log("cost to buy one", await costToBuyOneMore());
-    // console.log("market cap", await marketCap());
-    // console.log("number bought", await signerBalance());
-
-    // await psi.buy(pe(`9000000`), { value: pe(`999999`), gasPrice: 0 });
-
-    // console.log("cost to buy one", await costToBuyOneMore());
-    // console.log("market cap", await marketCap());
-    // console.log("number bought", await signerBalance());
-
-    // await psi.buy(pe(`90000000`), { value: pe(`999999`), gasPrice: 0 });
-
-    // console.log("cost to buy one", await costToBuyOneMore());
-    // console.log("market cap", await marketCap());
-    // console.log("number bought", await signerBalance());
   });
 });
