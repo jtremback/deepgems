@@ -20,9 +20,22 @@ export type Blockchain = {
   psi: PSI;
 };
 
+export type CurrentPsiData = {
+  totalSupply: number;
+  etherPrice: number;
+  eth: { price: number; marketCap: number };
+  dollars: { price: number; marketCap: number };
+};
+
 export type ModalData = GemModalData;
 
 export type GemModalData = {
   type: "GemModal";
   gem: GemData;
+};
+
+export type CurveDataPoint = {
+  price: number;
+  totalSupply: number;
+  marketCap: number;
 };
