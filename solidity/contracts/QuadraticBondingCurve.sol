@@ -12,13 +12,16 @@ abstract contract QuadraticBondingCurve is ERC20 {
         string memory name,
         string memory symbol,
         uint256 scaling,
-        uint256 supplyCap
+        uint256 supplyCap,
+        uint256 priceCliff
     ) ERC20(name, symbol) {
         SCALING = scaling;
         SUPPLY_CAP = supplyCap;
+        PRICE_CLIFF = priceCliff;
     }
 
     uint256 public SUPPLY_CAP;
+    uint256 public PRICE_CLIFF;
     uint256 private SCALING;
 
     function safeTransferETH(address to, uint256 value) internal {
@@ -26,12 +29,39 @@ abstract contract QuadraticBondingCurve is ERC20 {
         require(success, "ETH transfer failed");
     }
 
+    function max(uint256 a, uint256 b) internal pure returns (uint256) {
+        return a >= b ? a : b;
+    }
+
+    function absorbingSub(uint256 a, uint256 b)
+        internal
+        pure
+        returns (uint256)
+    {
+        return a >= b ? a - b : 0;
+    }
+
     function quoteBuyRaw(uint256 tokensToBuy, uint256 currentPsiSupply)
         public
         view
         returns (uint256)
     {
+        // if (PRICE_CLIFF > currentPsiSupply) {
+        //     currentPsiSupply = 0;
+        // } else {
+        //     currentPsiSupply = currentPsiSupply - PRICE_CLIFF;
+        // }
+
         uint256 newPsiSupply = currentPsiSupply + tokensToBuy;
+        // if (PRICE_CLIFF > newPsiSupply) {
+        //     newPsiSupply = 0;
+        // } else {
+        //     newPsiSupply = newPsiSupply - PRICE_CLIFF;
+        // }
+
+        // Calculate price cliff
+        uint256 priceCliffBalance =
+            (PRICE_CLIFF * PRICE_CLIFF * PRICE_CLIFF) / 3;
 
         // How much is the pool's ether balance
         uint256 currentPoolBalance =
@@ -41,7 +71,11 @@ abstract contract QuadraticBondingCurve is ERC20 {
             (newPsiSupply * newPsiSupply * newPsiSupply) / 3;
 
         // How much it costs to increase the supply by tokensToBuy
-        uint256 numEther = newPoolBalance - currentPoolBalance;
+        uint256 numEther =
+            absorbingSub(
+                newPoolBalance,
+                max(currentPoolBalance, priceCliffBalance)
+            );
 
         // Scale by 1e18 (ether precision) to cancel out exponentiation
         // Scales the number by a constant to get to the level we want
