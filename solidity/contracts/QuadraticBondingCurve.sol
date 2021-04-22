@@ -3,6 +3,8 @@ pragma solidity 0.8.3;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+// import "hardhat/console.sol";
+
 // Uses quadratic bonding curve integral formula from
 // https://blog.relevant.community/how-to-make-bonding-curves-for-continuous-token-models-3784653f8b17
 abstract contract QuadraticBondingCurve is ERC20 {
@@ -49,17 +51,19 @@ abstract contract QuadraticBondingCurve is ERC20 {
 
     function quoteBuy(uint256 tokensToBuy) public view returns (uint256) {
         uint256 supply = totalSupply();
-        require(
-            supply + tokensToBuy < SUPPLY_CAP,
-            "Supply cap exceeded, no more tokens can be minted."
-        );
         return quoteBuyRaw(tokensToBuy, supply);
     }
 
     function buy(uint256 tokensToBuy) public payable {
         // CHECKS
+        uint256 currentPsiSupply = totalSupply();
 
-        uint256 numEther = quoteBuy(tokensToBuy);
+        require(
+            currentPsiSupply + tokensToBuy <= SUPPLY_CAP,
+            "Supply cap exceeded, no more tokens can be bought from the curve."
+        );
+
+        uint256 numEther = quoteBuyRaw(tokensToBuy, currentPsiSupply);
 
         require(numEther <= msg.value, "Did not send enough Ether");
 
@@ -72,8 +76,11 @@ abstract contract QuadraticBondingCurve is ERC20 {
         safeTransferETH(msg.sender, msg.value - numEther);
     }
 
-    function quoteSellRaw(uint256 tokensToSell) public view returns (uint256) {
-        uint256 currentPsiSupply = totalSupply();
+    function quoteSellRaw(uint256 tokensToSell, uint256 currentPsiSupply)
+        public
+        view
+        returns (uint256)
+    {
         uint256 newPsiSupply = currentPsiSupply - tokensToSell;
 
         // How much the pool's ether balance
@@ -88,18 +95,19 @@ abstract contract QuadraticBondingCurve is ERC20 {
         uint256 numEther = currentPoolBalance - newPoolBalance;
 
         // Scale by 1e18 (ether precision) to cancel out exponentiation
-        return numEther / (1 ether * 1 ether);
+        // Scales the number by a constant to get to the level we want
+        return ((numEther / (1 ether * 1 ether)) / SCALING);
     }
 
     function quoteSell(uint256 tokensToSell) public view returns (uint256) {
-        // Scales the number by a constant to get to the level we want
-        return quoteSellRaw(tokensToSell) / SCALING;
+        uint256 supply = totalSupply();
+        return quoteSellRaw(tokensToSell, supply);
     }
 
     function sell(uint256 tokensToSell, uint256 minEther) public payable {
         // CHECKS
 
-        uint256 numEther = quoteSell(tokensToSell);
+        uint256 numEther = quoteSellRaw(tokensToSell, totalSupply());
 
         require(
             numEther >= minEther,

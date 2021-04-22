@@ -286,33 +286,33 @@ describe("Psi", function () {
 
     console.log("buy number, cost to buy one, market cap, number bought");
 
-    for (let i = 50; i < 1000; i++) {
-      const buyNumber = i ** 1.5;
-      await psi.buy(pe(`${buyNumber}`), { value: pe(`999999`), gasPrice: 0 });
+    for (let i = 0; true; i++) {
       const costToBuy = Number(await costToBuyOneMore());
       const pool = Number(await marketCap());
-      const numberBought = Number(await signerBalance());
-      const mcap = Number(costToBuy) * Number(numberBought);
-      // console.log(`${buyNumber}, ${costToBuy}, ${pool}, ${numberBought}`);
-
-      // if (pool * 2000 < 900000) {
-      //   continue;
-      // }
-
-      if (mcap * 2000 > 100000000) {
-        break;
-      }
+      const totalSupply = Number(fe(await psi.totalSupply()));
+      const mcap = Number(costToBuy) * Number(totalSupply);
 
       const record = {
         reservePool: pool * 2000,
         price: costToBuy * 2000,
-        totalSupply: numberBought,
+        totalSupply: totalSupply,
         marketCap: mcap * 2000,
       };
 
       console.log(record);
 
       graph[i] = record;
+
+      const buyNumber = 10000;
+      try {
+        let foo = await psi.buy(pe(`${buyNumber}`), {
+          value: pe(`999999`),
+          gasPrice: 0,
+        });
+      } catch (e) {
+        console.log(e);
+        break;
+      }
     }
 
     console.log(JSON.stringify(graph));
