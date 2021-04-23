@@ -18,10 +18,15 @@ abstract contract QuadraticBondingCurve is ERC20 {
         SCALING = scaling;
         SUPPLY_CAP = supplyCap;
         PRICE_CLIFF = priceCliff;
+        // Calculate price cliff
+        PRICE_CLIFF_BALANCE = (PRICE_CLIFF * PRICE_CLIFF * PRICE_CLIFF) / 3;
     }
 
     uint256 public SUPPLY_CAP;
+    // Price switches from 0 to the curve price at this supply level
     uint256 public PRICE_CLIFF;
+    // Area under the curve before the price cliff
+    uint256 private PRICE_CLIFF_BALANCE;
     uint256 private SCALING;
 
     function safeTransferETH(address to, uint256 value) internal {
@@ -46,26 +51,12 @@ abstract contract QuadraticBondingCurve is ERC20 {
         view
         returns (uint256)
     {
-        // if (PRICE_CLIFF > currentPsiSupply) {
-        //     currentPsiSupply = 0;
-        // } else {
-        //     currentPsiSupply = currentPsiSupply - PRICE_CLIFF;
-        // }
-
         uint256 newPsiSupply = currentPsiSupply + tokensToBuy;
-        // if (PRICE_CLIFF > newPsiSupply) {
-        //     newPsiSupply = 0;
-        // } else {
-        //     newPsiSupply = newPsiSupply - PRICE_CLIFF;
-        // }
-
-        // Calculate price cliff
-        uint256 priceCliffBalance =
-            (PRICE_CLIFF * PRICE_CLIFF * PRICE_CLIFF) / 3;
 
         // How much is the pool's ether balance
         uint256 currentPoolBalance =
             (currentPsiSupply * currentPsiSupply * currentPsiSupply) / 3;
+
         // How much the pool's ether balance will be after minting
         uint256 newPoolBalance =
             (newPsiSupply * newPsiSupply * newPsiSupply) / 3;
@@ -74,7 +65,7 @@ abstract contract QuadraticBondingCurve is ERC20 {
         uint256 numEther =
             absorbingSub(
                 newPoolBalance,
-                max(currentPoolBalance, priceCliffBalance)
+                max(currentPoolBalance, PRICE_CLIFF_BALANCE)
             );
 
         // Scale by 1e18 (ether precision) to cancel out exponentiation
@@ -126,7 +117,11 @@ abstract contract QuadraticBondingCurve is ERC20 {
             (newPsiSupply * newPsiSupply * newPsiSupply) / 3;
 
         // How much you get when you decrease the supply by tokensToSell
-        uint256 numEther = currentPoolBalance - newPoolBalance;
+        uint256 numEther =
+            absorbingSub(
+                currentPoolBalance,
+                max(newPoolBalance, PRICE_CLIFF_BALANCE)
+            );
 
         // Scale by 1e18 (ether precision) to cancel out exponentiation
         // Scales the number by a constant to get to the level we want
