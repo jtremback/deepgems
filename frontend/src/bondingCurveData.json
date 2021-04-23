@@ -56,6 +56,12 @@
   },
   {
     "reservePool": 2e-14,
+    "price": 2e-15,
+    "totalSupply": 99999,
+    "marketCap": 1.9999800000000002e-10
+  },
+  {
+    "reservePool": 2.2e-14,
     "price": 20.000200000666666,
     "totalSupply": 100000,
     "marketCap": 2000020.0000666666

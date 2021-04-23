@@ -303,7 +303,16 @@ describe("Psi", function () {
 
       graph[i] = record;
 
-      const buyNumber = 10000;
+      let buyNumber = 10000;
+
+      if (i === 9) {
+        buyNumber = 9999;
+      }
+
+      if (i === 10) {
+        buyNumber = 1;
+      }
+
       try {
         let foo = await psi.buy(pe(`${buyNumber}`), {
           value: pe(`999999`),
