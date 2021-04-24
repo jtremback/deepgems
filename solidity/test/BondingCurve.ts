@@ -4,19 +4,14 @@ import { ethers, network } from "hardhat";
 import { Signer, BigNumber, BigNumberish } from "ethers";
 import { PSI } from "../typechain/PSI";
 import { DeepGems } from "../typechain/DeepGems";
+const curve: {
+  [key: number]: { reservePool: string; price: string };
+} = require("./bondingCurveData.json");
 
 const ETHER_PRICE = 1700;
 
 const fe = ethers.utils.formatEther;
 const pe = ethers.utils.parseEther;
-
-function pe$(dollars: number) {
-  return pe(`${dollars / ETHER_PRICE}`);
-}
-
-function etherToDollars(n: BigNumberish) {
-  return Number(fe(n)) * ETHER_PRICE;
-}
 
 function almostEqual(a: BigNumber, b: BigNumber, within: BigNumber) {
   const delta = a.sub(b).abs();
@@ -33,62 +28,11 @@ async function initContracts() {
   const DeepGemsContract = await ethers.getContractFactory("DeepGems");
   const gems = (await DeepGemsContract.deploy(
     psi.address,
-    [signers[11].address, signers[12].address, signers[13].address],
-    [94, 3, 3],
     "https://deepge.ms/tokenId/"
   )) as DeepGems;
 
   return { signers, gems, psi };
 }
-
-const curve: {
-  [key: number]: { marketCap: string; costToBuyOneMore: string };
-} = {
-  100: {
-    marketCap: "0.000000500000000000",
-    costToBuyOneMore: "0.000000010050000000",
-  },
-  1000: {
-    marketCap: "0.000050000000000000",
-    costToBuyOneMore: "0.000000100050000000",
-  },
-  10000: {
-    marketCap: "0.005000000000000000",
-    costToBuyOneMore: "0.000001000050000000",
-  },
-  20000: {
-    marketCap: "0.020000000000000000",
-    costToBuyOneMore: "0.000002000050000000",
-  },
-  30000: {
-    marketCap: "0.045000000000000000",
-    costToBuyOneMore: "0.000003000050000000",
-  },
-  50000: {
-    marketCap: "0.125000000000000000",
-    costToBuyOneMore: "0.000005000050000000",
-  },
-  200000: {
-    marketCap: "2.000000000000000000",
-    costToBuyOneMore: "0.000020000050000000",
-  },
-  1000000: {
-    marketCap: "50.000000000000000000",
-    costToBuyOneMore: "0.000100000050000000",
-  },
-  2000000: {
-    marketCap: "200.000000000000000000",
-    costToBuyOneMore: "0.000200000050000000",
-  },
-  10000000: {
-    marketCap: "5000.000000000000000000",
-    costToBuyOneMore: "0.001000000050000000",
-  },
-  50000000: {
-    marketCap: "125000.000000000000000000",
-    costToBuyOneMore: "0.005000000050000000",
-  },
-};
 
 describe("Psi", function () {
   beforeEach(async function () {
@@ -130,11 +74,7 @@ describe("Psi", function () {
       return ethOut;
     }
 
-    const marketCap = async () =>
-      fe(await psi.provider.getBalance(psi.address));
-
-    const signerBalance = async () =>
-      fe(await psi.balanceOf(signers[0].address));
+    const almostEqualDelta = BigNumber.from(100000000);
 
     // Only works with whole tokenNumber
     async function buyCycle(tokensToBuy: number) {
@@ -148,16 +88,16 @@ describe("Psi", function () {
         `buying ${tokensToBuy} tokens at ${tokenNumber} total will cost ${quote}`
       );
 
-      expect(fe(await buy(tokensToBuy, 9000))).to.equal(quote);
+      expect(fe(await buy(tokensToBuy, 999999))).to.equal(quote);
 
       // We check the eth market cap
       expect(
         almostEqual(
           await psi.provider.getBalance(psi.address),
-          pe(curve[tokenNumber].marketCap),
-          pe("0.0000000001")
+          BigNumber.from(curve[tokenNumber].reservePool),
+          almostEqualDelta
         )
-      ).to.be.that.which.is.true;
+      ).to.be.true;
 
       // Check the psi balance of the signer
       expect(await psi.balanceOf(signers[0].address)).to.equal(
@@ -168,10 +108,10 @@ describe("Psi", function () {
       expect(
         almostEqual(
           await psi.quoteBuy(pe("1")),
-          pe(curve[tokenNumber].costToBuyOneMore),
-          pe("0.0000000001")
+          BigNumber.from(curve[tokenNumber].price),
+          almostEqualDelta
         )
-      ).to.be.that.which.is.true;
+      ).to.be.true;
     }
 
     async function sellCycle(tokensToSell: number) {
@@ -191,10 +131,10 @@ describe("Psi", function () {
       expect(
         almostEqual(
           await psi.provider.getBalance(psi.address),
-          pe(curve[tokenNumber].marketCap),
-          pe("0.0000000001")
+          BigNumber.from(curve[tokenNumber].reservePool),
+          almostEqualDelta
         )
-      ).to.be.that.which.is.true;
+      ).to.be.true;
 
       // Check the psi balance of the signer
       expect(await psi.balanceOf(signers[0].address)).to.equal(
@@ -205,21 +145,21 @@ describe("Psi", function () {
       expect(
         almostEqual(
           await psi.quoteBuy(pe("1")),
-          pe(curve[tokenNumber].costToBuyOneMore),
-          pe("0.0000000001")
+          BigNumber.from(curve[tokenNumber].price),
+          almostEqualDelta
         )
-      ).to.be.that.which.is.true;
+      ).to.be.true;
     }
 
     // ------------------
 
-    await buyCycle(100);
+    // await buyCycle(100);
 
-    // Going up to 1,000
-    await buyCycle(900);
+    // // Going up to 1,000
+    // await buyCycle(900);
 
     // Going up to 10,000
-    await buyCycle(9000);
+    await buyCycle(10000);
 
     // Going up to 20,000
     await buyCycle(10000);
@@ -236,11 +176,11 @@ describe("Psi", function () {
     // Going down to 30,000
     await sellCycle(170000);
 
-    // Going up to 10,000,000
-    await buyCycle(9970000);
+    // Going up to 500,000
+    await buyCycle(470000);
 
     // Going down to 30,000
-    await sellCycle(9970000);
+    await sellCycle(470000);
   });
 
   it.skip("try to exploit numerical instability", async function () {
@@ -270,25 +210,15 @@ describe("Psi", function () {
     }
   });
 
-  it.only("generate plot", async function () {
+  it.skip("generate plotting curve", async function () {
     this.timeout(0);
     const { signers, gems, psi } = await initContracts();
 
-    const costToBuyOneMore = async () => fe(await psi.quoteBuy(pe("1")));
-
-    const marketCap = async () =>
-      fe(await psi.provider.getBalance(psi.address));
-
-    const signerBalance = async () =>
-      fe(await psi.balanceOf(signers[0].address));
-
-    let graph = [];
-
-    console.log("buy number, cost to buy one, market cap, number bought");
+    let curve = [];
 
     for (let i = 0; true; i++) {
-      const costToBuy = Number(await costToBuyOneMore());
-      const pool = Number(await marketCap());
+      const costToBuy = Number(fe(await psi.quoteBuy(pe("1"))));
+      const pool = Number(fe(await psi.provider.getBalance(psi.address)));
       const totalSupply = Number(fe(await psi.totalSupply()));
       const mcap = Number(costToBuy) * Number(totalSupply);
 
@@ -301,7 +231,7 @@ describe("Psi", function () {
 
       console.log(record);
 
-      graph[i] = record;
+      curve[i] = record;
 
       let buyNumber = 10000;
 
@@ -314,7 +244,7 @@ describe("Psi", function () {
       }
 
       try {
-        let foo = await psi.buy(pe(`${buyNumber}`), {
+        await psi.buy(pe(`${buyNumber}`), {
           value: pe(`999999`),
           gasPrice: 0,
         });
@@ -324,6 +254,40 @@ describe("Psi", function () {
       }
     }
 
-    console.log(JSON.stringify(graph));
+    console.log(JSON.stringify(curve));
+  });
+
+  it.skip("generate testing curve", async function () {
+    this.timeout(0);
+    const { signers, gems, psi } = await initContracts();
+
+    let curve = {};
+
+    for (let i = 0; true; i++) {
+      const price = await psi.quoteBuy(pe("1"));
+      const pool = await psi.provider.getBalance(psi.address);
+      const totalSupply = await psi.totalSupply();
+
+      const record = {
+        reservePool: pool.toString(),
+        price: price.toString(),
+      };
+
+      curve[Number(fe(totalSupply))] = record;
+
+      let buyNumber = 10000;
+
+      try {
+        await psi.buy(pe(`${buyNumber}`), {
+          value: pe(`999999`),
+          gasPrice: 0,
+        });
+      } catch (e) {
+        console.log(e);
+        break;
+      }
+    }
+
+    console.log(JSON.stringify(curve));
   });
 });

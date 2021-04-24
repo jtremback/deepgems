@@ -24,30 +24,6 @@ async function mineBlock() {
   });
 }
 
-// async function getCurrentBlockNumber() {
-//   return BigNumber.from(
-//     await network.provider.request({
-//       method: "eth_blockNumber",
-//       params: [],
-//     })
-//   ).toNumber();
-// }
-
-// async function getBlockByNumber(num: number) {
-//   let hexNum = BigNumber.from(num).toHexString();
-//   return await network.provider.request({
-//     method: "eth_getBlockByNumber",
-//     params: [hexNum, false],
-//   });
-// }
-
-async function getEvents(contract: Contract, topic: string) {
-  return contract.queryFilter({
-    address: contract.address,
-    topics: [topic],
-  });
-}
-
 async function initContracts() {
   const signers = await ethers.getSigners();
 
@@ -57,8 +33,6 @@ async function initContracts() {
   const DeepGemsContract = await ethers.getContractFactory("DeepGems");
   const gems = (await DeepGemsContract.deploy(
     psi.address,
-    [signers[11].address, signers[12].address, signers[13].address],
-    [94, 3, 3],
     "https://deepge.ms/tokenId/"
   )) as DeepGems;
 
@@ -111,19 +85,19 @@ describe("Deep gems NFT functionality", function () {
     const gem1Input = 104;
     const gem2Input = 96;
 
-    const gem1MetadataPsi = Math.floor(gem1Input * 0.95);
-    const gem2MetadataPsi = Math.floor(gem2Input * 0.95);
+    const gem1MetadataPsi = gem1Input;
+    const gem2MetadataPsi = gem2Input;
 
-    const [gem1Remaining1, gem1commission1] = takeCommission(
-      pe(`${gem1Input}`)
-    );
-    const [gem1Remaining2, gem1commission2] = takeCommission(gem1Remaining1); // it gets reforged and so has a second 5% commission
+    const gem1Remaining1 = pe(`${gem1Input}`);
 
-    const [gem2Remaining, gem2commission] = takeCommission(pe(`${gem2Input}`));
+    function loseFivePercent(a: BigNumber) {
+      return a.sub(a.div(20));
+    }
 
-    const totalCommission = gem1commission1
-      .add(gem1commission2)
-      .add(gem2commission);
+    // it gets reforged and so loses 5%, then gets burned and loses another 5%
+    const gem1Remaining2 = loseFivePercent(loseFivePercent(gem1Remaining1));
+
+    const gem2Remaining = loseFivePercent(pe(`${gem2Input}`));
 
     await psi.buy(pe(`200`), { value: pe(`10`), gasPrice: 0 });
 
@@ -219,36 +193,13 @@ describe("Deep gems NFT functionality", function () {
     expect(gems.connect(signers[1]).burn(reforgedTokenId)).to.be.reverted;
 
     // Should have gotten the money
-    expect(await psi.balanceOf(signers[1].address)).to.equal(
-      gem1Remaining2,
-      "shatner"
-    );
+    expect(await psi.balanceOf(signers[1].address)).to.equal(gem1Remaining2);
 
     // Burn unactivated gem
 
     await gems.burn(forgedTokenId2);
 
     expect(await psi.balanceOf(signers[0].address)).to.equal(gem2Remaining);
-
-    // ARTIST COMMISSION
-
-    expect(
-      (await gems.state_commissionCollected()).sub(
-        await gems.state_commissionPaid()
-      )
-    ).to.equal(totalCommission);
-
-    await gems.artistWithdraw();
-
-    expect(await psi.balanceOf(signers[11].address)).to.equal(
-      totalCommission.div(100).mul(94)
-    );
-    expect(await psi.balanceOf(signers[12].address)).to.equal(
-      totalCommission.div(100).mul(3)
-    );
-    expect(await psi.balanceOf(signers[13].address)).to.equal(
-      totalCommission.div(100).mul(3)
-    );
   });
 
   it("emits the right events", async function () {
@@ -333,10 +284,7 @@ describe("Deep gems NFT functionality", function () {
 
     const tokenId = events[events.length - 1].args!.tokenId.toHexString();
 
-    const psiInGem = takeCommission(pe("2"))[0]
-      .toHexString()
-      .slice(2)
-      .padStart(32, "0");
+    const psiInGem = pe("2").toHexString().slice(2).padStart(32, "0");
 
     const expectedTokenId =
       "0x" +

@@ -14,8 +14,6 @@ contract DeepGems is ERC721 {
     }
 
     address public PSI_CONTRACT;
-    address[] public ARTIST_ADDRESSES;
-    uint8[] public ARTIST_PERCENTAGES;
     string BASE_URI;
 
     uint120 public state_counter;
@@ -65,7 +63,7 @@ contract DeepGems is ERC721 {
             (uint8(uint256(blockhash(block.number - 255))) >> 4);
     }
 
-    function packLatent(uint120 counter, uint8 blockhashEntropy)
+    function packSeed(uint120 counter, uint8 blockhashEntropy)
         internal
         pure
         returns (uint128)
@@ -89,7 +87,7 @@ contract DeepGems is ERC721 {
         // it was forged with
         uint256 tokenId =
             packTokenId(
-                packLatent(
+                packSeed(
                     // Deep gems uses a combination of entropy from the counter and
                     // two block hashes to determine the seed of a gem.
                     // This is OK, because there is no objective rarity or lottery-like mechanic in Deep gems.
