@@ -9,9 +9,7 @@ async function main() {
   const DeepGemsContract = await ethers.getContractFactory("DeepGems");
   const gems = (await DeepGemsContract.deploy(
     psi.address,
-    ["0xAB24c97524De9f7Bc8D6f1b8cF5c3ceC77323387"],
-    [100],
-    "https://deepge.ms/tokenId/"
+    "https://cdn.deepge.ms/metadata/"
   )) as DeepGems;
 
   await psi.initialize(gems.address);
