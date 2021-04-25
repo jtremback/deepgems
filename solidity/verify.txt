@@ -9,5 +9,5 @@ eval $(cat .env) npx hardhat verify --constructor-args scripts/arguments.js --ne
 
 Latest rinkeby deploy:
 
-DeepGems address: 0x5da58028D6305f541695B54412BbE356F5D8757C
-Psi address: 0xCA552ACe5ED13FfA1edA9e7DeDA0DCc62BD9567b
+DeepGems address: 0x8d471020BAD1903e3532604f42F107C4d80a930F
+Psi address: 0xC088Ce086712e54b7c6010398D183f150e126Da1

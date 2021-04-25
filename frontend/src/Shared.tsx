@@ -3,11 +3,11 @@ import "./App.css";
 import { GemData, ModalData } from "./Types";
 
 export const IMAGES_CDN = "https://cdn.deepge.ms/";
-export const METADATA_CDN = "https://cdn.deepge.ms/";
+export const METADATA_CDN = "https://cdn.deepge.ms/metadata/";
 export const GRAPHQL_URL =
   "https://api.thegraph.com/subgraphs/name/jtremback/deepgems";
-export const GEMS_CONTRACT = "0x5da58028D6305f541695B54412BbE356F5D8757C";
-export const PSI_CONTRACT = "0xCA552ACe5ED13FfA1edA9e7DeDA0DCc62BD9567b";
+export const GEMS_CONTRACT = "0x8d471020BAD1903e3532604f42F107C4d80a930F";
+export const PSI_CONTRACT = "0xC088Ce086712e54b7c6010398D183f150e126Da1";
 export const PSI_STATS_URL =
   "https://s3-us-west-2.amazonaws.com/cdn.deepge.ms/psiStats.json";
 
