@@ -299,7 +299,7 @@ async function uploadImageAndMetadata(gem: Gem, img: Buffer) {
       })
     ),
     S3_DATA_BUCKET,
-    `${gem.id}.json`,
+    `metadata/${gem.id}`,
     "application/json"
   );
   console.log(`metadata uploaded successfully. ${res.Location}`);
