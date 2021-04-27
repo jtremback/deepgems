@@ -6,40 +6,17 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./PSI.sol";
 
 contract DeepGems is ERC721 {
-    constructor(
-        address psiContract,
-        address[] memory artistAddresses,
-        uint8[] memory artistPercentages,
-        string memory baseURI
-    ) ERC721("Deep Gems", "DEEP") {
-        require(
-            artistAddresses.length == artistPercentages.length,
-            "malformed artist info"
-        );
-
-        // Check that artist percentages add up to 100
-        uint8 totalPercentages = 0;
-        for (uint64 i = 0; i < artistPercentages.length; i++) {
-            totalPercentages = totalPercentages + artistPercentages[i];
-        }
-        require(
-            totalPercentages == 100,
-            "artist percentages must add up to 100"
-        );
-
+    constructor(address psiContract, string memory baseURI)
+        ERC721("Deep Gems", "DEEP")
+    {
         PSI_CONTRACT = psiContract;
-        ARTIST_ADDRESSES = artistAddresses;
-        ARTIST_PERCENTAGES = artistPercentages;
         BASE_URI = baseURI;
     }
 
     address public PSI_CONTRACT;
-    address[] public ARTIST_ADDRESSES;
-    uint8[] public ARTIST_PERCENTAGES;
     string BASE_URI;
 
-    uint256 public state_commissionCollected;
-    uint256 public state_commissionPaid;
+    uint120 public state_counter;
     mapping(uint256 => address) public state_unactivatedGems;
 
     event Forged(uint256 indexed tokenId);
@@ -53,6 +30,19 @@ contract DeepGems is ERC721 {
 
     function unpackTokenId(uint256 a) internal pure returns (uint128, uint128) {
         return (uint128(a >> 128), uint128(a));
+    }
+
+    function counterFromTokenId(uint256 tokenId) public pure returns (uint120) {
+        return uint120(tokenId >> 136);
+    }
+
+    function psiFromOldGem(uint256 tokenId) internal pure returns (uint128) {
+        // 5% (1/20th) of the psi is locked forever,
+        // reducing the circulating supply
+        uint128 oldPsi = uint128(tokenId);
+        uint128 lockedPsi = oldPsi / 20;
+
+        return oldPsi - lockedPsi;
     }
 
     function blockHashEntropy() internal view returns (uint8) {
@@ -73,7 +63,7 @@ contract DeepGems is ERC721 {
             (uint8(uint256(blockhash(block.number - 255))) >> 4);
     }
 
-    function packLatent(uint120 counter, uint8 blockhashEntropy)
+    function packSeed(uint120 counter, uint8 blockhashEntropy)
         internal
         pure
         returns (uint128)
@@ -85,111 +75,66 @@ contract DeepGems is ERC721 {
         return BASE_URI;
     }
 
-    function _forge(uint256 amountPsi)
-        internal
-        view
-        returns (uint256, uint256)
-    {
-        // Calculate 5% artist commission
-        uint256 commission = amountPsi / 20;
-        uint256 psiInGem = amountPsi - commission;
+    function _forge(uint256 amountPsi) internal returns (uint256) {
+        require(
+            amountPsi > 0.1 ether,
+            "gems must be forged with at least 0.1 PSI"
+        );
 
-        uint256 commissionCollected = state_commissionCollected + commission;
+        state_counter = state_counter + 1;
 
-        // Generate id
+        // Generate tokenId. The tokenId contains the gem's seed, and the amount of PSI
+        // it was forged with
         uint256 tokenId =
             packTokenId(
-                packLatent(
-                    // Deep gems uses a combination of entropy from the commission counter and
-                    // two block hashes to determine the latent vector (seed) of a gem.
+                packSeed(
+                    // Deep gems uses a combination of entropy from the counter and
+                    // two block hashes to determine the seed of a gem.
                     // This is OK, because there is no objective rarity or lottery-like mechanic in Deep gems.
                     // The value of each gem is based on how attractive people find it.
                     // The only attack possible is one where someone searches for a latent vector that
-                    // produces a gem indistinguishable from one that has already been forged.
-                    //
-                    // Dividing by 1e17 quantizes the commission counter to one decimal place.
-                    // Quantizing greatly reduces the search space to find an identical looking
-                    // gem. Supposing PSI is worth $1, an attacker would need to spend up to $10,000 at
-                    // a 5% artist commission rate to get a search space of 5,000 possible gems. This is
-                    // probably too low to successfully find an identical gem. A miner who could determine
-                    // the hashes of two blocks might be able to increase this search space by 8 bits, or
-                    // up to 1,280,000 possible gems
-                    uint120(commissionCollected / 1e17),
+                    // produces a gem indistinguishable from one that has already been forged. To be able to search at all,
+                    // you would have to mine 2 blocks, 255 blocks apart, and accurately predict where the counter
+                    // would be. You would then have 8 bits of search space. To manipulate the counter, you would need
+                    // to spend 0.1 PSI for each increment, since this is the minimum forge amount.
+                    state_counter,
                     blockHashEntropy()
                 ),
-                uint128(psiInGem)
+                uint128(amountPsi)
             );
 
-        // This error will be triggered if the amount of PSI that was used to forge
-        // the gem was not enough to ensure that the quantized commission was
-        // larger than 0, since in this case the commissionCollected will not be
-        // incremented, and will have the same tokenId as the previous gem in the block.
-        // The threshold amount is around 2 PSI with a 5% artist commission and
-        // quantization to 1 decimal place, since (2 / 20) = 0.1
-        require(
-            state_unactivatedGems[tokenId] == address(0),
-            "try forging with more PSI"
-        );
-        require(!_exists(tokenId), "try forging with more PSI");
-
-        return (tokenId, commissionCollected);
-    }
-
-    function artistWithdraw() public {
-        // Calculate pending payout
-        uint256 pendingArtistPayout =
-            state_commissionCollected - state_commissionPaid;
-        // Calculate 1% of pending payout
-        uint256 onePercentOfPayout = pendingArtistPayout / 100;
-        // Zero out pending payout
-        state_commissionPaid = state_commissionCollected;
-
-        // Transfer coins out to artist addresses proportional to
-        // their percentages
-        for (uint64 i = 0; i < ARTIST_ADDRESSES.length; i++) {
-            IERC20(PSI_CONTRACT).transfer(
-                ARTIST_ADDRESSES[i],
-                ARTIST_PERCENTAGES[i] * onePercentOfPayout
-            );
-        }
+        return tokenId;
     }
 
     function forge(uint256 amountPsi) public returns (uint256) {
         // Transfer Psi to pay for gem
         PSI(PSI_CONTRACT).transferToDeepGems(msg.sender, amountPsi);
 
-        (uint256 tokenId, uint256 commissionCollected) = _forge(amountPsi);
+        uint256 tokenId = _forge(amountPsi);
 
         // Add gem to unactivated gems mapping
         state_unactivatedGems[tokenId] = msg.sender;
-
-        // Update artist's pending payout
-        state_commissionCollected = commissionCollected;
 
         emit Forged(tokenId);
 
         return tokenId;
     }
 
-    function reforge(uint256 oldTokenId) public returns (uint256) {
+    function reforge(uint256 oldtokenId) public returns (uint256) {
         require(
-            state_unactivatedGems[oldTokenId] == msg.sender,
+            state_unactivatedGems[oldtokenId] == msg.sender,
             "gem is already activated, you don't own it, or it does not exist"
         );
 
-        delete state_unactivatedGems[oldTokenId];
+        delete state_unactivatedGems[oldtokenId];
 
-        // pull the psi off the old token id by casting to uint128
-        (uint256 newTokenId, uint256 commissionCollected) =
-            _forge(uint128(oldTokenId));
+        // Add psi into new tokenId, minus 5%
+        uint256 newTokenId = _forge(psiFromOldGem(oldtokenId));
 
         // Add gem to unactivated gems mapping
         state_unactivatedGems[newTokenId] = msg.sender;
 
-        // Update artist's pending payout
-        state_commissionCollected = commissionCollected;
-
-        emit Reforged(oldTokenId, newTokenId);
+        emit Reforged(oldtokenId, newTokenId);
 
         return newTokenId;
     }
@@ -217,9 +162,11 @@ contract DeepGems is ERC721 {
             revert("this gem does not exist or you don't own it");
         }
 
-        // Casting tokenId to uint128 chops off the first 16 bytes,
-        // leaving only the amount of psi the gem has.
-        IERC20(PSI_CONTRACT).transfer(msg.sender, uint256(uint128(tokenId)));
+        // Transfer the psi in the gem to the caller, minus 5 percent
+        IERC20(PSI_CONTRACT).transfer(
+            msg.sender,
+            uint256(psiFromOldGem(tokenId))
+        );
 
         emit Burned(tokenId);
     }

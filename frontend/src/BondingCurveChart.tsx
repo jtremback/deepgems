@@ -2,16 +2,10 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Chart, registerables } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import numeral from "numeral";
+import { CurrentPsiData, CurveDataPoint } from "./Types";
+
 const data = require("./bondingCurveData.json");
 Chart.register(...registerables, ChartDataLabels);
-
-const randomInt = () => Math.floor(Math.random() * (10 - 1 + 1)) + 1;
-
-interface CurveDataPoint {
-  price: number;
-  totalSupply: number;
-  marketCap: number;
-}
 
 function parseData(data: CurveDataPoint[]): { x: number; y: number }[] {
   return data.map((record) => ({
@@ -20,15 +14,7 @@ function parseData(data: CurveDataPoint[]): { x: number; y: number }[] {
   }));
 }
 
-const pointerData = parseData([
-  {
-    price: 197.5532572050197,
-    totalSupply: 993863.8197262969,
-    marketCap: 196341034.80515245,
-  },
-]);
-
-function calculateLabelAlignment(pointerData: CurveDataPoint) {
+function calculateLabelAlignment(pointerData: CurrentPsiData) {
   let alignment = -52;
   if (pointerData.totalSupply > 200000) {
     alignment = -90;
@@ -43,7 +29,7 @@ function calculateLabelAlignment(pointerData: CurveDataPoint) {
   return alignment;
 }
 
-const MyChart = ({ pointerData }: { pointerData: CurveDataPoint }) => {
+const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
   const chartContainer = useRef<HTMLCanvasElement>(null);
   const [chartInstance, setChartInstance] = useState<Chart | undefined>(
     undefined
@@ -59,7 +45,12 @@ const MyChart = ({ pointerData }: { pointerData: CurveDataPoint }) => {
               type: "line",
               pointRadius: 8,
               backgroundColor: "white",
-              data: parseData([pointerData]),
+              data: [
+                {
+                  x: pointerData.totalSupply,
+                  y: pointerData.dollars.price,
+                },
+              ],
               datalabels: {
                 backgroundColor: "rgba(255,255,255,1)",
                 align: calculateLabelAlignment(pointerData),
@@ -72,12 +63,26 @@ const MyChart = ({ pointerData }: { pointerData: CurveDataPoint }) => {
                 },
                 padding: 10,
                 formatter: function (value, context) {
-                  const formattedSupply = numeral(value.x).format("0[.]0a");
-                  const formattedPrice = numeral(value.y).format("$0[.]00a");
-                  const formattedMarketCap = numeral(value.marketCap).format(
-                    "$0a"
-                  );
-                  return `Current PSI stats:\nSupply: ${formattedSupply}\nPrice: ${formattedPrice}\nMarket cap: ${formattedMarketCap}`;
+                  console.log("pointerData", pointerData);
+                  const formattedSupply = numeral(
+                    pointerData.totalSupply
+                  ).format("0[.]0a");
+
+                  const formattedPriceDollars = numeral(
+                    pointerData.dollars.price
+                  ).format("$0[.]00a");
+                  const formattedMarketCapDollars = numeral(
+                    pointerData.dollars.marketCap
+                  ).format("$0a");
+
+                  const formattedPriceEth = numeral(
+                    pointerData.eth.price
+                  ).format("0[.]0000000a");
+                  const formattedMarketCapEth = numeral(
+                    pointerData.eth.marketCap
+                  ).format("0.000a");
+
+                  return `Current PSI stats:\nSupply: ${formattedSupply}\nPrice: ${formattedPriceEth} ETH (${formattedPriceDollars})\nMarket cap: ${formattedMarketCapEth} ETH (${formattedMarketCapDollars})`;
                 },
               },
             },
@@ -119,7 +124,8 @@ const MyChart = ({ pointerData }: { pointerData: CurveDataPoint }) => {
                 color: "white",
               },
               min: 0,
-              max: 1000000,
+              max: 500000,
+              title: { display: true, text: "PSI supply", color: "white" },
             },
             y: {
               display: true,
@@ -140,24 +146,6 @@ const MyChart = ({ pointerData }: { pointerData: CurveDataPoint }) => {
       };
     }
   }, [chartContainer]);
-
-  const updateDataset = (datasetIndex: number, newData: number[]) => {
-    if (!chartInstance || !chartInstance.data.datasets) return;
-    chartInstance.data.datasets[datasetIndex].data = newData;
-    chartInstance.update();
-  };
-
-  const onButtonClick = () => {
-    const data = [
-      randomInt(),
-      randomInt(),
-      randomInt(),
-      randomInt(),
-      randomInt(),
-      randomInt(),
-    ];
-    updateDataset(0, data);
-  };
 
   return (
     // style={{ position: "relative", height: 100, width: "100%" }}

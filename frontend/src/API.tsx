@@ -8,7 +8,12 @@ import { Blockchain } from "./Types";
 
 import gemArtifact from "./artifacts/contracts/DeepGems.sol/DeepGems.json";
 import psiArtifact from "./artifacts/contracts/PSI.sol/PSI.json";
-import { GRAPHQL_URL, GEMS_CONTRACT, PSI_CONTRACT } from "./Shared";
+import {
+  GRAPHQL_URL,
+  GEMS_CONTRACT,
+  PSI_CONTRACT,
+  PSI_STATS_URL,
+} from "./Shared";
 
 // TODO
 // - Get buttons on gem modal to work
@@ -91,6 +96,14 @@ export async function getUserData(blockchain: Blockchain, userAddress: string) {
   const psiBalance = await blockchain.psi.balanceOf(userAddress);
 
   return { gems, psiBalance };
+}
+
+export async function getCurrentPsiData() {
+  const req = await fetch(PSI_STATS_URL, {
+    method: "GET",
+  });
+
+  return await req.json();
 }
 
 export async function connectProvider() {

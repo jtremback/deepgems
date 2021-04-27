@@ -7,6 +7,7 @@ import {
   IMAGES_CDN,
   GemThumbnail,
   LargeGem,
+  useInterval,
 } from "./Shared";
 import { GemData, UserData, Blockchain, ModalData } from "./Types";
 
@@ -65,29 +66,6 @@ export function BlockchainInteraction({
       )}
     </div>
   );
-}
-
-// If there is a number entered into the buy or sell box, the blockchain should be polled to get the current price
-//
-
-function useInterval(callback: () => void, delay: number) {
-  const savedCallback = useRef(callback);
-
-  useEffect(() => {
-    savedCallback.current = callback;
-  }, [callback]);
-
-  useEffect(() => {
-    function tick() {
-      savedCallback.current();
-    }
-    if (delay !== null) {
-      const id = setInterval(tick, delay);
-      return () => {
-        clearInterval(id);
-      };
-    }
-  }, [callback, delay]);
 }
 
 function BuyPSIBox({

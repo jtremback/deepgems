@@ -5,34 +5,24 @@ import psi50example from "./images/00056-000032-0.5.jpg";
 import psi100example from "./images/00056-000032-1.jpg";
 import psi200example from "./images/00056-000032-2.jpg";
 import psi300example from "./images/00056-000032-3.jpg";
-import useAPIPolling from "use-api-polling";
 import { BlockchainInteraction } from "./BlockchainInteraction";
-import { LargeGem } from "./Shared";
-import { connectProvider, getUserData, getRecentGems } from "./API";
+import { LargeGem, useInterval } from "./Shared";
+import {
+  connectProvider,
+  getUserData,
+  getRecentGems,
+  getCurrentPsiData,
+} from "./API";
 import { Modal } from "./BlockchainInteraction";
 
-import { Blockchain, UserData, GemData, ModalData } from "./Types";
+import {
+  Blockchain,
+  UserData,
+  GemData,
+  ModalData,
+  CurrentPsiData,
+} from "./Types";
 import MyChart from "./BondingCurveChart";
-
-function useInterval(callback: () => void, delay: number) {
-  const savedCallback = useRef(callback);
-
-  useEffect(() => {
-    savedCallback.current = callback;
-  }, [callback]);
-
-  useEffect(() => {
-    function tick() {
-      savedCallback.current();
-    }
-    if (delay !== null) {
-      const id = setInterval(tick, delay);
-      return () => {
-        clearInterval(id);
-      };
-    }
-  }, [callback, delay]);
-}
 
 const fontStyles: CSSProperties = {
   fontSize: 24,
@@ -44,35 +34,47 @@ const fontStyles: CSSProperties = {
 function App() {
   const [blockchain, setBlockchain] = useState<Blockchain>();
   const [userAddress, setUserAddress] = useState<string>();
+  const [recentGems, setRecentGems] = useState<GemData[]>();
   const [userData, setUserData] = useState<UserData>();
+  const [currentPsiData, setCurrentPsiData] = useState<CurrentPsiData>();
   const [modalData, setModalData] = useState<ModalData>();
 
-  // TODO: get rid of this api polling hook thing cause
-  // it sucks and do it yourself with useInterval
-  const recentGems = useAPIPolling<GemData[]>({
-    fetchFunc: getRecentGems,
-    initialState: [],
-    delay: 5000,
-  });
+  // Get get recent gems from the graph
+  async function retrieveRecentGems() {
+    setRecentGems(await getRecentGems());
+  }
+  useEffect(() => {
+    retrieveRecentGems();
+  }, []);
+  useInterval(retrieveRecentGems, 5000);
 
-  async function tryToGetuserData() {
+  // Get psi current data from cdn
+  async function retrieveCurrentPsiData() {
+    setCurrentPsiData(await getCurrentPsiData());
+  }
+  useEffect(() => {
+    retrieveCurrentPsiData();
+  }, []);
+  useInterval(retrieveCurrentPsiData, 5000);
+
+  // Connect the user and get user data the first time
+  async function triggerConnectProvider() {
+    const blockchain = await connectProvider();
+    const userAddress = await blockchain.provider.getSigner().getAddress();
+    const userData = await getUserData(blockchain, userAddress);
+    setBlockchain(blockchain);
+    setUserAddress(userAddress);
+    setUserData(userData);
+  }
+
+  // Get user data on an interval if the user is connected
+  useInterval(async () => {
     if (!blockchain || !userAddress) {
       return;
     }
     const userData = await getUserData(blockchain, userAddress);
     setUserData(userData);
-  }
-
-  useInterval(tryToGetuserData, 5000);
-
-  async function triggerConnectProvider() {
-    const blockchain = await connectProvider();
-    const userAddress = await blockchain.provider.getSigner().getAddress();
-    const userData = await getUserData(blockchain, userAddress);
-    setUserData(userData);
-    setBlockchain(blockchain);
-    setUserAddress(userAddress);
-  }
+  }, 5000);
 
   return (
     <>
@@ -92,7 +94,7 @@ function App() {
       >
         <DigDeeper />
         <PageTitle />
-        <RecentGems gemData={recentGems} />
+        {recentGems && <RecentGems gemData={recentGems} />}
         <div
           style={{
             ...fontStyles,
@@ -101,6 +103,7 @@ function App() {
           }}
         >
           <ExplainerText />
+          {currentPsiData && <MyChart pointerData={currentPsiData} />}
           <BlockchainInteraction
             blockchain={blockchain}
             connectProvider={triggerConnectProvider}
@@ -204,10 +207,12 @@ function RecentGems({ gemData }: { gemData: GemData[] }) {
 function ExplainerText() {
   return (
     <>
-      Deep Gems are completely unique AI-generated NFT gemstones. Some are
-      beautiful, some are ugly. Nobody knows what a gem will look like until the
-      moment it is forged. Deep Gems are powered by PSI. The more PSI you forge
-      a gem with, the more interesting it becomes.
+      Deep Gems is a GAN trained on a dataset of precious gemstones and hooked
+      up to the blockchain. Deep Gems allows you to create and own completely
+      unique virtual gemstones as NFTs. Nobody knows what a Deep Gem will look
+      like before the moment you forge it. A GAN, or generative adversarial
+      network, is a neural network that produces original art when trained on a
+      large dataset of existing images.
       <div
         style={{
           display: "flex",
@@ -234,13 +239,24 @@ function ExplainerText() {
           );
         })}
       </div>
-      When you forge a gem, only 95% of the PSI goes into the gem. The other 5%
-      goes to the artists behind Deep Gems. You can get PSI on a bonding curve.
-      The more people get into Deep Gems, the more it will cost you. If you
-      don't like how a gem turned out, you can reforge it to try again, or burn
-      it to get the PSI back out. To sell a gem on an NFT exchange, you can
-      activate it to turn it into a transferable NFT.
-      <MyChart />
+      <p>
+        In a world of infinite reproducibility, the most precious asset is
+        uniqueness. Deep Gems explores this concept by explicitly linking
+        uniqueness to an increasingly scarce token, called PSI. When you forge a
+        Deep Gem, you must supply PSI tokens. The more PSI a gem is forged with,
+        the more unique it becomes. At higher levels of PSI, gems become
+        increasingly chaotic and psychedelic. Forging a gem with a lot of PSI
+        can result in a distorted mess of colors, or it can result in a
+        masterpiece.
+      </p>
+      <p>
+        Deep Gems invites you to explore and curate the neural network's
+        creations. If you've forged a lackluster gem, you can burn it or reforge
+        it to reuse its PSI tokens to create a new gem. This blurs the line
+        between artist and viewer. As gems are forged, reforged, traded and
+        sold, Deep Gems users will mine the depths of the neural network to find
+        the rarest and most precious gems.
+      </p>
     </>
   );
 }
