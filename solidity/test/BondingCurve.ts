@@ -210,7 +210,7 @@ describe("Psi", function () {
     }
   });
 
-  it.skip("generate plotting curve", async function () {
+  it.only("generate plotting curve", async function () {
     this.timeout(0);
     const { signers, gems, psi } = await initContracts();
 
@@ -223,10 +223,10 @@ describe("Psi", function () {
       const mcap = Number(costToBuy) * Number(totalSupply);
 
       const record = {
-        reservePool: pool * 2000,
-        price: costToBuy * 2000,
+        reservePool: pool,
+        price: costToBuy,
         totalSupply: totalSupply,
-        marketCap: mcap * 2000,
+        marketCap: mcap,
       };
 
       console.log(record);
