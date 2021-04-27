@@ -34,7 +34,7 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
   const [chartInstance, setChartInstance] = useState<Chart | undefined>(
     undefined
   );
-
+  console.log(pointerData);
   useEffect(() => {
     if (chartContainer && chartContainer.current) {
       const newChartInstance = new Chart(chartContainer.current, {
@@ -48,7 +48,7 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
               data: [
                 {
                   x: pointerData.totalSupply,
-                  y: pointerData.dollars.price,
+                  y: pointerData.eth.price,
                 },
               ],
               datalabels: {

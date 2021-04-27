@@ -54,6 +54,32 @@
       "type": "event"
     },
     {
+      "inputs": [],
+      "name": "PRICE_CLIFF",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "SUPPLY_CAP",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "address",
@@ -274,6 +300,11 @@
         {
           "internalType": "uint256",
           "name": "tokensToSell",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "currentPsiSupply",
           "type": "uint256"
         }
       ],
