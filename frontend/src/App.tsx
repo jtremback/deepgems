@@ -189,11 +189,15 @@ function RecentGems({ gemData }: { gemData: GemData[] }) {
     >
       <div
         style={{
-          width: "150vw",
           display: "flex",
+          flexDirection: "column",
           flexWrap: "wrap",
+          alignItems: "center",
           marginBottom: 20,
+          height: 500,
+          alignContent: "flex-end",
         }}
+        className="gem-slide"
       >
         {gemData.map((gem, i) => (
           <LargeGem key={i} gem={gem} />
@@ -268,8 +272,7 @@ function ExplainerText({
         higher the price goes. At 500,000 PSI, the curve stops, and no more PSI
         is minted. At this point, you'll have to try to buy it from someone
         else. Every time anyone reforges or burns a gem, 5% of the PSI in that
-        gem is locked forever. The maximum number of possible PSI in existence
-        starts at 500,000, and goes down from there.
+        gem is locked forever.
       </p>
     </>
   );

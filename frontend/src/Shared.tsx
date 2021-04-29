@@ -1,6 +1,12 @@
 import React, { ReactNode, useEffect, useState, useRef } from "react";
 import "./App.css";
 import { GemData, ModalData } from "./Types";
+// import {
+//   format,
+//   formatDistanceToNowStrict,
+//   formatRelative,
+//   subDays,
+// } from "date-fns";
 
 export const IMAGES_CDN = "https://cdn.deepge.ms/";
 export const METADATA_CDN = "https://cdn.deepge.ms/metadata/";
@@ -76,6 +82,10 @@ export function LargeGem({
   const imageLink = `${IMAGES_CDN}${gem.id}.jpg`;
   const [showImage, setShowImage] = useState(true);
 
+  // const forgeTime = formatDistanceToNowStrict(new Date(gem.forgeTime * 1000), {
+  //   addSuffix: true,
+  // });
+
   function onImageError() {
     setShowImage(false);
     setTimeout(() => {
@@ -104,9 +114,9 @@ export function LargeGem({
       ) : (
         <CheapGemSpinner size={200} />
       )}
-      <div
-        style={{ color: "white", textAlign: "center", fontSize: 16 }}
-      >{`#${gem.number} - ${gem.psi} PSI`}</div>
+      <div style={{ color: "white", textAlign: "center", fontSize: 16 }}>
+        {`#${gem.number} - ${gem.psi} PSI`}
+      </div>
     </div>
   );
 }

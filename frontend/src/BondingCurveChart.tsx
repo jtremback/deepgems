@@ -127,7 +127,7 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
               },
               min: 0,
               max: 500000,
-              title: { display: true, text: "PSI supply", color: "white" },
+              title: { display: true, text: "PSI minted", color: "white" },
             },
             y: {
               display: true,
