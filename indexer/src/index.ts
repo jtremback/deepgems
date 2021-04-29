@@ -4,7 +4,6 @@ import { ethers, BigNumber } from "ethers";
 import dotenv from "dotenv";
 import { PSI } from "./typechain/PSI";
 import psiArtifact from "./artifacts/contracts/PSI.sol/PSI.json";
-const PSI_CONTRACT = "0xCA552ACe5ED13FfA1edA9e7DeDA0DCc62BD9567b";
 const ETHUSD_URL = "https://api.etherscan.io/api?module=stats&action=ethprice";
 
 if (dotenv.config().error) {
@@ -25,6 +24,7 @@ const {
   AWS_SECRET_ACCESS_KEY,
   GRAPHQL_URL,
   CDN_DOMAIN_FOR_METADATA,
+  PSI_CONTRACT,
 }: {
   S3_JSON_CONTEXT_URL: string;
   GEMS_PER_FETCH: string;
@@ -36,6 +36,7 @@ const {
   AWS_SECRET_ACCESS_KEY: string;
   GRAPHQL_URL: string;
   CDN_DOMAIN_FOR_METADATA: string;
+  PSI_CONTRACT: string;
 } = process.env as any;
 
 function loop() {
@@ -169,6 +170,9 @@ function parseGemMetadata(tokenId: string) {
   // Remove 0x
   tokenId = tokenId.slice(2);
 
+  // Pad it out since the string encoding of uints gets padding taken off
+  tokenId = tokenId.padStart(64, "0");
+
   // Get latents
   const latent1 = BigNumber.from("0x" + tokenId.slice(0, 8)).toNumber();
   const latent2 = BigNumber.from("0x" + tokenId.slice(8, 16)).toNumber();
@@ -241,8 +245,20 @@ async function run() {
 }
 
 async function getPsiStats() {
-  const totalSupply = Number(fe(`${await psi.totalSupply()}`));
-  const price = Number(fe(`${await psi.quoteBuy(pe("1"))}`));
+  const totalSupply = Number(
+    fe(
+      `${await psi.totalSupply({
+        gasLimit: 250000,
+      })}`
+    )
+  );
+  const price = Number(
+    fe(
+      `${await psi.quoteBuy(pe("1"), {
+        gasLimit: 250000,
+      })}`
+    )
+  );
   const marketCap = totalSupply * price;
   const etherPrice = await getEthUsd();
 
@@ -263,7 +279,7 @@ async function getPsiStats() {
 async function renderGem(gem: Gem) {
   // Get metadata
   let metadata = parseGemMetadata(gem.id);
-
+  console.log(metadata);
   // Render gem
   const img = await (
     await fetch(
