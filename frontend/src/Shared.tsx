@@ -73,6 +73,7 @@ export function LargeGem({
   style?: React.CSSProperties;
   gem: GemData;
 }) {
+  const imageLink = `${IMAGES_CDN}${gem.id}.jpg`;
   const [showImage, setShowImage] = useState(true);
 
   function onImageError() {
@@ -84,7 +85,7 @@ export function LargeGem({
   return (
     <div
       style={{
-        display: "inline-block",
+        // display: "inline-block",
         background: "rgba(0,0,0,0.7)",
         margin: 5,
         ...style,
@@ -97,7 +98,7 @@ export function LargeGem({
             height: 200,
           }}
           alt=""
-          src={`${IMAGES_CDN}${gem.id}.jpg`}
+          src={imageLink}
           onError={onImageError}
         />
       ) : (

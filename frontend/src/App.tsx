@@ -1,4 +1,4 @@
-import React, { CSSProperties, useEffect, useState, useRef } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import background from "./background.jpg";
 import "./App.css";
 import psi50example from "./images/00056-000032-0.5.jpg";
@@ -102,8 +102,8 @@ function App() {
             padding: 30,
           }}
         >
-          <ExplainerText />
-          {currentPsiData && <MyChart pointerData={currentPsiData} />}
+          <ExplainerText currentPsiData={currentPsiData} />
+
           <BlockchainInteraction
             blockchain={blockchain}
             connectProvider={triggerConnectProvider}
@@ -184,27 +184,30 @@ function RecentGems({ gemData }: { gemData: GemData[] }) {
     <div
       style={{
         width: "100%",
-        whiteSpace: "nowrap",
-        display: "flex",
-        flexDirection: "row-reverse",
-        marginBottom: 20,
+        overflow: "hidden",
       }}
     >
       <div
         style={{
-          width: 200,
-          height: 200,
-          display: "inline-block",
+          width: "150vw",
+          display: "flex",
+          flexWrap: "wrap",
+          marginBottom: 20,
         }}
-      ></div>
-      {gemData.map((gem) => (
-        <LargeGem gem={gem} />
-      ))}
+      >
+        {gemData.map((gem, i) => (
+          <LargeGem key={i} gem={gem} />
+        ))}
+      </div>
     </div>
   );
 }
 
-function ExplainerText() {
+function ExplainerText({
+  currentPsiData,
+}: {
+  currentPsiData: CurrentPsiData | undefined;
+}) {
   return (
     <>
       Deep Gems is a GAN trained on a dataset of precious gemstones and hooked
@@ -226,9 +229,9 @@ function ExplainerText() {
           [psi100example, "100 PSI"],
           [psi200example, "200 PSI"],
           [psi300example, "300 PSI"],
-        ].map((data) => {
+        ].map((data, i) => {
           return (
-            <div style={{ maxWidth: 100, textAlign: "center" }}>
+            <div key={i} style={{ maxWidth: 100, textAlign: "center" }}>
               <img
                 src={data[0]}
                 alt=""
@@ -256,6 +259,17 @@ function ExplainerText() {
         between artist and viewer. As gems are forged, reforged, traded and
         sold, Deep Gems users will mine the depths of the neural network to find
         the rarest and most precious gems.
+      </p>
+      <div style={{ marginTop: 50, marginBottom: 30 }}>
+        {currentPsiData && <MyChart pointerData={currentPsiData} />}
+      </div>
+      <p>
+        PSI can be minted on a bonding curve. The more PSI gets minted, the
+        higher the price goes. At 500,000 PSI, the curve stops, and no more PSI
+        is minted. At this point, you'll have to try to buy it from someone
+        else. Every time anyone reforges or burns a gem, 5% of the PSI in that
+        gem is locked forever. The maximum number of possible PSI in existence
+        starts at 500,000, and goes down from there.
       </p>
     </>
   );

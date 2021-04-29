@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Chart, registerables } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import numeral from "numeral";
@@ -14,15 +14,18 @@ function parseData(data: CurveDataPoint[]): { x: number; y: number }[] {
   }));
 }
 
-function calculateLabelAlignment(pointerData: CurrentPsiData) {
+function calculateLabelAlignment(
+  pointerData: CurrentPsiData,
+  supplyCap: number
+) {
   let alignment = -52;
-  if (pointerData.totalSupply > 200000) {
+  if (pointerData.totalSupply > supplyCap * 0.1) {
     alignment = -90;
   }
-  if (pointerData.totalSupply > 600000) {
+  if (pointerData.totalSupply > supplyCap * 0.6) {
     alignment = 180;
   }
-  if (pointerData.totalSupply > 800000) {
+  if (pointerData.totalSupply > supplyCap * 0.8) {
     alignment = -225;
   }
 
@@ -34,7 +37,7 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
   const [chartInstance, setChartInstance] = useState<Chart | undefined>(
     undefined
   );
-  console.log(pointerData);
+
   useEffect(() => {
     if (chartContainer && chartContainer.current) {
       const newChartInstance = new Chart(chartContainer.current, {
@@ -53,7 +56,7 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
               ],
               datalabels: {
                 backgroundColor: "rgba(255,255,255,1)",
-                align: calculateLabelAlignment(pointerData),
+                align: calculateLabelAlignment(pointerData, 500000),
                 offset: 20,
                 borderRadius: 4,
                 clamp: true,
@@ -63,7 +66,6 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
                 },
                 padding: 10,
                 formatter: function (value, context) {
-                  console.log("pointerData", pointerData);
                   const formattedSupply = numeral(
                     pointerData.totalSupply
                   ).format("0[.]0a");
@@ -73,14 +75,14 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
                   ).format("$0[.]00a");
                   const formattedMarketCapDollars = numeral(
                     pointerData.dollars.marketCap
-                  ).format("$0a");
+                  ).format("$0[.]0a");
 
                   const formattedPriceEth = numeral(
                     pointerData.eth.price
-                  ).format("0[.]0000000a");
+                  ).format("0[.]000a");
                   const formattedMarketCapEth = numeral(
                     pointerData.eth.marketCap
-                  ).format("0.000a");
+                  ).format("0[.]000a");
 
                   return `Current PSI stats:\nSupply: ${formattedSupply}\nPrice: ${formattedPriceEth} ETH (${formattedPriceDollars})\nMarket cap: ${formattedMarketCapEth} ETH (${formattedMarketCapDollars})`;
                 },
@@ -134,7 +136,14 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
               },
               ticks: {
                 color: "white",
+                callback: function (ethPrice) {
+                  const formattedDollarPrice = numeral(
+                    Number(ethPrice) * pointerData.etherPrice
+                  ).format("$0a");
+                  return `${ethPrice} ETH (${formattedDollarPrice})`;
+                },
               },
+
               title: { display: true, text: "PSI price", color: "white" },
             },
           },
