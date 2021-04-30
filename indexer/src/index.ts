@@ -86,9 +86,9 @@ const highestGemQuery = `{
   }
 }`;
 
-const provider = new ethers.providers.JsonRpcProvider(
-  "https://rinkeby.infura.io/v3/28b587d8cdde4eea926069342c002e01"
-);
+const provider = ethers.providers.getDefaultProvider("rinkeby", {
+  etherscan: "D4UDMH2BJI1UUR489XBJV8EG7IVI3NWE61",
+});
 
 const psi = (new ethers.Contract(
   PSI_CONTRACT,
@@ -167,6 +167,8 @@ async function getForgedGems(gt: number, lte: number): Promise<Gem[]> {
 }
 
 function parseGemMetadata(tokenId: string) {
+  // convert to hex
+  tokenId = BigNumber.from(tokenId).toHexString();
   // Remove 0x
   tokenId = tokenId.slice(2);
 
@@ -245,20 +247,8 @@ async function run() {
 }
 
 async function getPsiStats() {
-  const totalSupply = Number(
-    fe(
-      `${await psi.totalSupply({
-        gasLimit: 250000,
-      })}`
-    )
-  );
-  const price = Number(
-    fe(
-      `${await psi.quoteBuy(pe("1"), {
-        gasLimit: 250000,
-      })}`
-    )
-  );
+  const totalSupply = Number(fe(`${await psi.totalSupply()}`));
+  const price = Number(fe(`${await psi.quoteBuy(pe("1"))}`));
   const marketCap = totalSupply * price;
   const etherPrice = await getEthUsd();
 
