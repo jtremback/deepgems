@@ -7,7 +7,7 @@ contract PSI is QuadraticBondingCurve {
     address public DEEP_GEMS_CONTRACT;
 
     constructor()
-        QuadraticBondingCurve("PSI", "PSI", 1e12, 500000 ether, 100000 ether)
+        QuadraticBondingCurve("PSI", "PSI", 2e16, 5000000 ether, 1000000 ether)
     {}
 
     function initialize(address deepGemsContract) public {

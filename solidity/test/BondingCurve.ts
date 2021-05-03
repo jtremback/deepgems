@@ -4,6 +4,7 @@ import { ethers, network } from "hardhat";
 import { Signer, BigNumber, BigNumberish } from "ethers";
 import { PSI } from "../typechain/PSI";
 import { DeepGems } from "../typechain/DeepGems";
+var fs = require("fs");
 const curve: {
   [key: number]: { reservePool: string; price: string };
 } = require("./bondingCurveData.json");
@@ -233,10 +234,10 @@ describe("Psi", function () {
 
       curve[i] = record;
 
-      let buyNumber = 10000;
+      let buyNumber = 100000;
 
       if (i === 9) {
-        buyNumber = 9999;
+        buyNumber = 99999;
       }
 
       if (i === 10) {
@@ -255,6 +256,7 @@ describe("Psi", function () {
     }
 
     console.log(JSON.stringify(curve));
+    fs.writeFile("./curve-visuals/data.json", JSON.stringify(curve), () => {});
   });
 
   it.skip("generate testing curve", async function () {
