@@ -211,7 +211,7 @@ describe("Psi", function () {
     }
   });
 
-  it.only("generate plotting curve", async function () {
+  it.skip("generate plotting curve", async function () {
     this.timeout(0);
     const { signers, gems, psi } = await initContracts();
 
@@ -234,13 +234,13 @@ describe("Psi", function () {
 
       curve[i] = record;
 
-      let buyNumber = 100000;
+      let buyNumber = 50000;
 
-      if (i === 9) {
-        buyNumber = 99999;
+      if (i === 4) {
+        buyNumber = 49999;
       }
 
-      if (i === 10) {
+      if (i === 5) {
         buyNumber = 1;
       }
 
@@ -259,7 +259,7 @@ describe("Psi", function () {
     fs.writeFile("./curve-visuals/data.json", JSON.stringify(curve), () => {});
   });
 
-  it.skip("generate testing curve", async function () {
+  it.only("generate testing curve", async function () {
     this.timeout(0);
     const { signers, gems, psi } = await initContracts();
 
@@ -271,8 +271,8 @@ describe("Psi", function () {
       const totalSupply = await psi.totalSupply();
 
       const record = {
-        reservePool: pool.toString(),
-        price: price.toString(),
+        reservePool: fe(pool),
+        price: fe(price),
       };
 
       curve[Number(fe(totalSupply))] = record;

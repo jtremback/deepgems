@@ -12,8 +12,8 @@ export const IMAGES_CDN = "https://cdn.deepge.ms/";
 export const METADATA_CDN = "https://cdn.deepge.ms/metadata/";
 export const GRAPHQL_URL =
   "https://api.thegraph.com/subgraphs/name/jtremback/deepgems";
-export const GEMS_CONTRACT = "0x8d471020BAD1903e3532604f42F107C4d80a930F";
-export const PSI_CONTRACT = "0xC088Ce086712e54b7c6010398D183f150e126Da1";
+export const GEMS_CONTRACT = "0xa60ccC4e11F71a8B4D4F8B27B1De8B3e7aD40704";
+export const PSI_CONTRACT = "0x8C4c2C028305d0ee863FfdcCa8d4557f3EC1E834";
 export const PSI_STATS_URL =
   "https://s3-us-west-2.amazonaws.com/cdn.deepge.ms/psiStats.json";
 

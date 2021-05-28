@@ -1,8 +1,18 @@
 const ethPrice = 3300;
 
+function timeout(n) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve();
+    }, n);
+  });
+}
+
 async function run() {
   const req = await fetch("data.json");
   const data = await req.json();
+
+  await timeout(500);
 
   var ctx = document.getElementById("chart1").getContext("2d");
   var myChart = new Chart(ctx, {
@@ -50,8 +60,8 @@ async function run() {
             color: "white",
           },
           title: { display: true, text: "PSI minted", color: "white" },
-          min: 0,
-          max: 6000000,
+          // min: 0,
+          // max: 6000000,
         },
         y: {
           display: true,
@@ -62,8 +72,8 @@ async function run() {
             color: "white",
           },
           title: { display: true, text: "PSI price", color: "white" },
-          min: 0,
-          max: 6,
+          // min: 0,
+          // max: 6,
         },
       },
     },

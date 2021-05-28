@@ -3,6 +3,7 @@ import { Chart, registerables } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import numeral from "numeral";
 import { CurrentPsiData, CurveDataPoint } from "./Types";
+import { isConstructorDeclaration } from "typescript";
 
 const data = require("./bondingCurveData.json");
 Chart.register(...registerables, ChartDataLabels);
@@ -37,7 +38,7 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
   const [chartInstance, setChartInstance] = useState<Chart | undefined>(
     undefined
   );
-
+  console.log("pointerData", pointerData);
   useEffect(() => {
     if (chartContainer && chartContainer.current) {
       const newChartInstance = new Chart(chartContainer.current, {
@@ -56,7 +57,7 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
               ],
               datalabels: {
                 backgroundColor: "rgba(255,255,255,1)",
-                align: calculateLabelAlignment(pointerData, 500000),
+                align: calculateLabelAlignment(pointerData, 5000000),
                 offset: 20,
                 borderRadius: 4,
                 clamp: true,
@@ -79,7 +80,7 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
 
                   const formattedPriceEth = numeral(
                     pointerData.eth.price
-                  ).format("0[.]000a");
+                  ).format("0[.]0000a");
                   const formattedMarketCapEth = numeral(
                     pointerData.eth.marketCap
                   ).format("0[.]000a");
@@ -125,8 +126,8 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
               ticks: {
                 color: "white",
               },
-              min: 0,
-              max: 500000,
+              // min: 0,
+              // max: 5500000,
               title: { display: true, text: "PSI minted", color: "white" },
             },
             y: {
@@ -137,13 +138,15 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
               ticks: {
                 color: "white",
                 callback: function (ethPrice) {
+                  const formattedEthPrice = numeral(Number(ethPrice)).format(
+                    "0.0000"
+                  );
                   const formattedDollarPrice = numeral(
                     Number(ethPrice) * pointerData.etherPrice
                   ).format("$0a");
-                  return `${ethPrice} ETH (${formattedDollarPrice})`;
+                  return `${formattedEthPrice} ETH (${formattedDollarPrice})`;
                 },
               },
-
               title: { display: true, text: "PSI price", color: "white" },
             },
           },
