@@ -39,7 +39,9 @@ async function initContracts() {
   await psi.initialize(gems.address);
 
   // Would be very bad if you could initialize twice
-  expect(psi.initialize(signers[0].address)).to.be.reverted;
+  await expect(psi.initialize(signers[0].address)).to.be.revertedWith(
+    "already initialized"
+  );
 
   return { signers, gems, psi };
 }
@@ -102,7 +104,11 @@ describe("Deep gems NFT functionality", function () {
     await psi.buy(pe(`200`), { value: pe(`10`), gasPrice: 0 });
 
     // Make sure that transferToDeepGems can only be called by deepgems
-    expect(psi.transferToDeepGems(signers[0].address, pe("1"))).to.be.reverted;
+    await expect(
+      psi.transferToDeepGems(signers[0].address, pe("1"))
+    ).to.be.revertedWith(
+      "transferToDeepGems can only be called by the deep gems contract"
+    );
 
     // FORGE
 
@@ -114,7 +120,9 @@ describe("Deep gems NFT functionality", function () {
     );
 
     // Not enough tokens
-    expect(gems.forge(pe("100000"))).to.be.reverted;
+    await expect(gems.forge(pe("100000"))).to.be.revertedWith(
+      "ERC20: transfer amount exceeds balance"
+    );
 
     await gems.forge(pe(`${gem2Input}`));
 
@@ -158,10 +166,14 @@ describe("Deep gems NFT functionality", function () {
     await gems.activate(reforgedTokenId);
 
     // Doesn't exist
-    expect(gems.activate(forgedTokenId1)).to.be.reverted;
+    await expect(gems.activate(forgedTokenId1)).to.be.revertedWith(
+      "gem is already activated, you don't own it, or it does not exist"
+    );
 
     // Already activated
-    expect(gems.activate(reforgedTokenId)).to.be.reverted;
+    await expect(gems.activate(reforgedTokenId)).to.be.revertedWith(
+      "gem is already activated, you don't own it, or it does not exist"
+    );
 
     // TRANSFER
 
@@ -185,12 +197,16 @@ describe("Deep gems NFT functionality", function () {
     // BURN
 
     // Can't burn a gem you don't own
-    expect(gems.burn(reforgedTokenId)).to.be.reverted;
+    await expect(gems.burn(reforgedTokenId)).to.be.revertedWith(
+      "this gem does not exist or you don't own it"
+    );
 
     await gems.connect(signers[1]).burn(reforgedTokenId);
 
     // Already been burned
-    expect(gems.connect(signers[1]).burn(reforgedTokenId)).to.be.reverted;
+    await expect(
+      gems.connect(signers[1]).burn(reforgedTokenId)
+    ).to.be.revertedWith("this gem does not exist or you don't own it");
 
     // Should have gotten the money
     expect(await psi.balanceOf(signers[1].address)).to.equal(gem1Remaining2);

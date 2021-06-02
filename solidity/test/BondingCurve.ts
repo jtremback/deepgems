@@ -95,7 +95,7 @@ describe("Psi", function () {
       expect(
         almostEqual(
           await psi.provider.getBalance(psi.address),
-          BigNumber.from(curve[tokenNumber].reservePool),
+          BigNumber.from(pe(curve[tokenNumber].reservePool)),
           almostEqualDelta
         )
       ).to.be.true;
@@ -109,7 +109,7 @@ describe("Psi", function () {
       expect(
         almostEqual(
           await psi.quoteBuy(pe("1")),
-          BigNumber.from(curve[tokenNumber].price),
+          BigNumber.from(pe(curve[tokenNumber].price)),
           almostEqualDelta
         )
       ).to.be.true;
@@ -132,7 +132,7 @@ describe("Psi", function () {
       expect(
         almostEqual(
           await psi.provider.getBalance(psi.address),
-          BigNumber.from(curve[tokenNumber].reservePool),
+          BigNumber.from(pe(curve[tokenNumber].reservePool)),
           almostEqualDelta
         )
       ).to.be.true;
@@ -146,7 +146,7 @@ describe("Psi", function () {
       expect(
         almostEqual(
           await psi.quoteBuy(pe("1")),
-          BigNumber.from(curve[tokenNumber].price),
+          BigNumber.from(pe(curve[tokenNumber].price)),
           almostEqualDelta
         )
       ).to.be.true;
@@ -182,6 +182,17 @@ describe("Psi", function () {
 
     // Going down to 30,000
     await sellCycle(470000);
+
+    // Going up to 2,500,000
+    await buyCycle(2470000);
+
+    // Curve has stopped
+    await expect(buy(1, 999999)).to.be.revertedWith(
+      "Supply cap exceeded, no more tokens can be bought from the curve."
+    );
+
+    // Going down to 2,000,000
+    await sellCycle(500000);
   });
 
   it.skip("try to exploit numerical instability", async function () {
@@ -259,7 +270,7 @@ describe("Psi", function () {
     fs.writeFile("./curve-visuals/data.json", JSON.stringify(curve), () => {});
   });
 
-  it.only("generate testing curve", async function () {
+  it.skip("generate testing curve", async function () {
     this.timeout(0);
     const { signers, gems, psi } = await initContracts();
 

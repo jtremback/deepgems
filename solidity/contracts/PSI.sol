@@ -24,7 +24,10 @@ contract PSI is QuadraticBondingCurve {
     // check when transferring psi to the deep gems contract.
     // It can only be called by the deep gems contract.
     function transferToDeepGems(address sender, uint256 amount) public {
-        require(msg.sender == DEEP_GEMS_CONTRACT);
+        require(
+            msg.sender == DEEP_GEMS_CONTRACT,
+            "transferToDeepGems can only be called by the deep gems contract"
+        );
         _transfer(sender, DEEP_GEMS_CONTRACT, amount);
     }
 }
