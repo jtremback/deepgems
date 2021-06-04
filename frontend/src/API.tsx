@@ -1,6 +1,6 @@
 import "./App.css";
 import WalletConnectProvider from "@walletconnect/web3-provider";
-import { ethers, BigNumber } from "ethers";
+import { ethers } from "ethers";
 import Web3Modal from "web3modal";
 import { DeepGems } from "../../solidity/typechain/DeepGems";
 import { PSI } from "../../solidity/typechain/PSI";
@@ -35,7 +35,7 @@ const web3Modal = new Web3Modal({
 });
 
 const recentGemsQuery = `{
-  gems(orderBy: number, orderDirection: desc, first: 10, where: { burned: false }){
+  gems(orderBy: number, orderDirection: desc, first: 24, where: { burned: false }){
     id
     psi
     owner

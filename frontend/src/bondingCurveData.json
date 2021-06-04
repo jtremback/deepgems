@@ -3,307 +3,307 @@
   {
     "reservePool": 1e-18,
     "price": 1e-18,
-    "totalSupply": 10000,
-    "marketCap": 1e-14
-  },
-  {
-    "reservePool": 2e-18,
-    "price": 1e-18,
-    "totalSupply": 20000,
-    "marketCap": 2e-14
-  },
-  {
-    "reservePool": 3e-18,
-    "price": 1e-18,
-    "totalSupply": 30000,
-    "marketCap": 3.0000000000000005e-14
-  },
-  {
-    "reservePool": 4e-18,
-    "price": 1e-18,
-    "totalSupply": 40000,
-    "marketCap": 4e-14
-  },
-  {
-    "reservePool": 5e-18,
-    "price": 1e-18,
     "totalSupply": 50000,
     "marketCap": 5e-14
   },
   {
-    "reservePool": 6e-18,
+    "reservePool": 2e-18,
     "price": 1e-18,
-    "totalSupply": 60000,
-    "marketCap": 6.000000000000001e-14
-  },
-  {
-    "reservePool": 7e-18,
-    "price": 1e-18,
-    "totalSupply": 70000,
-    "marketCap": 7e-14
-  },
-  {
-    "reservePool": 8e-18,
-    "price": 1e-18,
-    "totalSupply": 80000,
-    "marketCap": 8e-14
-  },
-  {
-    "reservePool": 9e-18,
-    "price": 1e-18,
-    "totalSupply": 90000,
-    "marketCap": 9.000000000000001e-14
-  },
-  {
-    "reservePool": 1e-17,
-    "price": 1e-18,
-    "totalSupply": 99999,
-    "marketCap": 9.999900000000001e-14
-  },
-  {
-    "reservePool": 1.1e-17,
-    "price": 0.010000100000333334,
     "totalSupply": 100000,
-    "marketCap": 1000.0100000333333
+    "marketCap": 1e-13
   },
   {
-    "reservePool": 110.33333333333333,
-    "price": 0.012100110000333335,
-    "totalSupply": 110000,
-    "marketCap": 1331.0121000366669
-  },
-  {
-    "reservePool": 242.66666666666666,
-    "price": 0.014400120000333335,
-    "totalSupply": 120000,
-    "marketCap": 1728.01440004
-  },
-  {
-    "reservePool": 399,
-    "price": 0.016900130000333333,
-    "totalSupply": 130000,
-    "marketCap": 2197.0169000433334
-  },
-  {
-    "reservePool": 581.3333333333334,
-    "price": 0.019600140000333333,
-    "totalSupply": 140000,
-    "marketCap": 2744.0196000466667
-  },
-  {
-    "reservePool": 791.6666666666666,
-    "price": 0.022500150000333334,
+    "reservePool": 3e-18,
+    "price": 1e-18,
     "totalSupply": 150000,
-    "marketCap": 3375.02250005
+    "marketCap": 1.5000000000000002e-13
   },
   {
-    "reservePool": 1032,
-    "price": 0.025600160000333334,
-    "totalSupply": 160000,
-    "marketCap": 4096.025600053334
-  },
-  {
-    "reservePool": 1304.3333333333333,
-    "price": 0.028900170000333333,
-    "totalSupply": 170000,
-    "marketCap": 4913.028900056666
-  },
-  {
-    "reservePool": 1610.6666666666667,
-    "price": 0.03240018000033333,
-    "totalSupply": 180000,
-    "marketCap": 5832.032400059999
-  },
-  {
-    "reservePool": 1953,
-    "price": 0.036100190000333335,
-    "totalSupply": 190000,
-    "marketCap": 6859.036100063334
-  },
-  {
-    "reservePool": 2333.3333333333335,
-    "price": 0.04000020000033334,
+    "reservePool": 4e-18,
+    "price": 1e-18,
     "totalSupply": 200000,
-    "marketCap": 8000.040000066668
+    "marketCap": 2e-13
   },
   {
-    "reservePool": 2753.6666666666665,
-    "price": 0.04410021000033333,
-    "totalSupply": 210000,
-    "marketCap": 9261.04410007
+    "reservePool": 5e-18,
+    "price": 1e-18,
+    "totalSupply": 249999,
+    "marketCap": 2.49999e-13
   },
   {
-    "reservePool": 3216,
-    "price": 0.04840022000033333,
-    "totalSupply": 220000,
-    "marketCap": 10648.048400073332
-  },
-  {
-    "reservePool": 3722.3333333333335,
-    "price": 0.05290023000033334,
-    "totalSupply": 230000,
-    "marketCap": 12167.052900076667
-  },
-  {
-    "reservePool": 4274.666666666667,
-    "price": 0.057600240000333335,
-    "totalSupply": 240000,
-    "marketCap": 13824.057600080001
-  },
-  {
-    "reservePool": 4875,
-    "price": 0.06250025000033334,
+    "reservePool": 6e-18,
+    "price": 0.000012500050000067,
     "totalSupply": 250000,
-    "marketCap": 15625.062500083335
+    "marketCap": 3.1250125000167497
   },
   {
-    "reservePool": 5525.333333333333,
-    "price": 0.06760026000033334,
-    "totalSupply": 260000,
-    "marketCap": 17576.06760008667
-  },
-  {
-    "reservePool": 6227.666666666667,
-    "price": 0.07290027000033333,
-    "totalSupply": 270000,
-    "marketCap": 19683.07290009
-  },
-  {
-    "reservePool": 6984,
-    "price": 0.07840028000033333,
-    "totalSupply": 280000,
-    "marketCap": 21952.078400093334
-  },
-  {
-    "reservePool": 7796.333333333333,
-    "price": 0.08410029000033334,
-    "totalSupply": 290000,
-    "marketCap": 24389.08410009667
-  },
-  {
-    "reservePool": 8666.666666666666,
-    "price": 0.09000030000033334,
+    "reservePool": 0.7583333333333333,
+    "price": 0.000018000060000067,
     "totalSupply": 300000,
-    "marketCap": 27000.0900001
+    "marketCap": 5.400018000020101
   },
   {
-    "reservePool": 9597,
-    "price": 0.09610031000033334,
-    "totalSupply": 310000,
-    "marketCap": 29791.096100103336
-  },
-  {
-    "reservePool": 10589.333333333334,
-    "price": 0.10240032000033333,
-    "totalSupply": 320000,
-    "marketCap": 32768.10240010667
-  },
-  {
-    "reservePool": 11645.666666666666,
-    "price": 0.10890033000033333,
-    "totalSupply": 330000,
-    "marketCap": 35937.10890011
-  },
-  {
-    "reservePool": 12768,
-    "price": 0.11560034000033334,
-    "totalSupply": 340000,
-    "marketCap": 39304.115600113335
-  },
-  {
-    "reservePool": 13958.333333333334,
-    "price": 0.12250035000033334,
+    "reservePool": 1.8166666666666667,
+    "price": 0.000024500070000067,
     "totalSupply": 350000,
-    "marketCap": 42875.12250011667
+    "marketCap": 8.575024500023451
   },
   {
-    "reservePool": 15218.666666666666,
-    "price": 0.12960036000033334,
-    "totalSupply": 360000,
-    "marketCap": 46656.12960012
-  },
-  {
-    "reservePool": 16551,
-    "price": 0.13690037000033334,
-    "totalSupply": 370000,
-    "marketCap": 50653.13690012333
-  },
-  {
-    "reservePool": 17957.333333333332,
-    "price": 0.14440038000033334,
-    "totalSupply": 380000,
-    "marketCap": 54872.14440012667
-  },
-  {
-    "reservePool": 19439.666666666668,
-    "price": 0.15210039000033335,
-    "totalSupply": 390000,
-    "marketCap": 59319.152100130006
-  },
-  {
-    "reservePool": 21000,
-    "price": 0.16000040000033333,
+    "reservePool": 3.225,
+    "price": 0.000032000080000067,
     "totalSupply": 400000,
-    "marketCap": 64000.160000133335
+    "marketCap": 12.8000320000268
   },
   {
-    "reservePool": 22640.333333333332,
-    "price": 0.16810041000033332,
-    "totalSupply": 410000,
-    "marketCap": 68921.16810013667
-  },
-  {
-    "reservePool": 24362.666666666668,
-    "price": 0.17640042000033335,
-    "totalSupply": 420000,
-    "marketCap": 74088.17640014
-  },
-  {
-    "reservePool": 26169,
-    "price": 0.18490043000033332,
-    "totalSupply": 430000,
-    "marketCap": 79507.18490014333
-  },
-  {
-    "reservePool": 28061.333333333332,
-    "price": 0.19360044000033333,
-    "totalSupply": 440000,
-    "marketCap": 85184.19360014667
-  },
-  {
-    "reservePool": 30041.666666666668,
-    "price": 0.20250045000033334,
+    "reservePool": 5.033333333333333,
+    "price": 0.000040500090000067,
     "totalSupply": 450000,
-    "marketCap": 91125.20250015
+    "marketCap": 18.22504050003015
   },
   {
-    "reservePool": 32112,
-    "price": 0.21160046000033333,
-    "totalSupply": 460000,
-    "marketCap": 97336.21160015333
-  },
-  {
-    "reservePool": 34274.333333333336,
-    "price": 0.22090047000033333,
-    "totalSupply": 470000,
-    "marketCap": 103823.22090015667
-  },
-  {
-    "reservePool": 36530.666666666664,
-    "price": 0.23040048000033334,
-    "totalSupply": 480000,
-    "marketCap": 110592.23040016
-  },
-  {
-    "reservePool": 38883,
-    "price": 0.24010049000033334,
-    "totalSupply": 490000,
-    "marketCap": 117649.24010016334
-  },
-  {
-    "reservePool": 41333.333333333336,
-    "price": 0.25000050000033336,
+    "reservePool": 7.291666666666667,
+    "price": 0.000050000100000067,
     "totalSupply": 500000,
-    "marketCap": 125000.25000016668
+    "marketCap": 25.0000500000335
+  },
+  {
+    "reservePool": 10.05,
+    "price": 0.000060500110000067,
+    "totalSupply": 550000,
+    "marketCap": 33.27506050003685
+  },
+  {
+    "reservePool": 13.358333333333333,
+    "price": 0.000072000120000067,
+    "totalSupply": 600000,
+    "marketCap": 43.2000720000402
+  },
+  {
+    "reservePool": 17.266666666666666,
+    "price": 0.000084500130000067,
+    "totalSupply": 650000,
+    "marketCap": 54.92508450004355
+  },
+  {
+    "reservePool": 21.825,
+    "price": 0.000098000140000067,
+    "totalSupply": 700000,
+    "marketCap": 68.6000980000469
+  },
+  {
+    "reservePool": 27.083333333333332,
+    "price": 0.000112500150000067,
+    "totalSupply": 750000,
+    "marketCap": 84.37511250005025
+  },
+  {
+    "reservePool": 33.09166666666667,
+    "price": 0.000128000160000067,
+    "totalSupply": 800000,
+    "marketCap": 102.40012800005361
+  },
+  {
+    "reservePool": 39.9,
+    "price": 0.000144500170000067,
+    "totalSupply": 850000,
+    "marketCap": 122.82514450005694
+  },
+  {
+    "reservePool": 47.55833333333333,
+    "price": 0.000162000180000067,
+    "totalSupply": 900000,
+    "marketCap": 145.8001620000603
+  },
+  {
+    "reservePool": 56.11666666666667,
+    "price": 0.000180500190000067,
+    "totalSupply": 950000,
+    "marketCap": 171.47518050006366
+  },
+  {
+    "reservePool": 65.625,
+    "price": 0.000200000200000067,
+    "totalSupply": 1000000,
+    "marketCap": 200.000200000067
+  },
+  {
+    "reservePool": 76.13333333333334,
+    "price": 0.000220500210000067,
+    "totalSupply": 1050000,
+    "marketCap": 231.52522050007036
+  },
+  {
+    "reservePool": 87.69166666666666,
+    "price": 0.000242000220000067,
+    "totalSupply": 1100000,
+    "marketCap": 266.2002420000737
+  },
+  {
+    "reservePool": 100.35,
+    "price": 0.000264500230000067,
+    "totalSupply": 1150000,
+    "marketCap": 304.17526450007705
+  },
+  {
+    "reservePool": 114.15833333333333,
+    "price": 0.000288000240000067,
+    "totalSupply": 1200000,
+    "marketCap": 345.60028800008035
+  },
+  {
+    "reservePool": 129.16666666666666,
+    "price": 0.000312500250000067,
+    "totalSupply": 1250000,
+    "marketCap": 390.62531250008374
+  },
+  {
+    "reservePool": 145.425,
+    "price": 0.000338000260000067,
+    "totalSupply": 1300000,
+    "marketCap": 439.4003380000871
+  },
+  {
+    "reservePool": 162.98333333333332,
+    "price": 0.000364500270000067,
+    "totalSupply": 1350000,
+    "marketCap": 492.0753645000904
+  },
+  {
+    "reservePool": 181.89166666666668,
+    "price": 0.000392000280000067,
+    "totalSupply": 1400000,
+    "marketCap": 548.8003920000938
+  },
+  {
+    "reservePool": 202.2,
+    "price": 0.000420500290000067,
+    "totalSupply": 1450000,
+    "marketCap": 609.7254205000971
+  },
+  {
+    "reservePool": 223.95833333333334,
+    "price": 0.000450000300000067,
+    "totalSupply": 1500000,
+    "marketCap": 675.0004500001005
+  },
+  {
+    "reservePool": 247.21666666666667,
+    "price": 0.000480500310000067,
+    "totalSupply": 1550000,
+    "marketCap": 744.7754805001039
+  },
+  {
+    "reservePool": 272.025,
+    "price": 0.000512000320000067,
+    "totalSupply": 1600000,
+    "marketCap": 819.2005120001072
+  },
+  {
+    "reservePool": 298.43333333333334,
+    "price": 0.000544500330000067,
+    "totalSupply": 1650000,
+    "marketCap": 898.4255445001106
+  },
+  {
+    "reservePool": 326.4916666666667,
+    "price": 0.000578000340000067,
+    "totalSupply": 1700000,
+    "marketCap": 982.600578000114
+  },
+  {
+    "reservePool": 356.25,
+    "price": 0.000612500350000067,
+    "totalSupply": 1750000,
+    "marketCap": 1071.8756125001173
+  },
+  {
+    "reservePool": 387.7583333333333,
+    "price": 0.000648000360000067,
+    "totalSupply": 1800000,
+    "marketCap": 1166.4006480001206
+  },
+  {
+    "reservePool": 421.06666666666666,
+    "price": 0.000684500370000067,
+    "totalSupply": 1850000,
+    "marketCap": 1266.325684500124
+  },
+  {
+    "reservePool": 456.225,
+    "price": 0.000722000380000067,
+    "totalSupply": 1900000,
+    "marketCap": 1371.8007220001273
+  },
+  {
+    "reservePool": 493.28333333333336,
+    "price": 0.000760500390000067,
+    "totalSupply": 1950000,
+    "marketCap": 1482.9757605001305
+  },
+  {
+    "reservePool": 532.2916666666666,
+    "price": 0.000800000400000067,
+    "totalSupply": 2000000,
+    "marketCap": 1600.000800000134
+  },
+  {
+    "reservePool": 573.3,
+    "price": 0.000840500410000067,
+    "totalSupply": 2050000,
+    "marketCap": 1723.0258405001373
+  },
+  {
+    "reservePool": 616.3583333333333,
+    "price": 0.000882000420000067,
+    "totalSupply": 2100000,
+    "marketCap": 1852.2008820001408
+  },
+  {
+    "reservePool": 661.5166666666667,
+    "price": 0.000924500430000067,
+    "totalSupply": 2150000,
+    "marketCap": 1987.675924500144
+  },
+  {
+    "reservePool": 708.825,
+    "price": 0.000968000440000067,
+    "totalSupply": 2200000,
+    "marketCap": 2129.6009680001475
+  },
+  {
+    "reservePool": 758.3333333333334,
+    "price": 0.001012500450000067,
+    "totalSupply": 2250000,
+    "marketCap": 2278.126012500151
+  },
+  {
+    "reservePool": 810.0916666666667,
+    "price": 0.001058000460000067,
+    "totalSupply": 2300000,
+    "marketCap": 2433.401058000154
+  },
+  {
+    "reservePool": 864.15,
+    "price": 0.001104500470000067,
+    "totalSupply": 2350000,
+    "marketCap": 2595.5761045001577
+  },
+  {
+    "reservePool": 920.5583333333333,
+    "price": 0.001152000480000067,
+    "totalSupply": 2400000,
+    "marketCap": 2764.801152000161
+  },
+  {
+    "reservePool": 979.3666666666667,
+    "price": 0.001200500490000067,
+    "totalSupply": 2450000,
+    "marketCap": 2941.226200500164
+  },
+  {
+    "reservePool": 1040.625,
+    "price": 0.001250000500000067,
+    "totalSupply": 2500000,
+    "marketCap": 3125.0012500001676
   }
 ]

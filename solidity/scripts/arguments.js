@@ -1,4 +1,4 @@
 module.exports = [
-    "0xC088Ce086712e54b7c6010398D183f150e126Da1",
-    "https://cdn.deepge.ms/metadata/"
-]
+  "0x8C4c2C028305d0ee863FfdcCa8d4557f3EC1E834",
+  "https://cdn.deepge.ms/metadata/",
+];

@@ -4,6 +4,7 @@ import { ethers, network } from "hardhat";
 import { Signer, BigNumber, BigNumberish } from "ethers";
 import { PSI } from "../typechain/PSI";
 import { DeepGems } from "../typechain/DeepGems";
+var fs = require("fs");
 const curve: {
   [key: number]: { reservePool: string; price: string };
 } = require("./bondingCurveData.json");
@@ -94,7 +95,7 @@ describe("Psi", function () {
       expect(
         almostEqual(
           await psi.provider.getBalance(psi.address),
-          BigNumber.from(curve[tokenNumber].reservePool),
+          BigNumber.from(pe(curve[tokenNumber].reservePool)),
           almostEqualDelta
         )
       ).to.be.true;
@@ -108,7 +109,7 @@ describe("Psi", function () {
       expect(
         almostEqual(
           await psi.quoteBuy(pe("1")),
-          BigNumber.from(curve[tokenNumber].price),
+          BigNumber.from(pe(curve[tokenNumber].price)),
           almostEqualDelta
         )
       ).to.be.true;
@@ -131,7 +132,7 @@ describe("Psi", function () {
       expect(
         almostEqual(
           await psi.provider.getBalance(psi.address),
-          BigNumber.from(curve[tokenNumber].reservePool),
+          BigNumber.from(pe(curve[tokenNumber].reservePool)),
           almostEqualDelta
         )
       ).to.be.true;
@@ -145,7 +146,7 @@ describe("Psi", function () {
       expect(
         almostEqual(
           await psi.quoteBuy(pe("1")),
-          BigNumber.from(curve[tokenNumber].price),
+          BigNumber.from(pe(curve[tokenNumber].price)),
           almostEqualDelta
         )
       ).to.be.true;
@@ -181,6 +182,17 @@ describe("Psi", function () {
 
     // Going down to 30,000
     await sellCycle(470000);
+
+    // Going up to 2,500,000
+    await buyCycle(2470000);
+
+    // Curve has stopped
+    await expect(buy(1, 999999)).to.be.revertedWith(
+      "Supply cap exceeded, no more tokens can be bought from the curve."
+    );
+
+    // Going down to 2,000,000
+    await sellCycle(500000);
   });
 
   it.skip("try to exploit numerical instability", async function () {
@@ -210,7 +222,7 @@ describe("Psi", function () {
     }
   });
 
-  it.only("generate plotting curve", async function () {
+  it.skip("generate plotting curve", async function () {
     this.timeout(0);
     const { signers, gems, psi } = await initContracts();
 
@@ -233,13 +245,13 @@ describe("Psi", function () {
 
       curve[i] = record;
 
-      let buyNumber = 10000;
+      let buyNumber = 50000;
 
-      if (i === 9) {
-        buyNumber = 9999;
+      if (i === 4) {
+        buyNumber = 49999;
       }
 
-      if (i === 10) {
+      if (i === 5) {
         buyNumber = 1;
       }
 
@@ -255,6 +267,7 @@ describe("Psi", function () {
     }
 
     console.log(JSON.stringify(curve));
+    fs.writeFile("./curve-visuals/data.json", JSON.stringify(curve), () => {});
   });
 
   it.skip("generate testing curve", async function () {
@@ -269,8 +282,8 @@ describe("Psi", function () {
       const totalSupply = await psi.totalSupply();
 
       const record = {
-        reservePool: pool.toString(),
-        price: price.toString(),
+        reservePool: fe(pool),
+        price: fe(price),
       };
 
       curve[Number(fe(totalSupply))] = record;

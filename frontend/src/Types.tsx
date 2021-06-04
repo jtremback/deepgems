@@ -7,6 +7,7 @@ export type GemData = {
   psi: string;
   number: string;
   activated: boolean;
+  forgeTime: number;
 };
 
 export type UserData = {

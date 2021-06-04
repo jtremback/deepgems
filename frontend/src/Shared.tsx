@@ -1,13 +1,19 @@
 import React, { ReactNode, useEffect, useState, useRef } from "react";
 import "./App.css";
 import { GemData, ModalData } from "./Types";
+// import {
+//   format,
+//   formatDistanceToNowStrict,
+//   formatRelative,
+//   subDays,
+// } from "date-fns";
 
 export const IMAGES_CDN = "https://cdn.deepge.ms/";
 export const METADATA_CDN = "https://cdn.deepge.ms/metadata/";
 export const GRAPHQL_URL =
   "https://api.thegraph.com/subgraphs/name/jtremback/deepgems";
-export const GEMS_CONTRACT = "0x8d471020BAD1903e3532604f42F107C4d80a930F";
-export const PSI_CONTRACT = "0xC088Ce086712e54b7c6010398D183f150e126Da1";
+export const GEMS_CONTRACT = "0xa60ccC4e11F71a8B4D4F8B27B1De8B3e7aD40704";
+export const PSI_CONTRACT = "0x8C4c2C028305d0ee863FfdcCa8d4557f3EC1E834";
 export const PSI_STATS_URL =
   "https://s3-us-west-2.amazonaws.com/cdn.deepge.ms/psiStats.json";
 
@@ -73,7 +79,12 @@ export function LargeGem({
   style?: React.CSSProperties;
   gem: GemData;
 }) {
+  const imageLink = `${IMAGES_CDN}${gem.id}.jpg`;
   const [showImage, setShowImage] = useState(true);
+
+  // const forgeTime = formatDistanceToNowStrict(new Date(gem.forgeTime * 1000), {
+  //   addSuffix: true,
+  // });
 
   function onImageError() {
     setShowImage(false);
@@ -84,7 +95,7 @@ export function LargeGem({
   return (
     <div
       style={{
-        display: "inline-block",
+        // display: "inline-block",
         background: "rgba(0,0,0,0.7)",
         margin: 5,
         ...style,
@@ -97,15 +108,15 @@ export function LargeGem({
             height: 200,
           }}
           alt=""
-          src={`${IMAGES_CDN}${gem.id}.jpg`}
+          src={imageLink}
           onError={onImageError}
         />
       ) : (
         <CheapGemSpinner size={200} />
       )}
-      <div
-        style={{ color: "white", textAlign: "center", fontSize: 16 }}
-      >{`#${gem.number} - ${gem.psi} PSI`}</div>
+      <div style={{ color: "white", textAlign: "center", fontSize: 16 }}>
+        {`#${gem.number} - ${gem.psi} PSI`}
+      </div>
     </div>
   );
 }

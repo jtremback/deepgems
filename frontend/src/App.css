@@ -1,3 +1,7 @@
+h2 {
+  margin-top: 50px;
+}
+
 .App {
   text-align: center;
 }
@@ -34,5 +38,21 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+.gem-slide {
+  animation: gem-slide-frames infinite 130s linear;
+}
+
+@keyframes gem-slide-frames {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(1500px, 0);
+  }
+  100% {
+    transform: translate(0, 0);
   }
 }

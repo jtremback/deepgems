@@ -1,4 +1,4 @@
-import React, { CSSProperties, useEffect, useState, useRef } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import background from "./background.jpg";
 import "./App.css";
 import psi50example from "./images/00056-000032-0.5.jpg";
@@ -102,14 +102,15 @@ function App() {
             padding: 30,
           }}
         >
-          <ExplainerText />
-          {currentPsiData && <MyChart pointerData={currentPsiData} />}
+          <ExplainerText currentPsiData={currentPsiData} />
+
           <BlockchainInteraction
             blockchain={blockchain}
             connectProvider={triggerConnectProvider}
             userData={userData}
             setModalData={setModalData}
           />
+          <FAQ />
         </div>
       </div>
       {modalData && (
@@ -184,71 +185,53 @@ function RecentGems({ gemData }: { gemData: GemData[] }) {
     <div
       style={{
         width: "100%",
-        whiteSpace: "nowrap",
-        display: "flex",
-        flexDirection: "row-reverse",
-        marginBottom: 20,
+        overflow: "hidden",
       }}
     >
       <div
         style={{
-          width: 200,
-          height: 200,
-          display: "inline-block",
+          display: "flex",
+          flexDirection: "column",
+          flexWrap: "wrap",
+          alignItems: "center",
+          marginBottom: 20,
+          height: 500,
+          alignContent: "flex-end",
         }}
-      ></div>
-      {gemData.map((gem) => (
-        <LargeGem gem={gem} />
-      ))}
+        className="gem-slide"
+      >
+        {gemData.map((gem, i) => (
+          <LargeGem key={i} gem={gem} />
+        ))}
+      </div>
     </div>
   );
 }
 
-function ExplainerText() {
+function ExplainerText({
+  currentPsiData,
+}: {
+  currentPsiData: CurrentPsiData | undefined;
+}) {
   return (
     <>
-      Deep Gems is a GAN trained on a dataset of precious gemstones and hooked
-      up to the blockchain. Deep Gems allows you to create and own completely
-      unique virtual gemstones as NFTs. Nobody knows what a Deep Gem will look
-      like before the moment you forge it. A GAN, or generative adversarial
-      network, is a neural network that produces original art when trained on a
-      large dataset of existing images.
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-around",
-          paddingTop: 40,
-          paddingBottom: 40,
-        }}
-      >
-        {[
-          [psi50example, "50 PSI"],
-          [psi100example, "100 PSI"],
-          [psi200example, "200 PSI"],
-          [psi300example, "300 PSI"],
-        ].map((data) => {
-          return (
-            <div style={{ maxWidth: 100, textAlign: "center" }}>
-              <img
-                src={data[0]}
-                alt=""
-                style={{ paddingBottom: 20, width: "100%" }}
-              ></img>
-              {data[1]}
-            </div>
-          );
-        })}
-      </div>
       <p>
         In a world of infinite reproducibility, the most precious asset is
-        uniqueness. Deep Gems explores this concept by explicitly linking
-        uniqueness to an increasingly scarce token, called PSI. When you forge a
-        Deep Gem, you must supply PSI tokens. The more PSI a gem is forged with,
-        the more unique it becomes. At higher levels of PSI, gems become
-        increasingly chaotic and psychedelic. Forging a gem with a lot of PSI
-        can result in a distorted mess of colors, or it can result in a
-        masterpiece.
+        uniqueness. Deep Gems is a GAN trained on a dataset of precious
+        gemstones and hooked up to the blockchain. Deep Gems allows you to
+        create and own completely unique virtual gemstones as NFTs. Nobody knows
+        what a Deep Gem will look like before the moment you forge it.
       </p>
+      <h2>Forging gems with PSI</h2>
+      <p>
+        Deep Gems explores the concept of uniqueness with an increasingly scarce
+        token, called PSI. When you forge a Deep Gem, you must supply PSI
+        tokens. The more PSI a gem is forged with, the more unique it becomes.
+        At higher levels of PSI, gems become increasingly chaotic and
+        psychedelic. Forging a gem with a lot of PSI can result in a distorted
+        mess of colors, or it can result in a masterpiece.
+      </p>
+      <PSIDiagram />
       <p>
         Deep Gems invites you to explore and curate the neural network's
         creations. If you've forged a lackluster gem, you can burn it or reforge
@@ -256,6 +239,127 @@ function ExplainerText() {
         between artist and viewer. As gems are forged, reforged, traded and
         sold, Deep Gems users will mine the depths of the neural network to find
         the rarest and most precious gems.
+      </p>
+      <h2>PSI tokenomics</h2>
+      <div style={{ marginTop: 30, marginBottom: 30 }}>
+        {currentPsiData && <MyChart pointerData={currentPsiData} />}
+      </div>
+      <p>
+        PSI can be bought on a bonding curve. The more PSI gets bought, the
+        higher the price goes. At the 5,000,000 PSI supply cap, the curve stops,
+        and no more PSI can be bought. At this point, you'll have to try to buy
+        it on the open market. Every time anyone reforges or burns a gem, 5% of
+        the PSI in that gem is locked forever, permanently reducing the
+        circulating supply and driving up the price. 1,000,000 PSI has been
+        pre-mined by the artist.
+      </p>
+    </>
+  );
+}
+
+function PSIDiagram() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-around",
+        paddingTop: 40,
+        paddingBottom: 40,
+      }}
+    >
+      {[
+        [psi50example, "50 PSI"],
+        [psi100example, "100 PSI"],
+        [psi200example, "400 PSI"],
+        [psi300example, "900 PSI"],
+      ].map((data, i) => {
+        return (
+          <div key={i} style={{ maxWidth: 100, textAlign: "center" }}>
+            <img
+              src={data[0]}
+              alt=""
+              style={{ paddingBottom: 20, width: "100%" }}
+            ></img>
+            {data[1]}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function FAQ() {
+  return (
+    <>
+      <h1>FAQ</h1>
+      <h2>How does the bonding curve work?</h2>
+      <p>
+        The Deep Gems bonding curve exists to bootstrap liquidity, and it will
+        not last forever. It is a true bonding curve, meaning that you can not
+        only buy PSI from it, but also sell PSI back to it with no fee. The
+        supply is capped at 2,500,000 PSI. After this, no more PSI can be bought
+        from the curve. After this point, people wanting to buy PSI will have to
+        buy it from an exchange, such as Uniswap.
+      </p>
+      <p>250,000 PSI (10%) has been allocated to the artist.</p>
+      <h2>How are the gem images rendered and stored?</h2>
+      <p>
+        When you forge a gem, an event is emitted by the Deep Gems contract
+        which is picked up by a server running the neural network. You can get
+        the trained neural network here (TODO: LINK). The server parses the
+        gem's seed and PSI level out of the tokenId, and feeds this information
+        into the gem to render the image. It then uploads the image to another
+        server which serves it when you view it on this site, an NFT exchange,
+        or any other site.
+      </p>
+      <p>
+        This sounds kind of centralized, but it's not. When you forge or buy a
+        gem, you are taking ownership of that gem's seed, which is irrevocably
+        stored on the Ethereum blockchain. If this server were to ever go down,
+        you could always recreate the gem image using the neural network that we
+        have open sourced. You can even try it yourself right now. Copy a gem's
+        tokenId from this site or an NFT exchange, and paste it into this
+        notebook (TODO: LINK). The open source neural network will let you view
+        the gem.
+      </p>
+      <h2>What is a GAN?</h2>
+      <p>
+        A GAN (or Generative Adversarial Network) is a neural network that is
+        able to generate unique images from a random value called a "seed".
+        We've trained our GAN (using the StyleGAN2-ADA architecure) on a dataset
+        of 15,000 gemstones collected from around the internet, cleaned,
+        cropped, and curated to keep only the finest specimens. The trained
+        neural network is open sourced here: (TODO LINK). The StyleGAN2-ADA
+        architecure takes a parameter called "truncation_psi", which determines
+        how far from the average image in the dataset a result will be. This is
+        the basis for the PSI token. Forging a gem with higher PSI increases
+        this parameter, making the gem more unique. Forging a gem with 0 PSI
+        outputs the average gemstone, and will always look the same.
+      </p>
+      <h2>How are the gems generated? How random are they really?</h2>
+      <p>
+        Gems are intended to be random. However, we are using the Ethereum block
+        hash as a random number, and this can be manipulated by miners. But
+        given that a gem's value is only determined by how attractive it is,
+        there isn't much harm in letting miners choose which gem they will mine.
+        The only possible attack is one where a miner is able to forge a gem
+        that looks exactly like another one that has already been forged (for
+        example, a gem that sold for a lot of money). We take various steps to
+        prevent this kind of attack.
+      </p>
+      <p>
+        When you hit the "Forge" button, a gem's 128 bit seed is generated from
+        3 different elements. The first is a counter of all gems (the "edition
+        number"). This takes up the vast majority of the seed, 120 bits. Then we
+        take 4 bits of the block hash of the block one block ago, and 4 bits of
+        the block hash 255 blocks ago. So a malicious miner can at most choose
+        between 256 (2^8) different gems at each counter number. A malicious
+        miner could also try to manipulate the counter, by forging a large
+        number of gems in a block (remember, if they mine the block themselves,
+        they don't have to pay gas for each forging). We constrain this by
+        making the minimum amount of PSI that you can forge a gem with 0.1 PSI.
+        A miner would have to spend a lot of money buying PSI to be able to
+        search for an identical-looking gem.
       </p>
     </>
   );
