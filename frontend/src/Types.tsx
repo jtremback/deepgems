@@ -31,7 +31,7 @@ export type CurrentPsiData = {
 export type ModalData = GemModalData;
 
 export type GemModalData = {
-  type: "GemModal";
+  type: "MyGemModal" | "TheirGemModal";
   gem: GemData;
 };
 

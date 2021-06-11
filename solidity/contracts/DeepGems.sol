@@ -77,7 +77,7 @@ contract DeepGems is ERC721 {
 
     function _forge(uint256 amountPsi) internal returns (uint256) {
         require(
-            amountPsi > 0.1 ether,
+            amountPsi >= 0.1 ether,
             "gems must be forged with at least 0.1 PSI"
         );
 

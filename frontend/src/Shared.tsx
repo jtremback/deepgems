@@ -1,12 +1,12 @@
-import React, { ReactNode, useEffect, useState, useRef } from "react";
+import React, {
+  CSSProperties,
+  ReactNode,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import "./App.css";
-import { GemData, ModalData } from "./Types";
-// import {
-//   format,
-//   formatDistanceToNowStrict,
-//   formatRelative,
-//   subDays,
-// } from "date-fns";
+import { GemData, ModalData, Blockchain } from "./Types";
 
 export const IMAGES_CDN = "https://cdn.deepge.ms/";
 export const METADATA_CDN = "https://cdn.deepge.ms/metadata/";
@@ -16,6 +16,251 @@ export const GEMS_CONTRACT = "0xa60ccC4e11F71a8B4D4F8B27B1De8B3e7aD40704";
 export const PSI_CONTRACT = "0x8C4c2C028305d0ee863FfdcCa8d4557f3EC1E834";
 export const PSI_STATS_URL =
   "https://s3-us-west-2.amazonaws.com/cdn.deepge.ms/psiStats.json";
+
+export const fontStyles: CSSProperties = {
+  fontSize: 24,
+  fontWeight: "lighter",
+  color: "white",
+  backgroundColor: "rgba(0,0,0,0.7)",
+};
+
+export function Modal({
+  modalData,
+  blockchain,
+  setModalData,
+}: {
+  modalData: ModalData;
+  blockchain: Blockchain;
+  setModalData: (x?: ModalData) => void;
+}) {
+  return (
+    modalData && (
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          justifyContent: "space-evenly",
+          alignItems: "center",
+        }}
+      >
+        <div
+          style={{
+            ...fontStyles,
+            margin: 40,
+            overflow: "auto",
+            padding: 20,
+          }}
+        >
+          {" "}
+          {(() => {
+            switch (modalData.type) {
+              case "MyGemModal":
+                return (
+                  <MyGemModal blockchain={blockchain!} modalData={modalData} />
+                );
+              case "TheirGemModal":
+                return (
+                  <TheirGemModal
+                    blockchain={blockchain!}
+                    modalData={modalData}
+                  />
+                );
+            }
+          })()}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            zIndex: -1,
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+          }}
+          onClick={() => setModalData(undefined)}
+        ></div>
+      </div>
+    )
+  );
+}
+
+export function MyGemModal({
+  modalData,
+  blockchain,
+}: {
+  modalData: ModalData;
+  blockchain: Blockchain;
+}) {
+  return (
+    <div
+      style={{
+        width: 384,
+      }}
+    >
+      <div
+        style={{
+          width: 384,
+          // height: 280,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <LargeGem gem={modalData.gem} />
+      </div>
+      <div
+        style={{
+          color: "white",
+          textAlign: "center",
+          fontSize: 16,
+          marginTop: 20,
+          marginBottom: 20,
+          display: "flex",
+        }}
+      >
+        <div>tokenId:</div>
+        <input
+          style={{
+            backgroundColor: "grey",
+            marginLeft: 5,
+            fontSize: 14,
+            width: "22em",
+            display: "block",
+            fontFamily: "Inconsolata",
+          }}
+          type="text"
+          value={modalData.gem.id}
+        />
+      </div>
+      <div
+        style={{
+          display: modalData.gem.activated ? "none" : "flex",
+          marginBottom: 10,
+        }}
+      >
+        <div style={{ marginRight: 10 }}>
+          <Button
+            onClick={() => {
+              blockchain!.gems.reforge(modalData.gem.id);
+            }}
+          >
+            Reforge
+          </Button>
+        </div>
+        <div style={{ fontSize: 16 }}>
+          Reforging a gem creates a new gem using this gem's PSI.
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          marginBottom: 10,
+        }}
+      >
+        <div style={{ marginRight: 10 }}>
+          <Button
+            onClick={() => {
+              blockchain!.gems.burn(modalData.gem.id);
+            }}
+          >
+            Burn
+          </Button>
+        </div>
+        <div style={{ fontSize: 16 }}>
+          Burning a gem destroys the gem and adds the PSI to your account.
+        </div>
+      </div>
+
+      <div
+        style={{
+          marginBottom: 10,
+          display: modalData.gem.activated ? "none" : "flex",
+        }}
+      >
+        <div style={{ marginRight: 10 }}>
+          <Button
+            onClick={() => {
+              blockchain!.gems.activate(modalData.gem.id);
+            }}
+          >
+            Activate
+          </Button>
+        </div>
+        <div style={{ fontSize: 16 }}>
+          Activating a gem turns it into a full NFT and allows you to transfer
+          it and trade it on NFT exchanges.
+        </div>
+      </div>
+      <div
+        style={{
+          fontSize: 16,
+          display: modalData.gem.activated ? "flex" : "none",
+        }}
+      >
+        This gem has been activated and can be transferred to other accounts and
+        traded on NFT exchanges.
+      </div>
+    </div>
+  );
+}
+
+export function TheirGemModal({
+  modalData,
+  blockchain,
+}: {
+  modalData: ModalData;
+  blockchain: Blockchain;
+}) {
+  return (
+    <div
+      style={{
+        width: 384,
+      }}
+    >
+      <div
+        style={{
+          width: 384,
+          // height: 280,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <LargeGem gem={modalData.gem} />
+      </div>
+      <div
+        style={{
+          color: "white",
+          textAlign: "center",
+          fontSize: 16,
+          marginTop: 20,
+          marginBottom: 20,
+          display: "flex",
+        }}
+      >
+        <div>tokenId:</div>
+        <input
+          style={{
+            backgroundColor: "grey",
+            marginLeft: 5,
+            fontSize: 14,
+            width: "22em",
+            display: "block",
+            fontFamily: "Inconsolata",
+          }}
+          type="text"
+          value={modalData.gem.id}
+        />
+      </div>
+    </div>
+  );
+}
 
 export function TextInput({
   style,
@@ -176,7 +421,7 @@ export function GemThumbnail({
         }}
         onClick={() =>
           setModalData({
-            type: "GemModal",
+            type: "MyGemModal",
             gem,
           })
         }

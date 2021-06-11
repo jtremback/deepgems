@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState } from "react";
 import "./App.css";
 import { BigNumber, ethers } from "ethers";
 import {
@@ -8,6 +8,7 @@ import {
   GemThumbnail,
   LargeGem,
   useInterval,
+  fontStyles,
 } from "./Shared";
 import { GemData, UserData, Blockchain, ModalData } from "./Types";
 
@@ -243,106 +244,6 @@ function BuyPSIBox({
   );
 }
 
-export function Modal({
-  modalData,
-  blockchain,
-}: {
-  modalData: ModalData;
-  blockchain: Blockchain;
-}) {
-  switch (modalData.type) {
-    case "GemModal":
-      return (
-        <div
-          style={{
-            width: 384,
-          }}
-        >
-          <div
-            style={{
-              width: 384,
-              height: 300,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <LargeGem gem={modalData.gem} />
-          </div>
-          <div
-            style={{
-              display: modalData.gem.activated ? "none" : "flex",
-              marginBottom: 10,
-            }}
-          >
-            <div style={{ marginRight: 10 }}>
-              <Button
-                onClick={() => {
-                  blockchain!.gems.reforge(modalData.gem.id);
-                }}
-              >
-                Reforge
-              </Button>
-            </div>
-            <div style={{ fontSize: 16 }}>
-              Reforging a gem creates a new gem using this gem's PSI.
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              marginBottom: 10,
-            }}
-          >
-            <div style={{ marginRight: 10 }}>
-              <Button
-                onClick={() => {
-                  blockchain!.gems.burn(modalData.gem.id);
-                }}
-              >
-                Burn
-              </Button>
-            </div>
-            <div style={{ fontSize: 16 }}>
-              Burning a gem destroys the gem and adds the PSI to your account.
-            </div>
-          </div>
-
-          <div
-            style={{
-              marginBottom: 10,
-              display: modalData.gem.activated ? "none" : "flex",
-            }}
-          >
-            <div style={{ marginRight: 10 }}>
-              <Button
-                onClick={() => {
-                  blockchain!.gems.activate(modalData.gem.id);
-                }}
-              >
-                Activate
-              </Button>
-            </div>
-            <div style={{ fontSize: 16 }}>
-              Activating a gem turns it into a full NFT and allows you to
-              transfer it and trade it on NFT exchanges.
-            </div>
-          </div>
-          <div
-            style={{
-              fontSize: 16,
-              display: modalData.gem.activated ? "flex" : "none",
-            }}
-          >
-            This gem has been activated and can be transferred to other accounts
-            and traded on NFT exchanges.
-          </div>
-        </div>
-      );
-  }
-}
-
 function ForgeAGemBox({
   userData,
   blockchain,
@@ -365,6 +266,11 @@ function ForgeAGemBox({
       setPsiInputAmount(undefined);
       return;
     }
+    // Check if PSI is enough to forge a gem
+    if (psiInputBigNum.lt(pe("0.1"))) {
+      setPsiInputAmount(undefined);
+      return;
+    }
     setPsiInputAmount(psiInputBigNum);
   }
 
@@ -372,7 +278,8 @@ function ForgeAGemBox({
     <div style={{ background: "rgb(27,23,20)", padding: 40 }}>
       <h2>Forge a Gem</h2>
       <form>
-        <p>Amount of PSI to forge the gem with:</p>
+        <p style={{ marginBottom: 0 }}>Amount of PSI to forge the gem with:</p>
+        <p style={{ marginTop: 0, fontSize: 16 }}>(must be 0.1 or greater)</p>
         <p>
           <TextInput input={psiForm} setInput={setForm} />
         </p>

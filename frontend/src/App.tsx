@@ -6,14 +6,13 @@ import psi100example from "./images/00056-000032-1.jpg";
 import psi200example from "./images/00056-000032-2.jpg";
 import psi300example from "./images/00056-000032-3.jpg";
 import { BlockchainInteraction } from "./BlockchainInteraction";
-import { LargeGem, useInterval } from "./Shared";
+import { LargeGem, useInterval, fontStyles, Modal } from "./Shared";
 import {
   connectProvider,
   getUserData,
   getRecentGems,
   getCurrentPsiData,
 } from "./API";
-import { Modal } from "./BlockchainInteraction";
 
 import {
   Blockchain,
@@ -23,14 +22,6 @@ import {
   CurrentPsiData,
 } from "./Types";
 import MyChart from "./BondingCurveChart";
-
-const fontStyles: CSSProperties = {
-  fontSize: 24,
-  fontWeight: "lighter",
-  color: "white",
-  backgroundColor: "rgba(0,0,0,0.7)",
-};
-
 function App() {
   const [blockchain, setBlockchain] = useState<Blockchain>();
   const [userAddress, setUserAddress] = useState<string>();
@@ -94,7 +85,9 @@ function App() {
       >
         <DigDeeper />
         <PageTitle />
-        {recentGems && <RecentGems gemData={recentGems} />}
+        {recentGems && (
+          <RecentGems gemData={recentGems} setModalData={setModalData} />
+        )}
         <div
           style={{
             ...fontStyles,
@@ -126,7 +119,6 @@ function App() {
             justifyContent: "space-evenly",
             alignItems: "center",
           }}
-          onClick={() => setModalData(undefined)}
         >
           <div
             style={{
@@ -136,8 +128,23 @@ function App() {
               padding: 20,
             }}
           >
-            <Modal blockchain={blockchain!} modalData={modalData} />
+            <Modal
+              blockchain={blockchain!}
+              modalData={modalData}
+              setModalData={setModalData}
+            />
           </div>
+          <div
+            style={{
+              position: "absolute",
+              zIndex: -1,
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+            }}
+            onClick={() => setModalData(undefined)}
+          ></div>
         </div>
       )}
     </>
@@ -180,7 +187,13 @@ function PageTitle() {
   );
 }
 
-function RecentGems({ gemData }: { gemData: GemData[] }) {
+function RecentGems({
+  gemData,
+  setModalData,
+}: {
+  gemData: GemData[];
+  setModalData: (modalData: ModalData) => void;
+}) {
   return (
     <div
       style={{
@@ -201,7 +214,12 @@ function RecentGems({ gemData }: { gemData: GemData[] }) {
         className="gem-slide"
       >
         {gemData.map((gem, i) => (
-          <LargeGem key={i} gem={gem} />
+          <div
+            key={i}
+            onClick={() => setModalData({ type: "TheirGemModal", gem })}
+          >
+            <LargeGem gem={gem} />
+          </div>
         ))}
       </div>
     </div>
@@ -306,11 +324,14 @@ function FAQ() {
       <p>
         When you forge a gem, an event is emitted by the Deep Gems contract
         which is picked up by a server running the neural network. You can get
-        the trained neural network here (TODO: LINK). The server parses the
-        gem's seed and PSI level out of the tokenId, and feeds this information
-        into the gem to render the image. It then uploads the image to another
-        server which serves it when you view it on this site, an NFT exchange,
-        or any other site.
+        the trained neural network{" "}
+        <a href="https://colab.research.google.com/drive/1yh7C_GND4nV_VTiL-vl6I9twxNdCzdui">
+          here
+        </a>
+        . The server parses the gem's seed and PSI level out of the tokenId, and
+        feeds this information into the neural net to render the gem image. It
+        then uploads the image to another server which serves it when you view
+        it on this site, an NFT exchange, or any other site.
       </p>
       <p>
         This sounds kind of centralized, but it's not. When you forge or buy a
@@ -318,9 +339,11 @@ function FAQ() {
         stored on the Ethereum blockchain. If this server were to ever go down,
         you could always recreate the gem image using the neural network that we
         have open sourced. You can even try it yourself right now. Copy a gem's
-        tokenId from this site or an NFT exchange, and paste it into this
-        notebook (TODO: LINK). The open source neural network will let you view
-        the gem.
+        tokenId from this site or an NFT exchange, and paste it into this{" "}
+        <a href="https://colab.research.google.com/drive/1yh7C_GND4nV_VTiL-vl6I9twxNdCzdui">
+          notebook
+        </a>
+        . The open source neural network will let you view the gem.
       </p>
       <h2>What is a GAN?</h2>
       <p>
@@ -329,14 +352,21 @@ function FAQ() {
         We've trained our GAN (using the StyleGAN2-ADA architecure) on a dataset
         of 15,000 gemstones collected from around the internet, cleaned,
         cropped, and curated to keep only the finest specimens. The trained
-        neural network is open sourced here: (TODO LINK). The StyleGAN2-ADA
-        architecure takes a parameter called "truncation_psi", which determines
-        how far from the average image in the dataset a result will be. This is
-        the basis for the PSI token. Forging a gem with higher PSI increases
-        this parameter, making the gem more unique. Forging a gem with 0 PSI
-        outputs the average gemstone, and will always look the same.
+        neural network is available{" "}
+        <a href="https://colab.research.google.com/drive/1yh7C_GND4nV_VTiL-vl6I9twxNdCzdui">
+          here
+        </a>
+        .
       </p>
-      <h2>How are the gems generated? How random are they really?</h2>
+      <h2>How does PSI work?</h2>
+      <p>
+        The StyleGAN2-ADA architecure takes a parameter called "truncation_psi",
+        which determines how far from the average image in the dataset a result
+        will be. This is the basis for the PSI token. Forging a gem with higher
+        PSI increases this parameter, making the gem more unique. Forging a gem
+        with 0 PSI outputs the average gemstone, and will always look the same.
+      </p>
+      <h2>How are the gem seeds generated? How random are they really?</h2>
       <p>
         Gems are intended to be random. However, we are using the Ethereum block
         hash as a random number, and this can be manipulated by miners. But
