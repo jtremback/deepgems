@@ -9,9 +9,9 @@ eval $(cat .env) npx hardhat verify --constructor-args scripts/arguments.js --ne
 
 Latest rinkeby deploy:
 
-DeepGems address: 0xa60ccC4e11F71a8B4D4F8B27B1De8B3e7aD40704
-Psi address: 0x8C4c2C028305d0ee863FfdcCa8d4557f3EC1E834
+DeepGems address: 0x3d22Dd31d2f5CAa67728fd0Ad73d86A1a81fada0
+Psi address: 0x7CD4f42c1d7902F9B5964e81a1F1879D9392c0F9
 
-Update arguments.js first
+Update arguments.js first with PSI address
 
 Remember to update subgraph, indexer and frontend
