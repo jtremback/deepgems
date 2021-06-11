@@ -307,7 +307,7 @@ function PSIDiagram() {
 
 function FAQ() {
   return (
-    <>
+    <div style={{ marginTop: 100 }}>
       <h1>FAQ</h1>
       <h2>How does the bonding curve work?</h2>
       <p>
@@ -390,7 +390,7 @@ function FAQ() {
         A miner would have to spend a lot of money buying PSI to be able to
         search for an identical-looking gem.
       </p>
-    </>
+    </div>
   );
 }
 
