@@ -1,4 +1,4 @@
-const ethPrice = 3300;
+const ethPrice = 2500;
 
 function timeout(n) {
   return new Promise((resolve, reject) => {
