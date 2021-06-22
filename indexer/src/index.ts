@@ -90,11 +90,11 @@ const provider = ethers.providers.getDefaultProvider("rinkeby", {
   etherscan: "D4UDMH2BJI1UUR489XBJV8EG7IVI3NWE61",
 });
 
-const psi = (new ethers.Contract(
+const psi = new ethers.Contract(
   PSI_CONTRACT,
   psiArtifact.abi,
   provider
-) as any) as PSI;
+) as any as PSI;
 
 // https://api.etherscan.io/api?module=stats&action=ethprice
 
@@ -201,7 +201,7 @@ async function run() {
     lastGemRetrieved: parseInt(rawContext.lastGemRetrieved, 10),
   };
 
-  console.log("lastGemRetrieved", lastGemRetrieved, "currentGem", currentGem);
+  // console.log("lastGemRetrieved", lastGemRetrieved, "currentGem", currentGem);
 
   if (lastGemRetrieved > currentGem) {
     throw new Error(
@@ -214,7 +214,9 @@ async function run() {
     lastGemRetrieved + parseInt(GEMS_PER_FETCH, 10)
   );
 
-  console.log(`Got ${gems.length} events`);
+  if (gems.length > 0) {
+    console.log(`Got ${gems.length} events`);
+  }
 
   for (const gem of gems) {
     console.log("render gem: ", JSON.stringify(gem));
@@ -236,7 +238,7 @@ async function run() {
 
   // Get psi stats from contract
   const psiStats = await getPsiStats();
-  console.log("got psi stats", psiStats);
+  // console.log("got psi stats", psiStats);
   // Upload psi stats
   uploadToS3(
     Buffer.from(JSON.stringify(psiStats)),
