@@ -6,6 +6,8 @@ import { PSI } from "./typechain/PSI";
 import psiArtifact from "./artifacts/contracts/PSI.sol/PSI.json";
 const ETHUSD_URL = "https://api.etherscan.io/api?module=stats&action=ethprice";
 
+// Somehow, the gem with tokenId 2606903212981309568593356867534776267964416 ended up rendering with a different tokenId. A re-render fixed this.
+
 if (dotenv.config().error) {
   throw new Error("could not read .env");
 }

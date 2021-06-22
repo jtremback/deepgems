@@ -264,12 +264,11 @@ function ExplainerText({
       </div>
       <p>
         PSI can be bought on a bonding curve. The more PSI gets bought, the
-        higher the price goes. At the 5,000,000 PSI supply cap, the curve stops,
+        higher the price goes. At the 2,500,000 PSI supply cap, the curve stops,
         and no more PSI can be bought. At this point, you'll have to try to buy
         it on the open market. Every time anyone reforges or burns a gem, 5% of
         the PSI in that gem is locked forever, permanently reducing the
-        circulating supply and driving up the price. 1,000,000 PSI has been
-        pre-mined by the artist.
+        circulating supply. 250,000 PSI has been pre-minted by the artist.
       </p>
     </>
   );
@@ -308,7 +307,7 @@ function PSIDiagram() {
 
 function FAQ() {
   return (
-    <>
+    <div style={{ marginTop: 100 }}>
       <h1>FAQ</h1>
       <h2>How does the bonding curve work?</h2>
       <p>
@@ -391,7 +390,7 @@ function FAQ() {
         A miner would have to spend a lot of money buying PSI to be able to
         search for an identical-looking gem.
       </p>
-    </>
+    </div>
   );
 }
 

@@ -57,7 +57,7 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
               ],
               datalabels: {
                 backgroundColor: "rgba(255,255,255,1)",
-                align: calculateLabelAlignment(pointerData, 5000000),
+                align: calculateLabelAlignment(pointerData, 2500000),
                 offset: 20,
                 borderRadius: 4,
                 clamp: true,
@@ -80,12 +80,12 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
 
                   const formattedPriceEth = numeral(
                     pointerData.eth.price
-                  ).format("0[.]0000a");
+                  ).format("0[.]00000a");
                   const formattedMarketCapEth = numeral(
                     pointerData.eth.marketCap
                   ).format("0[.]000a");
 
-                  return `Current PSI stats:\nSupply: ${formattedSupply}\nPrice: ${formattedPriceEth} ETH (${formattedPriceDollars})\nMarket cap: ${formattedMarketCapEth} ETH (${formattedMarketCapDollars})`;
+                  return `Current PSI stats:\nPSI minted: ${formattedSupply}\nPrice: ${formattedPriceEth} ETH (${formattedPriceDollars})\nMarket cap: ${formattedMarketCapEth} ETH (${formattedMarketCapDollars})`;
                 },
               },
             },
