@@ -155,6 +155,10 @@ const config: HardhatUserConfig = {
       url: "https://rinkeby.infura.io/v3/" + process.env.INFURA_PROJECT_ID,
       accounts: [process.env.DEPLOY_ADDRESS_PRIVKEY],
     },
+    mainnet: {
+        url: "https://mainnet.infura.io/v3/" + process.env.INFURA_PROJECT_ID,
+        accounts: [process.env.DEPLOY_ADDRESS_PRIVKEY],
+    }
   },
   etherscan: {
     // Your API key for Etherscan

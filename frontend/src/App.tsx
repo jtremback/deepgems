@@ -318,6 +318,18 @@ function FAQ() {
         from the curve. After this point, people wanting to buy PSI will have to
         buy it from an exchange, such as Uniswap.
       </p>
+      <h2>What do "forge", "reforge", "activate", and "burn" do?</h2>
+      <p>
+        Because we want people to be able to explore the neural network as much
+        as possible, we've engineered the forging process to use as little gas
+        as possible. When you forge a gem, you own it on the blockchain, but it
+        is not yet a full-fledged NFT. You can reforge it as often as you want,
+        while paying as little gas as possible. Once you activate it, the gem
+        becomes a full NFT. It can no longer be reforged, but it can be
+        transfered and sold on NFT exchanges. Burning a gem refunds the PSI
+        tokens that were in it. You can burn a gem whether it is activated or
+        not.
+      </p>
       <p>250,000 PSI (10%) has been allocated to the artist.</p>
       <h2>How are the gem images rendered and stored?</h2>
       <p>
