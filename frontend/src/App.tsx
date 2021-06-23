@@ -268,7 +268,7 @@ function ExplainerText({
         and no more PSI can be bought. At this point, you'll have to try to buy
         it on the open market. Every time anyone reforges or burns a gem, 5% of
         the PSI in that gem is locked forever, permanently reducing the
-        circulating supply. 250,000 PSI has been pre-minted by the artist.
+        circulating supply. 250,000 PSI has been allocated to the artist.
       </p>
     </>
   );
@@ -319,6 +319,18 @@ function FAQ() {
         buy it from an exchange, such as Uniswap.
       </p>
       <p>250,000 PSI (10%) has been allocated to the artist.</p>
+      <h2>What do "forge", "reforge", "activate", and "burn" do?</h2>
+      <p>
+        Because we want people to be able to explore the neural network as much
+        as possible, we've engineered the forging process to use as little gas
+        as possible. When you forge a gem, you own it on the blockchain, but it
+        is not yet a full-fledged NFT. You can reforge it as often as you want,
+        while paying as little gas as possible. Once you activate it, the gem
+        becomes a full NFT. It can no longer be reforged, but it can be
+        transfered and sold on NFT exchanges. Burning a gem refunds the PSI
+        tokens that were in it. You can burn a gem whether it is activated or
+        not.
+      </p>
       <h2>How are the gem images rendered and stored?</h2>
       <p>
         When you forge a gem, an event is emitted by the Deep Gems contract

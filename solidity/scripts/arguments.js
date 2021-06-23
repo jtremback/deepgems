@@ -1,4 +1,5 @@
 module.exports = [
-  "0x7CD4f42c1d7902F9B5964e81a1F1879D9392c0F9",
+  // PSI address
+  "0xc5E5757Bdb6B2B7160b5fEF8571671DD7042F38A",
   "https://cdn.deepge.ms/metadata/",
 ];
