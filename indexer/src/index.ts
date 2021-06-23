@@ -88,7 +88,7 @@ const highestGemQuery = `{
   }
 }`;
 
-const provider = ethers.providers.getDefaultProvider("rinkeby", {
+const provider = ethers.providers.getDefaultProvider("mainnet", {
   etherscan: "D4UDMH2BJI1UUR489XBJV8EG7IVI3NWE61",
 });
 
