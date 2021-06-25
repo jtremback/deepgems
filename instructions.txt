@@ -49,4 +49,5 @@ To redeploy:
     - Restart the indexer and rendered processes with the instructions above
 - Check that everything works on the local frontend.
     - (and get your free PSI!)
-    - 
+- Build frontend with npm run build in frontend folder
+    - delete contents of dg-serve (separate repo), then copy contents of /frontend/build in. push dg-serve.
