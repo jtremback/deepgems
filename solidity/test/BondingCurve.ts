@@ -79,7 +79,7 @@ describe("Psi", function () {
 
     // Only works with whole tokenNumber
     async function buyCycle(tokensToBuy: number) {
-      const tokenNumber = Number(fe(await psi.totalSupply())) + tokensToBuy;
+      const tokenNumber = Number(fe(await psi.totalBought())) + tokensToBuy;
 
       // We buy to get up to the desired level, and also check that quoteBuy
       // matches buy
@@ -116,7 +116,7 @@ describe("Psi", function () {
     }
 
     async function sellCycle(tokensToSell: number) {
-      const tokenNumber = Number(fe(await psi.totalSupply())) - tokensToSell;
+      const tokenNumber = Number(fe(await psi.totalBought())) - tokensToSell;
 
       // We buy to get up to the desired level, and also check that quoteBuy
       // matches buy
@@ -195,6 +195,25 @@ describe("Psi", function () {
     await sellCycle(500000);
   });
 
+  it("token burns and mints are separate from bonding curve", async function () {
+    this.timeout(0);
+    const { signers, gems, psi } = await initContracts();
+
+    // Check that total supply cap is minted at start
+    expect(fe(await psi.totalSupply())).to.equal("2500000.0");
+
+    // Check that burns don't affect the price
+    await psi.buy(pe(`250100`), { value: pe(`10`), gasPrice: 0 });
+
+    const quote = fe(await psi.quoteBuy(pe(`100`)));
+
+    await psi.burn(pe(`10`));
+
+    const quote2 = fe(await psi.quoteBuy(pe(`100`)));
+
+    expect(quote).to.equal(quote2);
+  })
+
   it.skip("try to exploit numerical instability", async function () {
     this.timeout(0);
     const { signers, gems, psi } = await initContracts();
@@ -231,7 +250,7 @@ describe("Psi", function () {
     for (let i = 0; true; i++) {
       const costToBuy = Number(fe(await psi.quoteBuy(pe("1"))));
       const pool = Number(fe(await psi.provider.getBalance(psi.address)));
-      const totalSupply = Number(fe(await psi.totalSupply()));
+      const totalSupply = Number(fe(await psi.totalBought()));
       const mcap = Number(costToBuy) * Number(totalSupply);
 
       const record = {
@@ -279,7 +298,7 @@ describe("Psi", function () {
     for (let i = 0; true; i++) {
       const price = await psi.quoteBuy(pe("1"));
       const pool = await psi.provider.getBalance(psi.address);
-      const totalSupply = await psi.totalSupply();
+      const totalSupply = await psi.totalBought();
 
       const record = {
         reservePool: fe(pool),

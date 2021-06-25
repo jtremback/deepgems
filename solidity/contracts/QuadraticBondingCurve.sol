@@ -1,13 +1,13 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.3;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
 // import "hardhat/console.sol";
 
 // Uses quadratic bonding curve integral formula from
 // https://blog.relevant.community/how-to-make-bonding-curves-for-continuous-token-models-3784653f8b17
-abstract contract QuadraticBondingCurve is ERC20 {
+abstract contract QuadraticBondingCurve is ERC20Burnable {
     constructor(
         string memory name,
         string memory symbol,
@@ -17,6 +17,8 @@ abstract contract QuadraticBondingCurve is ERC20 {
     ) ERC20(name, symbol) {
         SCALING = scaling;
         SUPPLY_CAP = supplyCap;
+        // Mint total supply to the contract address
+        _mint(address(this), supplyCap);
         PRICE_CLIFF = priceCliff;
         // Calculate price cliff
         PRICE_CLIFF_BALANCE = (PRICE_CLIFF * PRICE_CLIFF * PRICE_CLIFF) / 3;
@@ -46,20 +48,20 @@ abstract contract QuadraticBondingCurve is ERC20 {
         return a >= b ? a - b : 0;
     }
 
-    function quoteBuyRaw(uint256 tokensToBuy, uint256 currentPsiSupply)
+    function quoteBuyRaw(uint256 tokensToBuy, uint256 currentPsiBought)
         public
         view
         returns (uint256)
     {
-        uint256 newPsiSupply = currentPsiSupply + tokensToBuy;
+        uint256 newPsiBought = currentPsiBought + tokensToBuy;
 
         // How much is the pool's ether balance
         uint256 currentPoolBalance =
-            (currentPsiSupply * currentPsiSupply * currentPsiSupply) / 3;
+            (currentPsiBought * currentPsiBought * currentPsiBought) / 3;
 
-        // How much the pool's ether balance will be after minting
+        // How much the pool's ether balance will be after buying
         uint256 newPoolBalance =
-            (newPsiSupply * newPsiSupply * newPsiSupply) / 3;
+            (newPsiBought * newPsiBought * newPsiBought) / 3;
 
         // How much it costs to increase the supply by tokensToBuy
         uint256 numEther =
@@ -74,47 +76,52 @@ abstract contract QuadraticBondingCurve is ERC20 {
         return ((numEther / (1 ether * 1 ether)) / SCALING) + 1;
     }
 
+    // This function gives us the total number of tokens that are not
+    // owned by the contract
+    function totalBought() public view returns (uint256) {
+       return SUPPLY_CAP - balanceOf(address(this));
+    }
+
     function quoteBuy(uint256 tokensToBuy) public view returns (uint256) {
-        uint256 supply = totalSupply();
-        return quoteBuyRaw(tokensToBuy, supply);
+        return quoteBuyRaw(tokensToBuy, totalBought());
     }
 
     function buy(uint256 tokensToBuy) public payable {
         // CHECKS
-        uint256 currentPsiSupply = totalSupply();
+        uint256 currentPsiBought = totalBought();
 
         require(
-            currentPsiSupply + tokensToBuy <= SUPPLY_CAP,
+            currentPsiBought + tokensToBuy <= SUPPLY_CAP,
             "Supply cap exceeded, no more tokens can be bought from the curve."
         );
 
-        uint256 numEther = quoteBuyRaw(tokensToBuy, currentPsiSupply);
+        uint256 numEther = quoteBuyRaw(tokensToBuy, currentPsiBought);
 
         require(numEther <= msg.value, "Did not send enough Ether");
 
         // ACTIONS
 
-        // Make tokens
-        _mint(msg.sender, tokensToBuy);
+        // Give bought tokens to buyer
+        _transfer(address(this), msg.sender, tokensToBuy);
 
         // Send dust back to caller
         safeTransferETH(msg.sender, msg.value - numEther);
     }
 
-    function quoteSellRaw(uint256 tokensToSell, uint256 currentPsiSupply)
+    function quoteSellRaw(uint256 tokensToSell, uint256 currentPsiBought)
         public
         view
         returns (uint256)
     {
-        uint256 newPsiSupply = currentPsiSupply - tokensToSell;
+        uint256 newPsiBought = currentPsiBought - tokensToSell;
 
         // How much the pool's ether balance
         uint256 currentPoolBalance =
-            (currentPsiSupply * currentPsiSupply * currentPsiSupply) / 3;
+            (currentPsiBought * currentPsiBought * currentPsiBought) / 3;
 
         // How much the pool's ether balance will be after
         uint256 newPoolBalance =
-            (newPsiSupply * newPsiSupply * newPsiSupply) / 3;
+            (newPsiBought * newPsiBought * newPsiBought) / 3;
 
         // How much you get when you decrease the supply by tokensToSell
         uint256 numEther =
@@ -129,14 +136,13 @@ abstract contract QuadraticBondingCurve is ERC20 {
     }
 
     function quoteSell(uint256 tokensToSell) public view returns (uint256) {
-        uint256 supply = totalSupply();
-        return quoteSellRaw(tokensToSell, supply);
+        return quoteSellRaw(tokensToSell, totalBought());
     }
 
     function sell(uint256 tokensToSell, uint256 minEther) public payable {
         // CHECKS
 
-        uint256 numEther = quoteSellRaw(tokensToSell, totalSupply());
+        uint256 numEther = quoteSell(tokensToSell);
 
         require(
             numEther >= minEther,
@@ -145,8 +151,8 @@ abstract contract QuadraticBondingCurve is ERC20 {
 
         // ACTIONS
 
-        // Burn tokens
-        _burn(msg.sender, tokensToSell);
+        // Take sold tokens from seller
+        _transfer(msg.sender, address(this), tokensToSell);
 
         // Send proceeds to caller
         safeTransferETH(msg.sender, numEther);

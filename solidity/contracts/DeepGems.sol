@@ -36,13 +36,13 @@ contract DeepGems is ERC721 {
         return uint120(tokenId >> 136);
     }
 
-    function psiFromOldGem(uint256 tokenId) internal pure returns (uint128) {
-        // 5% (1/20th) of the psi is locked forever,
-        // reducing the circulating supply
+    function extractPsiFromOldGem(uint256 tokenId) internal returns (uint128) {
+        // 5% (1/20th) of the psi is burned
         uint128 oldPsi = uint128(tokenId);
-        uint128 lockedPsi = oldPsi / 20;
+        uint128 burnedPsi = oldPsi / 20;
+        PSI(PSI_CONTRACT).burn(burnedPsi);
 
-        return oldPsi - lockedPsi;
+        return oldPsi - burnedPsi;
     }
 
     function blockHashEntropy() internal view returns (uint8) {
@@ -129,7 +129,7 @@ contract DeepGems is ERC721 {
         delete state_unactivatedGems[oldtokenId];
 
         // Add psi into new tokenId, minus 5%
-        uint256 newTokenId = _forge(psiFromOldGem(oldtokenId));
+        uint256 newTokenId = _forge(extractPsiFromOldGem(oldtokenId));
 
         // Add gem to unactivated gems mapping
         state_unactivatedGems[newTokenId] = msg.sender;
@@ -165,7 +165,7 @@ contract DeepGems is ERC721 {
         // Transfer the psi in the gem to the caller, minus 5 percent
         IERC20(PSI_CONTRACT).transfer(
             msg.sender,
-            uint256(psiFromOldGem(tokenId))
+            uint256(extractPsiFromOldGem(tokenId))
         );
 
         emit Burned(tokenId);
