@@ -22,14 +22,12 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 
 interface DeepGemsInterface extends ethers.utils.Interface {
   functions: {
-    "ARTIST_ADDRESSES(uint256)": FunctionFragment;
-    "ARTIST_PERCENTAGES(uint256)": FunctionFragment;
     "PSI_CONTRACT()": FunctionFragment;
     "activate(uint256)": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
-    "artistWithdraw()": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
     "burn(uint256)": FunctionFragment;
+    "counterFromTokenId(uint256)": FunctionFragment;
     "forge(uint256)": FunctionFragment;
     "getApproved(uint256)": FunctionFragment;
     "getGemMetadata(uint256)": FunctionFragment;
@@ -39,8 +37,7 @@ interface DeepGemsInterface extends ethers.utils.Interface {
     "reforge(uint256)": FunctionFragment;
     "safeTransferFrom(address,address,uint256)": FunctionFragment;
     "setApprovalForAll(address,bool)": FunctionFragment;
-    "state_commissionCollected()": FunctionFragment;
-    "state_commissionPaid()": FunctionFragment;
+    "state_counter()": FunctionFragment;
     "state_unactivatedGems(uint256)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "symbol()": FunctionFragment;
@@ -48,14 +45,6 @@ interface DeepGemsInterface extends ethers.utils.Interface {
     "transferFrom(address,address,uint256)": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "ARTIST_ADDRESSES",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "ARTIST_PERCENTAGES",
-    values: [BigNumberish]
-  ): string;
   encodeFunctionData(
     functionFragment: "PSI_CONTRACT",
     values?: undefined
@@ -68,12 +57,12 @@ interface DeepGemsInterface extends ethers.utils.Interface {
     functionFragment: "approve",
     values: [string, BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "artistWithdraw",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
   encodeFunctionData(functionFragment: "burn", values: [BigNumberish]): string;
+  encodeFunctionData(
+    functionFragment: "counterFromTokenId",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "forge", values: [BigNumberish]): string;
   encodeFunctionData(
     functionFragment: "getApproved",
@@ -105,11 +94,7 @@ interface DeepGemsInterface extends ethers.utils.Interface {
     values: [string, boolean]
   ): string;
   encodeFunctionData(
-    functionFragment: "state_commissionCollected",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "state_commissionPaid",
+    functionFragment: "state_counter",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -131,25 +116,17 @@ interface DeepGemsInterface extends ethers.utils.Interface {
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "ARTIST_ADDRESSES",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "ARTIST_PERCENTAGES",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "PSI_CONTRACT",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "activate", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "artistWithdraw",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "counterFromTokenId",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "forge", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getApproved",
@@ -175,11 +152,7 @@ interface DeepGemsInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "state_commissionCollected",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "state_commissionPaid",
+    functionFragment: "state_counter",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -230,26 +203,6 @@ export class DeepGems extends Contract {
   interface: DeepGemsInterface;
 
   functions: {
-    ARTIST_ADDRESSES(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    "ARTIST_ADDRESSES(uint256)"(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    ARTIST_PERCENTAGES(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[number]>;
-
-    "ARTIST_PERCENTAGES(uint256)"(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[number]>;
-
     PSI_CONTRACT(overrides?: CallOverrides): Promise<[string]>;
 
     "PSI_CONTRACT()"(overrides?: CallOverrides): Promise<[string]>;
@@ -276,10 +229,6 @@ export class DeepGems extends Contract {
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    artistWithdraw(overrides?: Overrides): Promise<ContractTransaction>;
-
-    "artistWithdraw()"(overrides?: Overrides): Promise<ContractTransaction>;
-
     balanceOf(owner: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
     "balanceOf(address)"(
@@ -296,6 +245,16 @@ export class DeepGems extends Contract {
       tokenId: BigNumberish,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
+
+    counterFromTokenId(
+      tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    "counterFromTokenId(uint256)"(
+      tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
 
     forge(
       amountPsi: BigNumberish,
@@ -354,12 +313,12 @@ export class DeepGems extends Contract {
     ): Promise<[string]>;
 
     reforge(
-      oldTokenId: BigNumberish,
+      oldtokenId: BigNumberish,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
     "reforge(uint256)"(
-      oldTokenId: BigNumberish,
+      oldtokenId: BigNumberish,
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
@@ -390,15 +349,9 @@ export class DeepGems extends Contract {
       overrides?: Overrides
     ): Promise<ContractTransaction>;
 
-    state_commissionCollected(overrides?: CallOverrides): Promise<[BigNumber]>;
+    state_counter(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "state_commissionCollected()"(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    state_commissionPaid(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    "state_commissionPaid()"(overrides?: CallOverrides): Promise<[BigNumber]>;
+    "state_counter()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     state_unactivatedGems(
       arg0: BigNumberish,
@@ -449,26 +402,6 @@ export class DeepGems extends Contract {
     ): Promise<ContractTransaction>;
   };
 
-  ARTIST_ADDRESSES(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  "ARTIST_ADDRESSES(uint256)"(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  ARTIST_PERCENTAGES(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<number>;
-
-  "ARTIST_PERCENTAGES(uint256)"(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<number>;
-
   PSI_CONTRACT(overrides?: CallOverrides): Promise<string>;
 
   "PSI_CONTRACT()"(overrides?: CallOverrides): Promise<string>;
@@ -495,10 +428,6 @@ export class DeepGems extends Contract {
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  artistWithdraw(overrides?: Overrides): Promise<ContractTransaction>;
-
-  "artistWithdraw()"(overrides?: Overrides): Promise<ContractTransaction>;
-
   balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   "balanceOf(address)"(
@@ -515,6 +444,16 @@ export class DeepGems extends Contract {
     tokenId: BigNumberish,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
+
+  counterFromTokenId(
+    tokenId: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  "counterFromTokenId(uint256)"(
+    tokenId: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
 
   forge(
     amountPsi: BigNumberish,
@@ -570,12 +509,12 @@ export class DeepGems extends Contract {
   ): Promise<string>;
 
   reforge(
-    oldTokenId: BigNumberish,
+    oldtokenId: BigNumberish,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
   "reforge(uint256)"(
-    oldTokenId: BigNumberish,
+    oldtokenId: BigNumberish,
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
@@ -606,13 +545,9 @@ export class DeepGems extends Contract {
     overrides?: Overrides
   ): Promise<ContractTransaction>;
 
-  state_commissionCollected(overrides?: CallOverrides): Promise<BigNumber>;
+  state_counter(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "state_commissionCollected()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-  state_commissionPaid(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "state_commissionPaid()"(overrides?: CallOverrides): Promise<BigNumber>;
+  "state_counter()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   state_unactivatedGems(
     arg0: BigNumberish,
@@ -660,26 +595,6 @@ export class DeepGems extends Contract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    ARTIST_ADDRESSES(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    "ARTIST_ADDRESSES(uint256)"(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    ARTIST_PERCENTAGES(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<number>;
-
-    "ARTIST_PERCENTAGES(uint256)"(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<number>;
-
     PSI_CONTRACT(overrides?: CallOverrides): Promise<string>;
 
     "PSI_CONTRACT()"(overrides?: CallOverrides): Promise<string>;
@@ -703,10 +618,6 @@ export class DeepGems extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    artistWithdraw(overrides?: CallOverrides): Promise<void>;
-
-    "artistWithdraw()"(overrides?: CallOverrides): Promise<void>;
-
     balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     "balanceOf(address)"(
@@ -720,6 +631,16 @@ export class DeepGems extends Contract {
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    counterFromTokenId(
+      tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "counterFromTokenId(uint256)"(
+      tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     forge(
       amountPsi: BigNumberish,
@@ -775,12 +696,12 @@ export class DeepGems extends Contract {
     ): Promise<string>;
 
     reforge(
-      oldTokenId: BigNumberish,
+      oldtokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     "reforge(uint256)"(
-      oldTokenId: BigNumberish,
+      oldtokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -811,15 +732,9 @@ export class DeepGems extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    state_commissionCollected(overrides?: CallOverrides): Promise<BigNumber>;
+    state_counter(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "state_commissionCollected()"(
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    state_commissionPaid(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "state_commissionPaid()"(overrides?: CallOverrides): Promise<BigNumber>;
+    "state_counter()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     state_unactivatedGems(
       arg0: BigNumberish,
@@ -899,26 +814,6 @@ export class DeepGems extends Contract {
   };
 
   estimateGas: {
-    ARTIST_ADDRESSES(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "ARTIST_ADDRESSES(uint256)"(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    ARTIST_PERCENTAGES(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "ARTIST_PERCENTAGES(uint256)"(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     PSI_CONTRACT(overrides?: CallOverrides): Promise<BigNumber>;
 
     "PSI_CONTRACT()"(overrides?: CallOverrides): Promise<BigNumber>;
@@ -942,10 +837,6 @@ export class DeepGems extends Contract {
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    artistWithdraw(overrides?: Overrides): Promise<BigNumber>;
-
-    "artistWithdraw()"(overrides?: Overrides): Promise<BigNumber>;
-
     balanceOf(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     "balanceOf(address)"(
@@ -958,6 +849,16 @@ export class DeepGems extends Contract {
     "burn(uint256)"(
       tokenId: BigNumberish,
       overrides?: Overrides
+    ): Promise<BigNumber>;
+
+    counterFromTokenId(
+      tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "counterFromTokenId(uint256)"(
+      tokenId: BigNumberish,
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     forge(amountPsi: BigNumberish, overrides?: Overrides): Promise<BigNumber>;
@@ -1014,12 +915,12 @@ export class DeepGems extends Contract {
     ): Promise<BigNumber>;
 
     reforge(
-      oldTokenId: BigNumberish,
+      oldtokenId: BigNumberish,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
     "reforge(uint256)"(
-      oldTokenId: BigNumberish,
+      oldtokenId: BigNumberish,
       overrides?: Overrides
     ): Promise<BigNumber>;
 
@@ -1050,15 +951,9 @@ export class DeepGems extends Contract {
       overrides?: Overrides
     ): Promise<BigNumber>;
 
-    state_commissionCollected(overrides?: CallOverrides): Promise<BigNumber>;
+    state_counter(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "state_commissionCollected()"(
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    state_commissionPaid(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "state_commissionPaid()"(overrides?: CallOverrides): Promise<BigNumber>;
+    "state_counter()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     state_unactivatedGems(
       arg0: BigNumberish,
@@ -1110,26 +1005,6 @@ export class DeepGems extends Contract {
   };
 
   populateTransaction: {
-    ARTIST_ADDRESSES(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "ARTIST_ADDRESSES(uint256)"(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    ARTIST_PERCENTAGES(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "ARTIST_PERCENTAGES(uint256)"(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     PSI_CONTRACT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "PSI_CONTRACT()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -1156,10 +1031,6 @@ export class DeepGems extends Contract {
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    artistWithdraw(overrides?: Overrides): Promise<PopulatedTransaction>;
-
-    "artistWithdraw()"(overrides?: Overrides): Promise<PopulatedTransaction>;
-
     balanceOf(
       owner: string,
       overrides?: CallOverrides
@@ -1178,6 +1049,16 @@ export class DeepGems extends Contract {
     "burn(uint256)"(
       tokenId: BigNumberish,
       overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    counterFromTokenId(
+      tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "counterFromTokenId(uint256)"(
+      tokenId: BigNumberish,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     forge(
@@ -1237,12 +1118,12 @@ export class DeepGems extends Contract {
     ): Promise<PopulatedTransaction>;
 
     reforge(
-      oldTokenId: BigNumberish,
+      oldtokenId: BigNumberish,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
     "reforge(uint256)"(
-      oldTokenId: BigNumberish,
+      oldtokenId: BigNumberish,
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
@@ -1273,21 +1154,9 @@ export class DeepGems extends Contract {
       overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
-    state_commissionCollected(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    state_counter(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "state_commissionCollected()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    state_commissionPaid(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "state_commissionPaid()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    "state_counter()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     state_unactivatedGems(
       arg0: BigNumberish,

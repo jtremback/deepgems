@@ -232,6 +232,11 @@
           "internalType": "uint256",
           "name": "tokensToBuy",
           "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "currentPsiSupply",
+          "type": "uint256"
         }
       ],
       "name": "quoteBuyRaw",

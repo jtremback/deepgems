@@ -24,9 +24,13 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 interface PSIInterface extends ethers.utils.Interface {
   functions: {
     "DEEP_GEMS_CONTRACT()": FunctionFragment;
+    "SCALING()": FunctionFragment;
+    "SUPPLY_CAP()": FunctionFragment;
     "allowance(address,address)": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
+    "burn(uint256)": FunctionFragment;
+    "burnFrom(address,uint256)": FunctionFragment;
     "buy(uint256)": FunctionFragment;
     "decimals()": FunctionFragment;
     "decreaseAllowance(address,uint256)": FunctionFragment;
@@ -36,9 +40,10 @@ interface PSIInterface extends ethers.utils.Interface {
     "quoteBuy(uint256)": FunctionFragment;
     "quoteBuyRaw(uint256,uint256)": FunctionFragment;
     "quoteSell(uint256)": FunctionFragment;
-    "quoteSellRaw(uint256)": FunctionFragment;
+    "quoteSellRaw(uint256,uint256)": FunctionFragment;
     "sell(uint256,uint256)": FunctionFragment;
     "symbol()": FunctionFragment;
+    "totalBought()": FunctionFragment;
     "totalSupply()": FunctionFragment;
     "transfer(address,uint256)": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
@@ -47,6 +52,11 @@ interface PSIInterface extends ethers.utils.Interface {
 
   encodeFunctionData(
     functionFragment: "DEEP_GEMS_CONTRACT",
+    values?: undefined
+  ): string;
+  encodeFunctionData(functionFragment: "SCALING", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "SUPPLY_CAP",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -58,6 +68,11 @@ interface PSIInterface extends ethers.utils.Interface {
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(functionFragment: "burn", values: [BigNumberish]): string;
+  encodeFunctionData(
+    functionFragment: "burnFrom",
+    values: [string, BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "buy", values: [BigNumberish]): string;
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
   encodeFunctionData(
@@ -84,13 +99,17 @@ interface PSIInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "quoteSellRaw",
-    values: [BigNumberish]
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "sell",
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "totalBought",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "totalSupply",
     values?: undefined
@@ -112,9 +131,13 @@ interface PSIInterface extends ethers.utils.Interface {
     functionFragment: "DEEP_GEMS_CONTRACT",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "SCALING", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "SUPPLY_CAP", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "allowance", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "burnFrom", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "buy", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
   decodeFunctionResult(
@@ -139,6 +162,10 @@ interface PSIInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "sell", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "totalBought",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "totalSupply",
     data: BytesLike
@@ -180,6 +207,14 @@ export class PSI extends Contract {
 
     "DEEP_GEMS_CONTRACT()"(overrides?: CallOverrides): Promise<[string]>;
 
+    SCALING(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    "SCALING()"(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    SUPPLY_CAP(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    "SUPPLY_CAP()"(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     allowance(
       owner: string,
       spender: string,
@@ -210,6 +245,28 @@ export class PSI extends Contract {
       account: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
+
+    burn(
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    "burn(uint256)"(
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    burnFrom(
+      account: string,
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    "burnFrom(address,uint256)"(
+      account: string,
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
 
     buy(
       tokensToBuy: BigNumberish,
@@ -275,13 +332,13 @@ export class PSI extends Contract {
 
     quoteBuyRaw(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
     "quoteBuyRaw(uint256,uint256)"(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
@@ -297,11 +354,13 @@ export class PSI extends Contract {
 
     quoteSellRaw(
       tokensToSell: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
-    "quoteSellRaw(uint256)"(
+    "quoteSellRaw(uint256,uint256)"(
       tokensToSell: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
@@ -320,6 +379,10 @@ export class PSI extends Contract {
     symbol(overrides?: CallOverrides): Promise<[string]>;
 
     "symbol()"(overrides?: CallOverrides): Promise<[string]>;
+
+    totalBought(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    "totalBought()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -368,6 +431,14 @@ export class PSI extends Contract {
 
   "DEEP_GEMS_CONTRACT()"(overrides?: CallOverrides): Promise<string>;
 
+  SCALING(overrides?: CallOverrides): Promise<BigNumber>;
+
+  "SCALING()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+  SUPPLY_CAP(overrides?: CallOverrides): Promise<BigNumber>;
+
+  "SUPPLY_CAP()"(overrides?: CallOverrides): Promise<BigNumber>;
+
   allowance(
     owner: string,
     spender: string,
@@ -398,6 +469,28 @@ export class PSI extends Contract {
     account: string,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
+
+  burn(
+    amount: BigNumberish,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  "burn(uint256)"(
+    amount: BigNumberish,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  burnFrom(
+    account: string,
+    amount: BigNumberish,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  "burnFrom(address,uint256)"(
+    account: string,
+    amount: BigNumberish,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
 
   buy(
     tokensToBuy: BigNumberish,
@@ -463,13 +556,13 @@ export class PSI extends Contract {
 
   quoteBuyRaw(
     tokensToBuy: BigNumberish,
-    currentPsiSupply: BigNumberish,
+    currentTokensBought: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
   "quoteBuyRaw(uint256,uint256)"(
     tokensToBuy: BigNumberish,
-    currentPsiSupply: BigNumberish,
+    currentTokensBought: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
@@ -485,11 +578,13 @@ export class PSI extends Contract {
 
   quoteSellRaw(
     tokensToSell: BigNumberish,
+    currentTokensBought: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  "quoteSellRaw(uint256)"(
+  "quoteSellRaw(uint256,uint256)"(
     tokensToSell: BigNumberish,
+    currentTokensBought: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
@@ -508,6 +603,10 @@ export class PSI extends Contract {
   symbol(overrides?: CallOverrides): Promise<string>;
 
   "symbol()"(overrides?: CallOverrides): Promise<string>;
+
+  totalBought(overrides?: CallOverrides): Promise<BigNumber>;
+
+  "totalBought()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -556,6 +655,14 @@ export class PSI extends Contract {
 
     "DEEP_GEMS_CONTRACT()"(overrides?: CallOverrides): Promise<string>;
 
+    SCALING(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "SCALING()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    SUPPLY_CAP(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "SUPPLY_CAP()"(overrides?: CallOverrides): Promise<BigNumber>;
+
     allowance(
       owner: string,
       spender: string,
@@ -586,6 +693,25 @@ export class PSI extends Contract {
       account: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    burn(amount: BigNumberish, overrides?: CallOverrides): Promise<void>;
+
+    "burn(uint256)"(
+      amount: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    burnFrom(
+      account: string,
+      amount: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "burnFrom(address,uint256)"(
+      account: string,
+      amount: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     buy(tokensToBuy: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
@@ -648,13 +774,13 @@ export class PSI extends Contract {
 
     quoteBuyRaw(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     "quoteBuyRaw(uint256,uint256)"(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -670,11 +796,13 @@ export class PSI extends Contract {
 
     quoteSellRaw(
       tokensToSell: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "quoteSellRaw(uint256)"(
+    "quoteSellRaw(uint256,uint256)"(
       tokensToSell: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -693,6 +821,10 @@ export class PSI extends Contract {
     symbol(overrides?: CallOverrides): Promise<string>;
 
     "symbol()"(overrides?: CallOverrides): Promise<string>;
+
+    totalBought(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "totalBought()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -752,6 +884,14 @@ export class PSI extends Contract {
 
     "DEEP_GEMS_CONTRACT()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    SCALING(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "SCALING()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    SUPPLY_CAP(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "SUPPLY_CAP()"(overrides?: CallOverrides): Promise<BigNumber>;
+
     allowance(
       owner: string,
       spender: string,
@@ -781,6 +921,25 @@ export class PSI extends Contract {
     "balanceOf(address)"(
       account: string,
       overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    burn(amount: BigNumberish, overrides?: Overrides): Promise<BigNumber>;
+
+    "burn(uint256)"(
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
+    burnFrom(
+      account: string,
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
+    "burnFrom(address,uint256)"(
+      account: string,
+      amount: BigNumberish,
+      overrides?: Overrides
     ): Promise<BigNumber>;
 
     buy(
@@ -847,13 +1006,13 @@ export class PSI extends Contract {
 
     quoteBuyRaw(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     "quoteBuyRaw(uint256,uint256)"(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -869,11 +1028,13 @@ export class PSI extends Contract {
 
     quoteSellRaw(
       tokensToSell: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "quoteSellRaw(uint256)"(
+    "quoteSellRaw(uint256,uint256)"(
       tokensToSell: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -892,6 +1053,10 @@ export class PSI extends Contract {
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
 
     "symbol()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    totalBought(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "totalBought()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -945,6 +1110,14 @@ export class PSI extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    SCALING(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "SCALING()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    SUPPLY_CAP(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "SUPPLY_CAP()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     allowance(
       owner: string,
       spender: string,
@@ -977,6 +1150,28 @@ export class PSI extends Contract {
     "balanceOf(address)"(
       account: string,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    burn(
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    "burn(uint256)"(
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    burnFrom(
+      account: string,
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    "burnFrom(address,uint256)"(
+      account: string,
+      amount: BigNumberish,
+      overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
     buy(
@@ -1043,13 +1238,13 @@ export class PSI extends Contract {
 
     quoteBuyRaw(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     "quoteBuyRaw(uint256,uint256)"(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -1065,11 +1260,13 @@ export class PSI extends Contract {
 
     quoteSellRaw(
       tokensToSell: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "quoteSellRaw(uint256)"(
+    "quoteSellRaw(uint256,uint256)"(
       tokensToSell: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -1088,6 +1285,10 @@ export class PSI extends Contract {
     symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "symbol()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    totalBought(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "totalBought()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
