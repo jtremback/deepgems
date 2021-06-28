@@ -34,7 +34,7 @@ run:
 
 To redeploy:
 - Go into ./solidity
-    - run `npm run deploy`
+    - run `npm run deploy-real`
     - Follow the instructions in verify.txt to verify the contract on etherscan.
 - Go into ./frontend
     - Replace the contract addresses in the frontend code

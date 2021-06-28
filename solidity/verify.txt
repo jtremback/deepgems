@@ -7,15 +7,13 @@ Deepgems.sol:
 eval $(cat .env) npx hardhat verify --network rinkeby <PSI address> 
 eval $(cat .env) npx hardhat verify --constructor-args scripts/arguments.js --network rinkeby <DeepGems Address>
 
-Latest rinkeby deploy:
-
-DeepGems address: 0xDCD459D3075Af74A6C420E16F191b59a174Fc887
-Psi address: 0xc5E5757Bdb6B2B7160b5fEF8571671DD7042F38A
-
 Latest mainnet deploy:
 
-DeepGems address: 0xDCD459D3075Af74A6C420E16F191b59a174Fc887
-Psi address: 0xc5E5757Bdb6B2B7160b5fEF8571671DD7042F38A
+// DeepGems address: 0x6A746B25b240518cf26bdA877A969De85Db492b7
+// Psi address: 0x70d626dFE4BACaD28994469b6baC702979bdeB09
+
+DeepGems address: 0x6A746B25b240518cf26bdA877A969De85Db492b7
+Psi address: 0x70d626dFE4BACaD28994469b6baC702979bdeB09
 
 Update arguments.js first with PSI address
 
