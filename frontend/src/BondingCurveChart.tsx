@@ -85,7 +85,7 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
                     pointerData.eth.marketCap
                   ).format("0[.]000a");
 
-                  return `Current PSI stats:\nPSI minted: ${formattedSupply}\nPrice: ${formattedPriceEth} ETH (${formattedPriceDollars})\nMarket cap: ${formattedMarketCapEth} ETH (${formattedMarketCapDollars})`;
+                  return `Current PSI stats:\nPSI bought: ${formattedSupply}\nPrice: ${formattedPriceEth} ETH (${formattedPriceDollars})\nMarket cap: ${formattedMarketCapEth} ETH (${formattedMarketCapDollars})`;
                 },
               },
             },
@@ -128,7 +128,7 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
               },
               // min: 0,
               // max: 5500000,
-              title: { display: true, text: "PSI minted", color: "white" },
+              title: { display: true, text: "PSI bought", color: "white" },
             },
             y: {
               display: true,
