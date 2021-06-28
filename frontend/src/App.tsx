@@ -263,7 +263,7 @@ function ExplainerText({
         {currentPsiData && <MyChart pointerData={currentPsiData} />}
       </div>
       <p>
-        2,500,00 PSI has been created, and is available for purchase on a
+        2,500,000 PSI has been created, and is available for purchase on a
         bonding curve. You can also sell PSI back to the curve. The more PSI is
         bought, the higher the price goes. Every time anyone reforges or burns a
         gem, 5% of the PSI in that gem is burned forever, permanently reducing
