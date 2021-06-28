@@ -192,6 +192,17 @@ function parseGemMetadata(tokenId: string) {
 }
 
 async function run() {
+  // Get psi stats from contract
+  const psiStats = await getPsiStats();
+  // console.log("got psi stats", psiStats);
+  // Upload psi stats
+  uploadToS3(
+    Buffer.from(JSON.stringify(psiStats)),
+    S3_DATA_BUCKET,
+    `psiStats.json`,
+    "application/json"
+  );
+
   const currentGem = await getHighestGem();
 
   if (!currentGem) {
@@ -237,21 +248,10 @@ async function run() {
     `context.json`,
     "application/json"
   );
-
-  // Get psi stats from contract
-  const psiStats = await getPsiStats();
-  // console.log("got psi stats", psiStats);
-  // Upload psi stats
-  uploadToS3(
-    Buffer.from(JSON.stringify(psiStats)),
-    S3_DATA_BUCKET,
-    `psiStats.json`,
-    "application/json"
-  );
 }
 
 async function getPsiStats() {
-  const totalSupply = Number(fe(`${await psi.totalSupply()}`));
+  const totalSupply = Number(fe(`${await psi.totalBought()}`));
   const price = Number(fe(`${await psi.quoteBuy(pe("1"))}`));
   const marketCap = totalSupply * price;
   const etherPrice = await getEthUsd();
