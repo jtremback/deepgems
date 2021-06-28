@@ -12,68 +12,47 @@ abstract contract QuadraticBondingCurve is ERC20Burnable {
         string memory name,
         string memory symbol,
         uint256 scaling,
-        uint256 supplyCap,
-        uint256 priceCliff
+        uint256 supplyCap
     ) ERC20(name, symbol) {
         SCALING = scaling;
         SUPPLY_CAP = supplyCap;
-        // Mint total supply to the contract address
+        // Mint total supply to the contract's own address. 
+        // The bonding curve sells tokens out of this pool, instead of increasing token
+        // supply by minting as most bonding curves do. This makes no difference to price,
+        // but it means the total supply on sites such as Etherscan reflect the true total supply.
         _mint(address(this), supplyCap);
-        PRICE_CLIFF = priceCliff;
-        // Calculate price cliff
-        PRICE_CLIFF_BALANCE = (PRICE_CLIFF * PRICE_CLIFF * PRICE_CLIFF) / 3;
     }
 
     uint256 public SUPPLY_CAP;
-    // Price switches from 0 to the curve price at this supply level
-    uint256 public PRICE_CLIFF;
-    // Area under the curve before the price cliff
-    uint256 private PRICE_CLIFF_BALANCE;
-    uint256 private SCALING;
+    uint256 public SCALING;
 
     function safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}(new bytes(0));
         require(success, "ETH transfer failed");
     }
 
-    function max(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a >= b ? a : b;
-    }
-
-    function absorbingSub(uint256 a, uint256 b)
-        internal
-        pure
-        returns (uint256)
-    {
-        return a >= b ? a - b : 0;
-    }
-
-    function quoteBuyRaw(uint256 tokensToBuy, uint256 currentPsiBought)
+    function quoteBuyRaw(uint256 tokensToBuy, uint256 currentTokensBought)
         public
         view
         returns (uint256)
     {
-        uint256 newPsiBought = currentPsiBought + tokensToBuy;
+        uint256 newTokensBought = currentTokensBought + tokensToBuy;
 
         // How much is the pool's ether balance
         uint256 currentPoolBalance =
-            (currentPsiBought * currentPsiBought * currentPsiBought) / 3;
+            (currentTokensBought * currentTokensBought * currentTokensBought) / 3;
 
         // How much the pool's ether balance will be after buying
         uint256 newPoolBalance =
-            (newPsiBought * newPsiBought * newPsiBought) / 3;
+            (newTokensBought * newTokensBought * newTokensBought) / 3;
 
-        // How much it costs to increase the supply by tokensToBuy
-        uint256 numEther =
-            absorbingSub(
-                newPoolBalance,
-                max(currentPoolBalance, PRICE_CLIFF_BALANCE)
-            );
+        // How much it costs to buy tokensToBuy from the bonding curve
+        uint256 numEther = newPoolBalance - currentPoolBalance;
 
-        // Scale by 1e18 (ether precision) to cancel out exponentiation
+        // Scale by 1e18^2 (ether precision) to cancel out exponentiation
         // Scales the number by a constant to get to the level we want
         // We add one wei to absorb rounding error
-        return ((numEther / (1 ether * 1 ether)) / SCALING) + 1;
+        return ((numEther / (1e18 * 1e18)) / SCALING) + 1;
     }
 
     // This function gives us the total number of tokens that are not
@@ -88,14 +67,14 @@ abstract contract QuadraticBondingCurve is ERC20Burnable {
 
     function buy(uint256 tokensToBuy) public payable {
         // CHECKS
-        uint256 currentPsiBought = totalBought();
+        uint256 currentTokensBought = totalBought();
 
         require(
-            currentPsiBought + tokensToBuy <= SUPPLY_CAP,
+            currentTokensBought + tokensToBuy <= SUPPLY_CAP,
             "Supply cap exceeded, no more tokens can be bought from the curve."
         );
 
-        uint256 numEther = quoteBuyRaw(tokensToBuy, currentPsiBought);
+        uint256 numEther = quoteBuyRaw(tokensToBuy, currentTokensBought);
 
         require(numEther <= msg.value, "Did not send enough Ether");
 
@@ -108,31 +87,27 @@ abstract contract QuadraticBondingCurve is ERC20Burnable {
         safeTransferETH(msg.sender, msg.value - numEther);
     }
 
-    function quoteSellRaw(uint256 tokensToSell, uint256 currentPsiBought)
+    function quoteSellRaw(uint256 tokensToSell, uint256 currentTokensBought)
         public
         view
         returns (uint256)
     {
-        uint256 newPsiBought = currentPsiBought - tokensToSell;
+        uint256 newTokensBought = currentTokensBought - tokensToSell;
 
         // How much the pool's ether balance
         uint256 currentPoolBalance =
-            (currentPsiBought * currentPsiBought * currentPsiBought) / 3;
+            (currentTokensBought * currentTokensBought * currentTokensBought) / 3;
 
         // How much the pool's ether balance will be after
         uint256 newPoolBalance =
-            (newPsiBought * newPsiBought * newPsiBought) / 3;
+            (newTokensBought * newTokensBought * newTokensBought) / 3;
 
-        // How much you get when you decrease the supply by tokensToSell
-        uint256 numEther =
-            absorbingSub(
-                currentPoolBalance,
-                max(newPoolBalance, PRICE_CLIFF_BALANCE)
-            );
+        // How much you get when you sell tokensToSell to the bonding curve
+        uint256 numEther = currentPoolBalance - newPoolBalance;
 
-        // Scale by 1e18 (ether precision) to cancel out exponentiation
+        // Scale by 1e18^2 (ether precision) to cancel out exponentiation
         // Scales the number by a constant to get to the level we want
-        return ((numEther / (1 ether * 1 ether)) / SCALING);
+        return ((numEther / (1e18 * 1e18)) / SCALING);
     }
 
     function quoteSell(uint256 tokensToSell) public view returns (uint256) {

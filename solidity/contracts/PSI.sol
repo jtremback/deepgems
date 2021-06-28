@@ -5,9 +5,12 @@ import "./QuadraticBondingCurve.sol";
 
 contract PSI is QuadraticBondingCurve {
     address public DEEP_GEMS_CONTRACT;
-
+    
     constructor()
-        QuadraticBondingCurve("PSI", "PSI", 5e15, 2500000 ether, 250000 ether)
+        QuadraticBondingCurve("PSI", "PSI", 
+            5e15, // Curve scaling factor
+            2500000 * 1e18 // Total supply: 2,500,000 tokens
+        )
     {}
 
     function initialize(address deepGemsContract) public {

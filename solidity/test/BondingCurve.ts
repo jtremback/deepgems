@@ -43,6 +43,13 @@ describe("Psi", function () {
     });
   });
 
+  it("how much will some amount of tokens cost?", async function () {
+    this.timeout(0);
+    const { signers, gems, psi } = await initContracts();
+
+    console.log(fe(await psi.quoteBuy(pe(`250000`))));
+  });
+
   it("buys and sells tokens on correct curve", async function () {
     this.timeout(0);
     const { signers, gems, psi } = await initContracts();
@@ -52,7 +59,7 @@ describe("Psi", function () {
     async function buy(num: number, value: number) {
       let startingBalance = await psi.provider.getBalance(signers[0].address);
 
-      console.log("startingBalance", startingBalance.toString());
+      console.log("starting ether balance", fe(startingBalance));
 
       await psi.buy(pe(`${num}`), { value: pe(`${value}`), gasPrice: 0 });
 
@@ -212,7 +219,7 @@ describe("Psi", function () {
     const quote2 = fe(await psi.quoteBuy(pe(`100`)));
 
     expect(quote).to.equal(quote2);
-  })
+  });
 
   it.skip("try to exploit numerical instability", async function () {
     this.timeout(0);
