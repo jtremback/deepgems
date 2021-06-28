@@ -23,11 +23,13 @@ import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 
 interface QuadraticBondingCurveInterface extends ethers.utils.Interface {
   functions: {
-    "PRICE_CLIFF()": FunctionFragment;
+    "SCALING()": FunctionFragment;
     "SUPPLY_CAP()": FunctionFragment;
     "allowance(address,address)": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
+    "burn(uint256)": FunctionFragment;
+    "burnFrom(address,uint256)": FunctionFragment;
     "buy(uint256)": FunctionFragment;
     "decimals()": FunctionFragment;
     "decreaseAllowance(address,uint256)": FunctionFragment;
@@ -39,15 +41,13 @@ interface QuadraticBondingCurveInterface extends ethers.utils.Interface {
     "quoteSellRaw(uint256,uint256)": FunctionFragment;
     "sell(uint256,uint256)": FunctionFragment;
     "symbol()": FunctionFragment;
+    "totalBought()": FunctionFragment;
     "totalSupply()": FunctionFragment;
     "transfer(address,uint256)": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "PRICE_CLIFF",
-    values?: undefined
-  ): string;
+  encodeFunctionData(functionFragment: "SCALING", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "SUPPLY_CAP",
     values?: undefined
@@ -61,6 +61,11 @@ interface QuadraticBondingCurveInterface extends ethers.utils.Interface {
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(functionFragment: "burn", values: [BigNumberish]): string;
+  encodeFunctionData(
+    functionFragment: "burnFrom",
+    values: [string, BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "buy", values: [BigNumberish]): string;
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
   encodeFunctionData(
@@ -94,6 +99,10 @@ interface QuadraticBondingCurveInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "totalBought",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "totalSupply",
     values?: undefined
   ): string;
@@ -106,14 +115,13 @@ interface QuadraticBondingCurveInterface extends ethers.utils.Interface {
     values: [string, string, BigNumberish]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "PRICE_CLIFF",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "SCALING", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "SUPPLY_CAP", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "allowance", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "burnFrom", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "buy", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
   decodeFunctionResult(
@@ -137,6 +145,10 @@ interface QuadraticBondingCurveInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "sell", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "totalBought",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "totalSupply",
     data: BytesLike
@@ -170,9 +182,9 @@ export class QuadraticBondingCurve extends Contract {
   interface: QuadraticBondingCurveInterface;
 
   functions: {
-    PRICE_CLIFF(overrides?: CallOverrides): Promise<[BigNumber]>;
+    SCALING(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "PRICE_CLIFF()"(overrides?: CallOverrides): Promise<[BigNumber]>;
+    "SCALING()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     SUPPLY_CAP(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -208,6 +220,28 @@ export class QuadraticBondingCurve extends Contract {
       account: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
+
+    burn(
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    "burn(uint256)"(
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    burnFrom(
+      account: string,
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
+
+    "burnFrom(address,uint256)"(
+      account: string,
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<ContractTransaction>;
 
     buy(
       tokensToBuy: BigNumberish,
@@ -263,13 +297,13 @@ export class QuadraticBondingCurve extends Contract {
 
     quoteBuyRaw(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
     "quoteBuyRaw(uint256,uint256)"(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
@@ -285,13 +319,13 @@ export class QuadraticBondingCurve extends Contract {
 
     quoteSellRaw(
       tokensToSell: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
     "quoteSellRaw(uint256,uint256)"(
       tokensToSell: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
@@ -310,6 +344,10 @@ export class QuadraticBondingCurve extends Contract {
     symbol(overrides?: CallOverrides): Promise<[string]>;
 
     "symbol()"(overrides?: CallOverrides): Promise<[string]>;
+
+    totalBought(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    "totalBought()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -342,9 +380,9 @@ export class QuadraticBondingCurve extends Contract {
     ): Promise<ContractTransaction>;
   };
 
-  PRICE_CLIFF(overrides?: CallOverrides): Promise<BigNumber>;
+  SCALING(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "PRICE_CLIFF()"(overrides?: CallOverrides): Promise<BigNumber>;
+  "SCALING()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   SUPPLY_CAP(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -380,6 +418,28 @@ export class QuadraticBondingCurve extends Contract {
     account: string,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
+
+  burn(
+    amount: BigNumberish,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  "burn(uint256)"(
+    amount: BigNumberish,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  burnFrom(
+    account: string,
+    amount: BigNumberish,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
+
+  "burnFrom(address,uint256)"(
+    account: string,
+    amount: BigNumberish,
+    overrides?: Overrides
+  ): Promise<ContractTransaction>;
 
   buy(
     tokensToBuy: BigNumberish,
@@ -435,13 +495,13 @@ export class QuadraticBondingCurve extends Contract {
 
   quoteBuyRaw(
     tokensToBuy: BigNumberish,
-    currentPsiSupply: BigNumberish,
+    currentTokensBought: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
   "quoteBuyRaw(uint256,uint256)"(
     tokensToBuy: BigNumberish,
-    currentPsiSupply: BigNumberish,
+    currentTokensBought: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
@@ -457,13 +517,13 @@ export class QuadraticBondingCurve extends Contract {
 
   quoteSellRaw(
     tokensToSell: BigNumberish,
-    currentPsiSupply: BigNumberish,
+    currentTokensBought: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
   "quoteSellRaw(uint256,uint256)"(
     tokensToSell: BigNumberish,
-    currentPsiSupply: BigNumberish,
+    currentTokensBought: BigNumberish,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
@@ -482,6 +542,10 @@ export class QuadraticBondingCurve extends Contract {
   symbol(overrides?: CallOverrides): Promise<string>;
 
   "symbol()"(overrides?: CallOverrides): Promise<string>;
+
+  totalBought(overrides?: CallOverrides): Promise<BigNumber>;
+
+  "totalBought()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -514,9 +578,9 @@ export class QuadraticBondingCurve extends Contract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    PRICE_CLIFF(overrides?: CallOverrides): Promise<BigNumber>;
+    SCALING(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "PRICE_CLIFF()"(overrides?: CallOverrides): Promise<BigNumber>;
+    "SCALING()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     SUPPLY_CAP(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -552,6 +616,25 @@ export class QuadraticBondingCurve extends Contract {
       account: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    burn(amount: BigNumberish, overrides?: CallOverrides): Promise<void>;
+
+    "burn(uint256)"(
+      amount: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    burnFrom(
+      account: string,
+      amount: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "burnFrom(address,uint256)"(
+      account: string,
+      amount: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     buy(tokensToBuy: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
@@ -604,13 +687,13 @@ export class QuadraticBondingCurve extends Contract {
 
     quoteBuyRaw(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     "quoteBuyRaw(uint256,uint256)"(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -626,13 +709,13 @@ export class QuadraticBondingCurve extends Contract {
 
     quoteSellRaw(
       tokensToSell: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     "quoteSellRaw(uint256,uint256)"(
       tokensToSell: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -651,6 +734,10 @@ export class QuadraticBondingCurve extends Contract {
     symbol(overrides?: CallOverrides): Promise<string>;
 
     "symbol()"(overrides?: CallOverrides): Promise<string>;
+
+    totalBought(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "totalBought()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -694,9 +781,9 @@ export class QuadraticBondingCurve extends Contract {
   };
 
   estimateGas: {
-    PRICE_CLIFF(overrides?: CallOverrides): Promise<BigNumber>;
+    SCALING(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "PRICE_CLIFF()"(overrides?: CallOverrides): Promise<BigNumber>;
+    "SCALING()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     SUPPLY_CAP(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -731,6 +818,25 @@ export class QuadraticBondingCurve extends Contract {
     "balanceOf(address)"(
       account: string,
       overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    burn(amount: BigNumberish, overrides?: Overrides): Promise<BigNumber>;
+
+    "burn(uint256)"(
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
+    burnFrom(
+      account: string,
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<BigNumber>;
+
+    "burnFrom(address,uint256)"(
+      account: string,
+      amount: BigNumberish,
+      overrides?: Overrides
     ): Promise<BigNumber>;
 
     buy(
@@ -787,13 +893,13 @@ export class QuadraticBondingCurve extends Contract {
 
     quoteBuyRaw(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     "quoteBuyRaw(uint256,uint256)"(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -809,13 +915,13 @@ export class QuadraticBondingCurve extends Contract {
 
     quoteSellRaw(
       tokensToSell: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     "quoteSellRaw(uint256,uint256)"(
       tokensToSell: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -834,6 +940,10 @@ export class QuadraticBondingCurve extends Contract {
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
 
     "symbol()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    totalBought(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "totalBought()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -867,9 +977,9 @@ export class QuadraticBondingCurve extends Contract {
   };
 
   populateTransaction: {
-    PRICE_CLIFF(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    SCALING(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "PRICE_CLIFF()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    "SCALING()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     SUPPLY_CAP(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -907,6 +1017,28 @@ export class QuadraticBondingCurve extends Contract {
     "balanceOf(address)"(
       account: string,
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    burn(
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    "burn(uint256)"(
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    burnFrom(
+      account: string,
+      amount: BigNumberish,
+      overrides?: Overrides
+    ): Promise<PopulatedTransaction>;
+
+    "burnFrom(address,uint256)"(
+      account: string,
+      amount: BigNumberish,
+      overrides?: Overrides
     ): Promise<PopulatedTransaction>;
 
     buy(
@@ -963,13 +1095,13 @@ export class QuadraticBondingCurve extends Contract {
 
     quoteBuyRaw(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     "quoteBuyRaw(uint256,uint256)"(
       tokensToBuy: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -985,13 +1117,13 @@ export class QuadraticBondingCurve extends Contract {
 
     quoteSellRaw(
       tokensToSell: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     "quoteSellRaw(uint256,uint256)"(
       tokensToSell: BigNumberish,
-      currentPsiSupply: BigNumberish,
+      currentTokensBought: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -1010,6 +1142,10 @@ export class QuadraticBondingCurve extends Contract {
     symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "symbol()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    totalBought(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "totalBought()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

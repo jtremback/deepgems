@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { ERC20 } from "./ERC20";
+export type { ERC20Burnable } from "./ERC20Burnable";
 export type { IERC20 } from "./IERC20";
 export type { ERC721 } from "./ERC721";
 export type { IERC721Enumerable } from "./IERC721Enumerable";
@@ -16,6 +17,7 @@ export type { PSI } from "./PSI";
 export type { QuadraticBondingCurve } from "./QuadraticBondingCurve";
 
 export { ERC20__factory } from "./factories/ERC20__factory";
+export { ERC20Burnable__factory } from "./factories/ERC20Burnable__factory";
 export { IERC20__factory } from "./factories/IERC20__factory";
 export { ERC721__factory } from "./factories/ERC721__factory";
 export { IERC721Enumerable__factory } from "./factories/IERC721Enumerable__factory";
