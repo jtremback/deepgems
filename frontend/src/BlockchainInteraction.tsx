@@ -182,13 +182,21 @@ function BuyPSIBox({
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <h2
           onClick={() => setMode("buy")}
-          style={mode === "buy" ? {} : { color: "grey", cursor: "pointer" }}
+          style={
+            mode === "buy"
+              ? { marginTop: 10 }
+              : { color: "grey", cursor: "pointer", marginTop: 10 }
+          }
         >
           Buy PSI
         </h2>
         <h2
           onClick={() => setMode("sell")}
-          style={mode === "sell" ? {} : { color: "grey", cursor: "pointer" }}
+          style={
+            mode === "sell"
+              ? { marginTop: 10 }
+              : { color: "grey", cursor: "pointer", marginTop: 10 }
+          }
         >
           Sell PSI
         </h2>
@@ -276,7 +284,7 @@ function ForgeAGemBox({
 
   return (
     <div style={{ background: "rgb(27,23,20)", padding: 40 }}>
-      <h2>Forge a Gem</h2>
+      <h2 style={{ marginTop: 10 }}>Forge a Gem</h2>
       <form>
         <p style={{ marginBottom: 0 }}>Amount of PSI to forge the gem with:</p>
         <p style={{ marginTop: 0, fontSize: 16 }}>(must be 0.1 or greater)</p>

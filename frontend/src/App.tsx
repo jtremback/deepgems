@@ -263,12 +263,24 @@ function ExplainerText({
         {currentPsiData && <MyChart pointerData={currentPsiData} />}
       </div>
       <p>
-        PSI can be bought on a bonding curve. The more PSI gets bought, the
-        higher the price goes. At the 2,500,000 PSI supply cap, the curve stops,
-        and no more PSI can be bought. At this point, you'll have to try to buy
-        it on the open market. Every time anyone reforges or burns a gem, 5% of
-        the PSI in that gem is locked forever, permanently reducing the
-        circulating supply. 250,000 PSI has been allocated to the artist.
+        2,500,00 PSI has been created, and is available for purchase on a
+        bonding curve. The more PSI is bought, the higher the price goes. Every
+        time anyone reforges or burns a gem, 5% of the PSI in that gem is burned
+        forever, permanently reducing the supply.
+      </p>
+      <p>
+        <p>
+          Here are the{" "}
+          <a href="https://etherscan.io/address/0x6A746B25b240518cf26bdA877A969De85Db492b7#code">
+            Deep Gems
+          </a>{" "}
+          and{" "}
+          <a href="https://etherscan.io/address/0x70d626dFE4BACaD28994469b6baC702979bdeB09#code">
+            PSI
+          </a>{" "}
+          contracts. Be aware that they are completely unaudited, and you
+          interact with them at your own risk.
+        </p>
       </p>
     </>
   );
@@ -311,25 +323,25 @@ function FAQ() {
       <h1>FAQ</h1>
       <h2>How does the bonding curve work?</h2>
       <p>
-        The Deep Gems bonding curve exists to bootstrap liquidity, and it will
-        not last forever. It is a true bonding curve, meaning that you can not
-        only buy PSI from it, but also sell PSI back to it with no fee. The
-        supply is capped at 2,500,000 PSI. After this, no more PSI can be bought
-        from the curve. After this point, people wanting to buy PSI will have to
-        buy it from an exchange, such as Uniswap.
+        The Deep Gems bonding curve is a true bonding curve, meaning that you
+        can not only buy PSI from it, but also sell PSI back to it with no fee
+        beyond the Ethereum gas fee. The supply is capped at 2,500,000 PSI.
+        After this, no more PSI can be bought from the curve. After this point,
+        people wanting to buy PSI will have to buy it from an exchange, such as
+        Uniswap.
       </p>
-      <p>250,000 PSI (10%) has been allocated to the artist.</p>
+
       <h2>What do "forge", "reforge", "activate", and "burn" do?</h2>
       <p>
         Because we want people to be able to explore the neural network as much
         as possible, we've engineered the forging process to use as little gas
         as possible. When you forge a gem, you own it on the blockchain, but it
         is not yet a full-fledged NFT. You can reforge it as often as you want,
-        while paying as little gas as possible. Once you activate it, the gem
-        becomes a full NFT. It can no longer be reforged, but it can be
-        transfered and sold on NFT exchanges. Burning a gem refunds the PSI
-        tokens that were in it. You can burn a gem whether it is activated or
-        not.
+        while paying as little gas as possible, but each time you reforge, 5% of
+        the PSI in the gem is burned. Once you activate it, the gem becomes a
+        full NFT. It can no longer be reforged, but it can be transfered and
+        sold on NFT exchanges. Burning a gem refunds the PSI tokens that were in
+        it, minus 5%. You can burn a gem whether it is activated or not.
       </p>
       <h2>How are the gem images rendered and stored?</h2>
       <p>

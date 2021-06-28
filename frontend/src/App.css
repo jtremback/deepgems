@@ -2,6 +2,9 @@ h2 {
   margin-top: 50px;
 }
 
+a {
+  cursor: pointer;
+}
 .App {
   text-align: center;
 }
@@ -50,7 +53,7 @@ h2 {
     transform: translate(0, 0);
   }
   50% {
-    transform: translate(1500px, 0);
+    transform: translate(1000px, 0);
   }
   100% {
     transform: translate(0, 0);
