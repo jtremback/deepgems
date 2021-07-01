@@ -92,6 +92,7 @@ function App() {
           style={{
             ...fontStyles,
             maxWidth: "1024px",
+            width: "100vw",
             padding: 30,
           }}
         >

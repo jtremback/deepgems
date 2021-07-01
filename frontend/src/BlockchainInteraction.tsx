@@ -32,6 +32,7 @@ export function BlockchainInteraction({
         style={{
           display: "flex",
           justifyContent: "space-around",
+          flexWrap: "wrap",
           paddingTop: 40,
           paddingBottom: 40,
         }}

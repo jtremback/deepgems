@@ -33,6 +33,16 @@ function calculateLabelAlignment(
   return alignment;
 }
 
+function getAspectRatio() {
+  if (window.innerWidth > 700) {
+    return 4;
+  } else if (window.innerWidth > 400) {
+    return 2;
+  } else {
+    return 1;
+  }
+}
+
 const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
   const chartContainer = useRef<HTMLCanvasElement>(null);
   const [chartInstance, setChartInstance] = useState<Chart | undefined>(
@@ -101,7 +111,7 @@ const MyChart = ({ pointerData }: { pointerData: CurrentPsiData }) => {
         },
         options: {
           responsive: true,
-          aspectRatio: 4,
+          aspectRatio: getAspectRatio(),
           elements: {
             line: {
               borderColor: "white",
