@@ -210,7 +210,7 @@ function RecentGems({
           alignItems: "center",
           marginBottom: 20,
           height: 500,
-          alignContent: "flex-end",
+          alignContent: "flex-start",
         }}
         className="gem-slide"
       >
