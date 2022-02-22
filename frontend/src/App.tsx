@@ -1,27 +1,15 @@
 import { CSSProperties, useEffect, useState } from "react";
 import background from "./background.jpg";
 import "./App.css";
-// import psi50example from "./images/00056-000032-0.5.jpg";
-// import psi100example from "./images/00056-000032-1.jpg";
-// import psi200example from "./images/00056-000032-2.jpg";
-// import psi300example from "./images/00056-000032-3.jpg";
 
-import seed0127_8_1_0 from "./images/seed0127-8-1.0.png"
 import seed0178_8_1_0 from "./images/seed0178-8-1.0.png"
-import seed0221_8_1_2 from "./images/seed0221-8-1.2.png"
 import seed0282_8_1_0 from "./images/seed0282-8-1.0.png"
-import seed0468_8_0_8 from "./images/seed0468-8-0.8.png"
 import seed0548_8_1_2 from "./images/seed0548-8-1.2.png"
-import seed0793_8_1_0 from "./images/seed0793-8-1.0.png"
-import seed0883_8_1_2 from "./images/seed0883-8-1.2.png"
-import seed0885_8_0_8 from "./images/seed0885-8-0.8.png"
-import seed0898_8_1_2 from "./images/seed0898-8-1.2.png"
 import seed0910_8_1_2 from "./images/seed0910-8-1.2.png"
 import seed0919_8_1_2 from "./images/seed0919-8-1.2.png"
 import seed1088_8_1_0 from "./images/seed1088-8-1.0.png"
 import seed1210_8_1_2 from "./images/seed1210-8-1.2.png"
 import seed1294_8_1_0 from "./images/seed1294-8-1.0.png"
-import seed1409_8_1_0 from "./images/seed1409-8-1.0.png"
 import { BlockchainInteraction } from "./BlockchainInteraction";
 import { LargeGem, useInterval, fontStyles, Modal } from "./Shared";
 import {
@@ -325,7 +313,7 @@ function ExplainerText({
         </a>. PSI can still be bought and sold through the bonding curve at the bottom of this page.
       </p>
       <p>
-      <h3>Get a Deep Gem on Stargaze:</h3>
+      <h3>Redeem Deep Gems on Stargaze:</h3>
         We will redeem any Deep Gem on Ethereum that was forged before 2/2/22 for one Deep Gem on Stargaze. We will also redeem any PSI that was bought before 2/2/22 for Deep Gems on Stargaze, at an exchange rate of 1000 PSI for 1 Gem. Email deepgems69@gmail.com for details. Offer good until 1/1/23.
       </p>
       {/* <h2>Forging gems with PSI</h2>
