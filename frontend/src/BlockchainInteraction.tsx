@@ -39,7 +39,7 @@ export function BlockchainInteraction({
       >
         <>
           <BuyPSIBox blockchain={blockchain} setModalData={setModalData} />
-          <ForgeAGemBox blockchain={blockchain} userData={userData} />
+          {/* <ForgeAGemBox blockchain={blockchain} userData={userData} /> */}
         </>
       </div>
       {blockchain && (

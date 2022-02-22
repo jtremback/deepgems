@@ -1,10 +1,27 @@
 import { CSSProperties, useEffect, useState } from "react";
 import background from "./background.jpg";
 import "./App.css";
-import psi50example from "./images/00056-000032-0.5.jpg";
-import psi100example from "./images/00056-000032-1.jpg";
-import psi200example from "./images/00056-000032-2.jpg";
-import psi300example from "./images/00056-000032-3.jpg";
+// import psi50example from "./images/00056-000032-0.5.jpg";
+// import psi100example from "./images/00056-000032-1.jpg";
+// import psi200example from "./images/00056-000032-2.jpg";
+// import psi300example from "./images/00056-000032-3.jpg";
+
+import seed0127_8_1_0 from "./images/seed0127-8-1.0.png"
+import seed0178_8_1_0 from "./images/seed0178-8-1.0.png"
+import seed0221_8_1_2 from "./images/seed0221-8-1.2.png"
+import seed0282_8_1_0 from "./images/seed0282-8-1.0.png"
+import seed0468_8_0_8 from "./images/seed0468-8-0.8.png"
+import seed0548_8_1_2 from "./images/seed0548-8-1.2.png"
+import seed0793_8_1_0 from "./images/seed0793-8-1.0.png"
+import seed0883_8_1_2 from "./images/seed0883-8-1.2.png"
+import seed0885_8_0_8 from "./images/seed0885-8-0.8.png"
+import seed0898_8_1_2 from "./images/seed0898-8-1.2.png"
+import seed0910_8_1_2 from "./images/seed0910-8-1.2.png"
+import seed0919_8_1_2 from "./images/seed0919-8-1.2.png"
+import seed1088_8_1_0 from "./images/seed1088-8-1.0.png"
+import seed1210_8_1_2 from "./images/seed1210-8-1.2.png"
+import seed1294_8_1_0 from "./images/seed1294-8-1.0.png"
+import seed1409_8_1_0 from "./images/seed1409-8-1.0.png"
 import { BlockchainInteraction } from "./BlockchainInteraction";
 import { LargeGem, useInterval, fontStyles, Modal } from "./Shared";
 import {
@@ -73,21 +90,22 @@ function App() {
         style={{
           backgroundImage: `url(${background})`,
           backgroundPositionX: "center",
+          backgroundPositionY: "70%",
           backgroundRepeat: "no-repeat",
           backgroundColor: "black",
           width: "100%",
           overflowY: "auto",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "flex-end",
+          // justifyContent: "flex-end",
           alignItems: "center",
         }}
       >
-        <DigDeeper />
+        {/* <DigDeeper /> */}
         <PageTitle />
-        {recentGems && (
+        {/* {recentGems && (
           <RecentGems gemData={recentGems} setModalData={setModalData} />
-        )}
+        )} */}
         <div
           style={{
             ...fontStyles,
@@ -104,7 +122,7 @@ function App() {
             userData={userData}
             setModalData={setModalData}
           />
-          <FAQ />
+          {/* <FAQ /> */}
         </div>
       </div>
       {modalData && (
@@ -235,13 +253,82 @@ function ExplainerText({
   return (
     <>
       <p>
-        In a world of infinite reproducibility, the most precious asset is
-        uniqueness. Deep Gems is a GAN trained on a dataset of precious
-        gemstones and hooked up to the blockchain. Deep Gems allows you to
-        create and own completely unique virtual gemstones as NFTs. Nobody knows
-        what a Deep Gem will look like before the moment you forge it.
+        Due to high Ethereum gas prices, Deep Gems is relaunching, with better art, on <a href="http://stargaze.zone">Stargaze.</a>
       </p>
-      <h2>Forging gems with PSI</h2>
+
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          paddingTop: 40,
+          paddingBottom: 0,
+        }}
+      >
+        {[
+          [seed0178_8_1_0, ""],
+          [seed0282_8_1_0, ""],
+          [seed0548_8_1_2, ""],
+          [seed0910_8_1_2, ""],
+        ].map((data, i) => {
+          return (
+            <div key={i} style={{ maxWidth: 200, textAlign: "center" }}>
+              <img
+                src={data[0]}
+                alt=""
+                style={{ paddingBottom: 20, width: "100%" }}
+              ></img>
+              {data[1]}
+            </div>
+          );
+        })}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          paddingTop: 40,
+          paddingBottom: 40,
+        }}
+      >
+        {[
+          [seed0919_8_1_2, ""],
+          [seed1088_8_1_0, ""],
+          [seed1210_8_1_2, ""],
+          [seed1294_8_1_0, ""],
+        ].map((data, i) => {
+          return (
+            <div key={i} style={{ maxWidth: 200, textAlign: "center" }}>
+              <img
+                src={data[0]}
+                alt=""
+                style={{ paddingBottom: 20, width: "100%" }}
+              ></img>
+              {data[1]}
+            </div>
+          );
+        })}
+      </div>
+
+
+      <p>Come join our community, and maybe get some free gems, in #deep-gems on the <a href="https://discord.gg/stargaze">Stargaze Discord server</a>.</p>
+      <br/>
+      <br/>
+      <br/>
+      <br />
+      <p>
+        <h3>What this means for holders of Deep Gems:</h3> Your NFT will continue to work exactly the same on Ethereum, and will continue to display. Nothing will change.
+      </p>
+      <p>
+        <h3>What this means for holders of PSI:</h3> We will be turning off the GAN on 2/2/22, after which point newly forged gems will no longer automatically have an image generated for display on NFT exchanges and wallets. Gems that were already forged will continue displaying on exchanges and wallets. The images of gems forged after the GAN server is shut off will still be viewable <a href="https://colab.research.google.com/drive/1yh7C_GND4nV_VTiL-vl6I9twxNdCzdui">
+          here
+        </a>. PSI can still be bought and sold through the bonding curve at the bottom of this page.
+      </p>
+      <p>
+      <h3>Get a Deep Gem on Stargaze:</h3>
+        We will redeem any Deep Gem on Ethereum that was forged before 2/2/22 for one Deep Gem on Stargaze. We will also redeem any PSI that was bought before 2/2/22 for Deep Gems on Stargaze, at an exchange rate of 1000 PSI for 1 Gem. Email deepgems69@gmail.com for details. Offer good until 1/1/23.
+      </p>
+      {/* <h2>Forging gems with PSI</h2>
       <p>
         Deep Gems explores the concept of uniqueness with an increasingly scarce
         token, called PSI. When you forge a Deep Gem, you must supply PSI
@@ -283,7 +370,7 @@ function ExplainerText({
           contracts. Be aware that they are completely unaudited, and you
           interact with them at your own risk.
         </p>
-      </p>
+      </p> */}
     </>
   );
 }
@@ -299,10 +386,10 @@ function PSIDiagram() {
       }}
     >
       {[
-        [psi50example, "50 PSI"],
-        [psi100example, "100 PSI"],
-        [psi200example, "400 PSI"],
-        [psi300example, "900 PSI"],
+        // [psi50example, "50 PSI"],
+        // [psi100example, "100 PSI"],
+        // [psi200example, "400 PSI"],
+        // [psi300example, "900 PSI"],
       ].map((data, i) => {
         return (
           <div key={i} style={{ maxWidth: 100, textAlign: "center" }}>

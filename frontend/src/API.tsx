@@ -2,8 +2,8 @@ import "./App.css";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { ethers } from "ethers";
 import Web3Modal from "web3modal";
-import { DeepGems } from "../../solidity/typechain/DeepGems";
-import { PSI } from "../../solidity/typechain/PSI";
+import { DeepGems } from "./typechain/DeepGems";
+import { PSI } from "./typechain/PSI";
 import { Blockchain } from "./Types";
 
 import gemArtifact from "./artifacts/contracts/DeepGems.sol/DeepGems.json";

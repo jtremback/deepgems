@@ -1,6 +1,6 @@
 import { ethers, BigNumber } from "ethers";
-import { DeepGems } from "../../solidity/typechain/DeepGems";
-import { PSI } from "../../solidity/typechain/PSI";
+import { DeepGems } from "./typechain/DeepGems";
+import { PSI } from "./typechain/PSI";
 
 export type GemData = {
   id: string;
